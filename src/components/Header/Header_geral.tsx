@@ -1,7 +1,7 @@
 import { Bell, Settings, User } from "lucide-react";
 import logo from "../../../imagens/logo_arraiware.png";
 
-export default function HeaderDashboard() {
+export default function Header() {
   return (
     <header className="fixed inset-x-0 top-0 bg-white shadow-md z-50">
       <div className="w-full flex items-center justify-between px-6 py-4">
