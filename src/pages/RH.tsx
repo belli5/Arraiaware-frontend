@@ -5,6 +5,7 @@ import OverallProgress from '../components/OverallProgressRH/OverallProgress';
 import { useState } from 'react';
 import Tabs from '../components/Tabs/Tabs';
 import type {Tab} from '../components/Tabs/Tabs';
+import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
 
 // import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
 
@@ -58,11 +59,7 @@ export default function RH() {
               className="mt-12" 
             />
             <div className="mt-[-1px]">
-            {activeTab === 'status' && (
-              <div className="bg-white p-8 rounded-b-lg rounded-r-lg shadow-md">
-                Painel de Status das Avaliações (Em breve)
-              </div>
-            )}
+            {activeTab === 'status' && <EvaluationsPanel />}
             {activeTab === 'criterios' && <div>Painel de Critérios (Em breve)</div>}
             {activeTab === 'historico' && <div>Painel de Históricos (Em breve)</div>}
           </div>
