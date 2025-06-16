@@ -1,9 +1,9 @@
-import Header from '../components/Header/header_geral';
+import HeaderLogin from '../components/Header/Header_login';
 
 export default function Login() {
   return (
     <div className="w-full">
-      <Header/>
+      <HeaderLogin />
     </div>
   );
 }
