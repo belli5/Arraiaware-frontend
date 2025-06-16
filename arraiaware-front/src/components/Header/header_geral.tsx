@@ -1,5 +1,5 @@
 import { Bell, Settings, User } from "lucide-react";
-import logo from "../../imagens/logo_arraiware.png";
+import logo from "../../../imagens/logo_arraiware.png";
 
 export default function HeaderDashboard() {
   return (

@@ -1,4 +1,4 @@
-import logo from "../../imagens/logo_arraiware.png";
+import logo from "../../../imagens/logo_arraiware.png";
 
 export default function HeaderLogin() {
   return (
