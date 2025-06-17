@@ -71,7 +71,7 @@ export default function EvaluationsTable({ searchTerm, statusFilter, departmentF
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{evalItem.collaborator}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{evalItem.department}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{evalItem.track}</td>
-                            <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={evalItem.status} /></td>
+                            <td className="pl-3 pr-6 py-4 whitespace-nowrap"><StatusBadge status={evalItem.status} /></td>
                             <td className="px-6 py-4 whitespace-nowrap"><ProgressBar progress={evalItem.progress} /></td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{evalItem.deadline}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{evalItem.completedAt}</td>

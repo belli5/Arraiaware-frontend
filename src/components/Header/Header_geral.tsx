@@ -3,7 +3,7 @@ import logo from "../../../imagens/logo_arraiware.png";
 
 export default function Header() {
   return (
-    <header className="fixed inset-x-0 top-0 bg-white shadow-md z-50">
+    <header className="fixed inset-x-0 top-0 bg-orange-200 shadow-md z-50">
       <div className="w-full flex items-center justify-between px-6 py-4">
         {/* LOGO + NAVEGAÇÃO */}
         <div className="flex items-center space-x-8">
@@ -61,7 +61,7 @@ export default function Header() {
           <Settings className="h-6 w-6 text-gray-600 hover:text-brand-orange transition" />
           <div className="flex items-center space-x-2">
             <div className="p-1 bg-brand-orange rounded-full">
-              <User className="h-5 w-5 text-white" />
+              <User className="h-5 w-5 text-gray-600" />
             </div>
             <span className="text-gray-800 font-medium">Maria Silva</span>
           </div>

@@ -7,15 +7,13 @@ import Tabs from '../components/Tabs/Tabs';
 import type {Tab} from '../components/Tabs/Tabs';
 import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
 
-// import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
-
 export default function RH() {
   const [activeTab, setActiveTab] = useState<Tab>('status');
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-white to-orange-100">
       <Header />
       <main className="pt-24">
-        <div className='max-w-7xl mx-auto'>
+        <div className='max-w-[1600px] mx-auto'>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard 
                 title="Total de Avaliações"
