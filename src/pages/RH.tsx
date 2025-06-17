@@ -6,11 +6,12 @@ import { useState } from 'react';
 import Tabs from '../components/Tabs/Tabs';
 import type {Tab} from '../components/Tabs/Tabs';
 import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
+import CriteriaPanel from '../components/CriteriaPanel/CriteriaPanel'; // 1. Importe o novo painel
 
 export default function RH() {
   const [activeTab, setActiveTab] = useState<Tab>('status');
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-orange-100">
+    <div className="min-h-screen bg-gray-100">
       <Header />
       <main className="pt-24">
         <div className='max-w-[1600px] mx-auto'>
@@ -54,11 +55,11 @@ export default function RH() {
             <Tabs 
               activeTab={activeTab} 
               setActiveTab={setActiveTab}
-              className="mt-12" 
+              className="mt-8" 
             />
             <div className="mt-[-1px]">
             {activeTab === 'status' && <EvaluationsPanel />}
-            {activeTab === 'criterios' && <div>Painel de Critérios (Em breve)</div>}
+            {activeTab === 'criterios' && <CriteriaPanel />}
             {activeTab === 'historico' && <div>Painel de Históricos (Em breve)</div>}
           </div>
         </div>
