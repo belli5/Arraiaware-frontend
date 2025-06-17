@@ -3,7 +3,7 @@ import logo from "../../../imagens/logo_arraiware.png";
 
 export default function Header() {
   return (
-    <header className="fixed inset-x-0 top-0 bg-orange-200 shadow-md z-50">
+    <header className="fixed inset-x-0 top-0 bg-gradient-to-br from-white to-orange-300 shadow-md z-50">
       <div className="w-full flex items-center justify-between px-6 py-4">
         {/* LOGO + NAVEGAÇÃO */}
         <div className="flex items-center space-x-8">
@@ -22,7 +22,7 @@ export default function Header() {
               <li>
                 <a
                   href="/Home"
-                  className="hover:text-orange-500 font-medium hover:opacity-90"
+                  className="hover:text-orange-500 hover:opacity-90"
                 >
                   Home
                 </a>

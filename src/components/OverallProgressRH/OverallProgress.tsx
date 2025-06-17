@@ -27,7 +27,7 @@ export default function OverallProgress() {
         </div>
       </div>
 
-      <div className="flex items-center space-x-4 md:space-x-6 mt-4 text-sm text-gray-600 flex-wrap">
+      <div className="flex items-center space-x-6 md:space-x-10 mt-4 text-base font-medium text-gray-600 flex-wrap">
         <div className="flex items-center">
           <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
           <span>Concluídas ({completed})</span>
