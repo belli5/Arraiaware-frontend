@@ -28,7 +28,7 @@ export default function EvaluationsPanel() {
             
             {/* Cabeçalho do Painel */}
             <div>
-                <h2 className="text-2xl font-bold text-gray-800">Painel de Avaliações - Arraiware</h2>
+                <h2 className="text-xl font-bold text-gray-800">Painel de Avaliações - Arraiware</h2>
                 <p className="text-base text-gray-500 mt-1">Acompanhe o progresso de todas as avaliações em andamento</p>
             </div>
 
@@ -47,7 +47,7 @@ export default function EvaluationsPanel() {
                     />
                 </div>
                 
-                {/* Filtros e Exportar */}
+                {/* Filtros e Exportação*/}
                 <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
                     {/* Container do Dropdown de Status */}
                     <div className="relative">

@@ -6,7 +6,8 @@ import { useState } from 'react';
 import Tabs from '../components/Tabs/Tabs';
 import type {Tab} from '../components/Tabs/Tabs';
 import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
-import CriteriaPanel from '../components/CriteriaPanel/CriteriaPanel'; // 1. Importe o novo painel
+import CriteriaPanel from '../components/CriteriaPanel/CriteriaPanel'; 
+import HistoryPanel from '../components/HistoryPanel/HistoryPanel'; 
 
 export default function RH() {
   const [activeTab, setActiveTab] = useState<Tab>('status');
@@ -60,7 +61,7 @@ export default function RH() {
             <div className="mt-[-1px]">
             {activeTab === 'status' && <EvaluationsPanel />}
             {activeTab === 'criterios' && <CriteriaPanel />}
-            {activeTab === 'historico' && <div>Painel de Históricos (Em breve)</div>}
+            {activeTab === 'historico' && <HistoryPanel />}
           </div>
         </div>
 
