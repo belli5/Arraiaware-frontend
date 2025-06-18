@@ -8,6 +8,7 @@ import type {Tab} from '../components/Tabs/Tabs';
 import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
 import CriteriaPanel from '../components/CriteriaPanel/CriteriaPanel'; 
 import HistoryPanel from '../components/HistoryPanel/HistoryPanel'; 
+import Footer from '../components/Footer/Footer';
 
 export default function RH() {
   const [activeTab, setActiveTab] = useState<Tab>('status');
@@ -65,7 +66,7 @@ export default function RH() {
           </div>
         </div>
 
-
+        <Footer />
       </main>
     </div>
   );
