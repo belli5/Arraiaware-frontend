@@ -13,10 +13,10 @@ import Footer from '../components/Footer/Footer';
 export default function RH() {
   const [activeTab, setActiveTab] = useState<Tab>('status');
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-orange-50">
       <Header />
       <main className="pt-24">
-        <div className='max-w-[1600px] mx-auto'>
+        <div className='max-w-[1600px] mx-auto px-6 lg:px-10'>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard 
                 title="Total de Avaliações"

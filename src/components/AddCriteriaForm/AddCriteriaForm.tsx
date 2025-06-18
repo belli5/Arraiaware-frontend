@@ -65,11 +65,13 @@ export default function AddCriteriaForm({ tracks, onCancel, onSubmit }: AddCrite
         {errors.trackId && <p className="mt-1 text-xs text-red-600">{errors.trackId}</p>}
       </div>
 
-      {/* Seção 2: Detalhes do Critério - com a estrutura corrigida */}
-      <fieldset className="bg-gray-50/80 rounded-xl border border-gray-200">
-        <legend className="text-base font-semibold text-gray-900 px-2 ml-4">Detalhes do Critério</legend>
+      {/* Seção 2: Detalhes do Critério*/}
+      <div>
+        <h3 className="text-base font-semibold text-gray-900 mb-2">
+          Detalhes do Critério
+        </h3>
         
-        <div className="p-5 pt-2 space-y-4">
+        <div className="space-y-4 bg-gray-50/80 p-5 rounded-xl border border-gray-200">
             <div>
               <label htmlFor="criterion-name" className="block text-sm font-medium text-gray-700">Nome do Critério</label>
               <input 
@@ -113,7 +115,7 @@ export default function AddCriteriaForm({ tracks, onCancel, onSubmit }: AddCrite
                 {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description}</p>}
             </div>
         </div>
-      </fieldset>
+      </div>
 
       {/* Rodapé do Formulário com as Ações */}
       <div className="pt-8 flex justify-end gap-x-3">
@@ -128,7 +130,7 @@ export default function AddCriteriaForm({ tracks, onCancel, onSubmit }: AddCrite
           onClick={handleSubmit} 
           className="inline-flex items-center justify-center gap-x-2 px-4 py-2 border border-transparent text-sm font-semibold rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
         >
-          <Check size={18}/>
+          <Check size={16} />
           Salvar Critério
         </button>
       </div>
