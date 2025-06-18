@@ -1,54 +1,78 @@
-# React + TypeScript + Vite
+# RPE - Rocket Performance & Engagement (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este repositório contém o código-fonte do **Frontend** da plataforma RPE (Rocket Performance & Engagement), desenvolvida pela equipe **Arraiware** para a Rocket Corp.
 
-Currently, two official plugins are available:
+O RPE é uma solução digital inovadora que visa modernizar e centralizar o processo de avaliação de desempenho da Rocket Corp, substituindo métodos manuais por uma abordagem mais eficiente, transparente e baseada em dados.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Sobre o Projeto RPE
 
-## Expanding the ESLint configuration
+O RPE (Rocket Performance & Engagement) é uma plataforma desenvolvida para automatizar e otimizar as avaliações de desempenho, feedback 360 e gestão de talentos na Rocket Corp. O objetivo é proporcionar:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+* **Eficiência:** Substituir planilhas e processos manuais, evitando erros e inconsistências.
+* **Transparência:** Centralizar informações e facilitar o acesso aos dados de avaliação.
+* **Decisão Estratégica:** Fornecer dados estruturados para o comitê de equalização, apoiando decisões de promoções, treinamentos e reconhecimento.
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## Tecnologias Utilizadas (Frontend)
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+* **Framework:** React
+* **Build Tool:** Vite
+* **Estilização:** Tailwind CSS
+* **Roteamento:** React Router DOM
+* **Ícones:** React Icons
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Módulos Atuais (MVP 1)
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+O Mínimo Produto Viável (MVP 1) do RPE foca na digitalização básica do processo de avaliação, incluindo:
+
+* **Cadastro de Usuários:** Gerenciamento de colaboradores com seus cargos, trilhas e unidades.
+* **Configuração de Critérios:** Criação e edição de critérios de avaliação personalizados por trilha/unidade.
+* **Formulário de Autoavaliação:** Permite que colaboradores preencham suas próprias avaliações.
+* **Formulário de Avaliação de Pares e Líderes:** Permite que colaboradores avaliem seus colegas e gestores.
+* **Indicação de Referências:** Funcionalidade para indicar referências técnicas e culturais.
+* **Painel de Acompanhamento (RH):** Visão básica do status de preenchimento das avaliações.
+* **Importação/Exportação:** Funcionalidades para importar históricos e exportar avaliações para o comitê.
+
+## Como Executar o Projeto (Desenvolvimento)
+
+Para rodar o frontend localmente, siga os passos abaixo:
+
+1.  **Pré-requisitos:** Certifique-se de ter o Node.js (versão 18 ou superior recomendada) e o npm (ou Yarn) instalados em sua máquina.
+2.  **Clonar o Repositório:**
+    ```bash
+    git clone https://github.com/belli5/Arraiaware-frontend.git
+    cd Arraiaware-frontend
+    ```
+
+3.  **Instalar Dependências:**
+    ```bash
+    pnpm install
+    ```
+4.  **Iniciar o Servidor de Desenvolvimento:**
+    ```bash
+    pnpm run dev
+    ```
+    O aplicativo estará disponível em `http://localhost:5173/` (ou outra porta indicada pelo Vite).
+
+## Repositório do Backend
+
+Este frontend consome dados de uma API de backend separada. Você pode encontrar o código-fonte do backend no seguinte repositório:
+
+* **Repositório do Backend:** [https://github.com/belli5/Arraiaware-backend](https://github.com/belli5/Arraiaware-backend)
+
+Certifique-se de ter o backend rodando localmente para que o frontend possa se comunicar com ele e persistir os dados das avaliações. Consulte o README do repositório do backend para instruções sobre como configurá-lo e executá-lo.
+
+## Contribuição
+
+Contribuições são bem-vindas! Se você deseja colaborar, por favor, siga estas diretrizes:
+
+1.  Faça um fork deste repositório.
+2.  Crie uma nova branch para sua funcionalidade ou correção de bug (`git checkout -b feature/minha-feature` ou `fix/meu-bug`).
+3.  Faça suas alterações e comite-as com mensagens claras e atômicas.
+4.  Envie suas alterações para o seu fork.
+5.  Abra um Pull Request para a branch `main` deste repositório.
+
+## Equipe de Desenvolvimento
+
+Este projeto está sendo desenvolvido pela equipe **Arraiware**.
+
+---
