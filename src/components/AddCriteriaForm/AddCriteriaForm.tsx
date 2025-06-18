@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { Check } from 'lucide-react';
 
 type CriterionType = 'Comportamento' | 'Execução' | 'Gestão e Liderança';
-
 interface Track { id: number; name: string; }
 interface NewCriterionData {
   name: string;
@@ -15,7 +15,6 @@ interface AddCriteriaFormProps {
   onSubmit: (trackId: number, data: NewCriterionData) => void;
 }
 
-
 const criterionTypes: CriterionType[] = ['Comportamento', 'Execução', 'Gestão e Liderança'];
 
 export default function AddCriteriaForm({ tracks, onCancel, onSubmit }: AddCriteriaFormProps) {
@@ -23,51 +22,113 @@ export default function AddCriteriaForm({ tracks, onCancel, onSubmit }: AddCrite
   const [type, setType] = useState<CriterionType | ''>(''); 
   const [description, setDescription] = useState('');
   const [selectedTrackId, setSelectedTrackId] = useState<number | ''>('');
+  
+  const [errors, setErrors] = useState({
+    trackId: '', name: '', type: '', description: ''
+  });
+
+  const validate = () => {
+    const newErrors = { trackId: '', name: '', type: '', description: '' };
+    let isValid = true;
+
+    if (!selectedTrackId) { newErrors.trackId = 'Por favor, selecione uma trilha.'; isValid = false; }
+    if (!type) { newErrors.type = 'Por favor, selecione um tipo.'; isValid = false; }
+    if (!name.trim()) { newErrors.name = 'O nome do critério é obrigatório.'; isValid = false; }
+    if (!description.trim()) { newErrors.description = 'A descrição é obrigatória.'; isValid = false; }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleSubmit = () => {
-    if (!selectedTrackId) { alert("Por favor, selecione uma trilha."); return; }
-    if (!type) { alert("Por favor, selecione um tipo."); return; } 
-    if (!name.trim() || !description.trim()) { alert("Por favor, preencha o nome e a descrição."); return; }
-
-    onSubmit(selectedTrackId, { name, type, description });
+    if (!validate()) return;
+    
+    if (selectedTrackId && type) {
+        onSubmit(selectedTrackId, { name, type, description });
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       {/* Seção 1: Seleção da Trilha */}
       <div>
-        <label htmlFor="track-select" className="block text-sm font-semibold text-gray-800 mb-1">Adicionar à Trilha</label>
-        <select id="track-select" value={selectedTrackId} onChange={e => setSelectedTrackId(Number(e.target.value))} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500">
+        <label htmlFor="track-select" className="block text-sm font-medium text-gray-700">Adicionar à Trilha</label>
+        <select 
+          id="track-select" 
+          value={selectedTrackId} 
+          onChange={e => setSelectedTrackId(Number(e.target.value))} 
+          className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.trackId ? 'border-red-500' : 'border-gray-300'}`}
+        >
           <option disabled value="">Selecione uma trilha</option>
           {tracks.map(track => <option key={track.id} value={track.id}>{track.name}</option>)}
         </select>
+        {errors.trackId && <p className="mt-1 text-xs text-red-600">{errors.trackId}</p>}
       </div>
 
-      {/* Seção 2: Detalhes do Critério */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-5">
-        <div className="md:col-span-2">
-          <label htmlFor="criterion-name" className="block text-sm font-semibold text-gray-800">Nome do Critério</label>
-          <input id="criterion-name" type="text" value={name} onChange={e => setName(e.target.value)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"/>
+      {/* Seção 2: Detalhes do Critério - com a estrutura corrigida */}
+      <fieldset className="bg-gray-50/80 rounded-xl border border-gray-200">
+        <legend className="text-base font-semibold text-gray-900 px-2 ml-4">Detalhes do Critério</legend>
+        
+        <div className="p-5 pt-2 space-y-4">
+            <div>
+              <label htmlFor="criterion-name" className="block text-sm font-medium text-gray-700">Nome do Critério</label>
+              <input 
+                id="criterion-name" 
+                type="text" 
+                value={name} 
+                onChange={e => setName(e.target.value)} 
+                className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
+              />
+              {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700">Tipo</label>
+                <div className="mt-2 flex rounded-md shadow-sm border border-gray-300 p-1 bg-gray-50">
+                    {criterionTypes.map((criterionType) => (
+                        <button
+                            key={criterionType}
+                            type="button"
+                            onClick={() => setType(criterionType)}
+                            className={`w-full py-1.5 text-sm font-semibold transition-colors duration-150 rounded-md focus:outline-none ${
+                                type === criterionType
+                                    ? 'bg-orange-500 text-white shadow'
+                                    : 'text-gray-600 hover:bg-gray-200'
+                            }`}
+                        >
+                            {criterionType}
+                        </button>
+                    ))}
+                </div>
+                {errors.type && <p className="mt-1 text-xs text-red-600">{errors.type}</p>}
+            </div>
+            <div>
+                <label htmlFor="criterion-description" className="block text-sm font-medium text-gray-700">Descrição</label>
+                <textarea 
+                  id="criterion-description" 
+                  value={description} 
+                  onChange={e => setDescription(e.target.value)} 
+                  rows={4} 
+                  className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.description ? 'border-red-500' : 'border-gray-300'}`}
+                />
+                {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description}</p>}
+            </div>
         </div>
-        <div>
-          <label htmlFor="criterion-type" className="block text-sm font-semibold text-gray-800">Tipo</label>
-          <select id="criterion-type" value={type} onChange={e => setType(e.target.value as CriterionType)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500">
-            <option disabled value="">Selecione um tipo</option>
-            {criterionTypes.map(type => <option key={type} value={type}>{type}</option>)}
-          </select>
-        </div>
-        <div className="md:col-span-2">
-          <label htmlFor="criterion-description" className="block text-sm font-semibold text-gray-800">Descrição</label>
-          <textarea id="criterion-description" value={description} onChange={e => setDescription(e.target.value)} rows={4} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"/>
-        </div>
-      </div>
+      </fieldset>
 
       {/* Rodapé do Formulário com as Ações */}
-      <div className="mt-8 pt-5 border-t border-gray-200 flex justify-end gap-x-3">
-        <button type="button" onClick={onCancel} className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50">
+      <div className="pt-8 flex justify-end gap-x-3">
+        <button 
+          type="button" 
+          onClick={onCancel} 
+          className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+        >
           Cancelar
         </button>
-        <button onClick={handleSubmit} className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-transparent text-sm font-semibold rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600">
+        <button 
+          onClick={handleSubmit} 
+          className="inline-flex items-center justify-center gap-x-2 px-4 py-2 border border-transparent text-sm font-semibold rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+        >
+          <Check size={18}/>
           Salvar Critério
         </button>
       </div>
