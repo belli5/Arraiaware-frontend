@@ -4,6 +4,8 @@ Este repositório contém o código-fonte do **Frontend** da plataforma RPE (Roc
 
 O RPE é uma solução digital inovadora que visa modernizar e centralizar o processo de avaliação de desempenho da Rocket Corp, substituindo métodos manuais por uma abordagem mais eficiente, transparente e baseada em dados.
 
+> Novo por aqui? Confira o guia de [ONBOARDING](docs/ONBOARDING.md) para começar!
+
 ## Sobre o Projeto RPE
 
 O RPE (Rocket Performance & Engagement) é uma plataforma desenvolvida para automatizar e otimizar as avaliações de desempenho, feedback 360 e gestão de talentos na Rocket Corp. O objetivo é proporcionar:
