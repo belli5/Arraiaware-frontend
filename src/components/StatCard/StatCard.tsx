@@ -20,7 +20,7 @@ export default function StatCard({
   iconColor = 'text-gray-400'
 }: StatCardProps) {
   return (
-    <div className={`bg-white p-6 w-85 rounded-xl shadow-md border-l-4 hover:shadow-lg hover:-translate-y-1 transform transition ${borderColor}`}>
+    <div className={`bg-white p-6 w-85 rounded-xl shadow-md border-l-4 hover:shadow-lg hover:-translate-y-1 transform transition duration-300 ${borderColor}`}>
       <div className="flex justify-between items-start">
         <div className="flex flex-col text-left">
           <span className="text-xl font-semibold text-gray-800">{title}</span>
