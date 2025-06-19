@@ -2,7 +2,7 @@ import Header from '../components/Header/Header_geral';
 import StatCard from '../components/StatCard/StatCard'; 
 import { Users, CheckCircle2, Clock, AlertTriangle } from 'lucide-react'; 
 import OverallProgress from '../components/OverallProgressRH/OverallProgress';
-import { useState } from 'react';
+import { useState,useRef } from 'react';
 import Tabs from '../components/Tabs/Tabs';
 import type {Tab} from '../components/Tabs/Tabs';
 import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
@@ -12,6 +12,16 @@ import Footer from '../components/Footer/Footer';
 
 export default function RH() {
   const [activeTab, setActiveTab] = useState<Tab>('status');
+  const contentPanelRef = useRef<HTMLDivElement>(null);
+  const handleTabChange = (tab: Tab) => {
+      setActiveTab(tab);
+      setTimeout(() => {
+        if (contentPanelRef.current) {
+          contentPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 50); 
+  };
+
   return (
     <div className="min-h-screen bg-orange-50">
       <Header />
@@ -56,10 +66,10 @@ export default function RH() {
 
             <Tabs 
               activeTab={activeTab} 
-              setActiveTab={setActiveTab}
+              setActiveTab={handleTabChange}
               className="mt-8" 
             />
-            <div className="mt-[-1px]">
+            <div ref={contentPanelRef} className="mt-[-1px]">
             {activeTab === 'status' && <EvaluationsPanel />}
             {activeTab === 'criterios' && <CriteriaPanel />}
             {activeTab === 'historico' && <HistoryPanel />}
