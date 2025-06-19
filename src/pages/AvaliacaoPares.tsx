@@ -63,7 +63,7 @@ export default function AvaliacaoPares() {
               <button
                 key={s.key}
                 onClick={() => {
-                  if (s.key === 'peer') navigate('/PeerEvaluation');
+                  if (s.key === 'peer') navigate('/avaliacaoPares');
                   else if (s.key === 'leader') navigate('/avaliacaoLideres');
                   else navigate(`/avaliacao/${s.key}`);
                 }}
