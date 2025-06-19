@@ -19,7 +19,7 @@ export default function EvaluationTabs({ sections, answers, currentSectionIndex 
         const completed = hasQuestions ? doneCount === s.questions.length : false;
         const isActive = idx === currentSectionIndex;
 
-        const base = 'flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors';
+        const base = 'flex items-center gap-2 px-5 py-2.5 rounded-lg border text-base font-medium transition-colors';
         const activeCls = 'bg-orange-500 text-white border-orange-500 shadow-sm';
         const doneCls = 'bg-green-100 text-green-800 border-green-200';
         const defaultCls = 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50';
