@@ -6,10 +6,17 @@ export interface Colleague {
   tempo: string;
 }
 
+export interface Question {
+  id: string;
+  type: 'scale' | 'text'; 
+  text: string;
+}
+
 export interface Section {
   key: string;
   title: string;
-  icon: React.ReactNode; 
-  total: number;
-  done: number;
+  icon: React.ReactNode;
+  total?: number;
+  done?: number;
+  questions: Question[];
 }
