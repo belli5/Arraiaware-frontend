@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { FaCheckCircle } from 'react-icons/fa';
-import type { Section } from '../../types/evaluation';
+import type { Section , Answer} from '../../types/evaluation';
 
 interface EvaluationTabsProps {
   sections: Section[];
-  answers: Record<string, string>;
+  answers: Record<string, Answer>;
   currentSectionIndex: number;
 }
 
@@ -15,7 +15,12 @@ export default function EvaluationTabs({ sections, answers, currentSectionIndex 
     <nav className="flex gap-2 mb-6 flex-wrap">
       {sections.map((s, idx) => {
         const hasQuestions = s.questions.length > 0;
-        const doneCount = hasQuestions ? s.questions.filter((q) => answers[q.id]).length : 0;
+        const doneCount = hasQuestions
+          ? s.questions.filter((q) => {
+              const answer = answers[q.id];
+              return answer && answer.scale && answer.justification?.trim() !== '';
+            }).length
+          : 0;
         const completed = hasQuestions ? doneCount === s.questions.length : false;
         const isActive = idx === currentSectionIndex;
 

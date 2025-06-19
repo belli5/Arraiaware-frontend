@@ -1,9 +1,9 @@
 import { FaRegLightbulb } from 'react-icons/fa';
-import type { Section } from '../../types/evaluation';
+import type { Answer, Section } from '../../types/evaluation';
 
 interface ProgressSidebarProps {
   sections: Section[];
-  answers: Record<string, string>;
+  answers: Record<string, Answer>;
 }
 
 export default function ProgressSidebar({ sections, answers }: ProgressSidebarProps) {
@@ -26,7 +26,10 @@ export default function ProgressSidebar({ sections, answers }: ProgressSidebarPr
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Progresso por Seção</h3>
         <div className="space-y-4">
           {sections.map((s) => {
-            const done = s.questions.filter((q) => answers[q.id]).length;
+            const done = s.questions.filter((q) => {
+              const answer = answers[q.id];
+              return answer && answer.scale && answer.justification?.trim();
+            }).length;
             const total = s.questions.length;
             const progress = total === 0 ? 0 : (done / total) * 100;
             const isSpecialSection = total === 0;

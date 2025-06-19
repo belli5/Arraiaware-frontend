@@ -13,7 +13,7 @@ import EvaluationTabs from '../components/EvaluationTabs/EvaluationTabs';
 import QuestionList from '../components/QuestionList/QuestionList';
 import PeerEvaluationPanel from '../components/PeerEvaluationPanel/PeerEvaluationPanel';
 import ProgressSidebar from '../components/ProgressSideBar/ProgressSideBar';
-import type { Section,Colleague } from '../types/evaluation';
+import type { Section,Colleague,Answer } from '../types/evaluation';
 
 // Dados da aplicação 
 const sections: Section[] = [
@@ -27,7 +27,6 @@ const sections: Section[] = [
       { id: 'q3', type: 'scale', text: '3. Você é organizado em relação ao seu trabalho ?' },
       { id: 'q4', type: 'scale', text: '4. Você acredita que tem uma boa capacidade de aprendizado ?' },
       { id: 'q5', type: 'scale', text: '5. Você é "team player"?' },
-      { id: 'q6', type: 'text',  text: '6. Justifique suas notas' },
     ],
   },
   {
@@ -39,7 +38,6 @@ const sections: Section[] = [
       { id: 'q8', type: 'scale', text: '2. Como você considera seu comprometimento com prazos?' },
       { id: 'q9', type: 'scale', text: '3. Você acredita que consegue tirar leite de pedra ?' },
       { id: 'q10', type: 'scale', text: '4. Você acha que consegue pensar fora da caixa ?' },
-      { id: 'q11',type: 'text', text:  '5.Justifique suas notas'}
     ],
   },
   {
@@ -50,7 +48,6 @@ const sections: Section[] = [
       { id: 'q12', type: 'scale', text: '1. Como você avalia sua interação com seus colegas de trabalho?' },
       { id: 'q13', type: 'scale', text: '2. Como você avalia os resultados do seu grupo?' },
       { id: 'q14', type: 'scale', text: '3. Como você avalia a evolução da empresa?' },
-      { id: 'q15',type: 'text', text:  '4. Justifique suas notas'}
     ],
   },
   {
@@ -77,7 +74,21 @@ const colleagues: Colleague[] = [
 export default function Avaliacao() {
   const navigate = useNavigate();
   const { section } = useParams();
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, Answer>>({});
+
+  const handleAnswerChange = (
+    questionId: string,
+    field: 'scale' | 'justification',
+    value: string
+  ) => {
+    setAnswers(prevAnswers => ({
+      ...prevAnswers,
+      [questionId]: {
+        ...prevAnswers[questionId],
+        [field]: value,
+      },
+    }));
+  };
 
   // Efeito para rolar a página para o topo ao mudar de seção
   useEffect(() => {
@@ -90,13 +101,11 @@ export default function Avaliacao() {
     0
   );
   const currentSectionData = sections[currentSectionIndex];
-  
+
   // Lógica para a barra de progresso geral
   const totalQs = sections.reduce((sum, s) => sum + s.questions.length, 0);
-  const answeredQs = Object.keys(answers).length;
-  
-  const handleScaleChange = (qid: string, val: number) => setAnswers((a) => ({ ...a, [qid]: val.toString() }));
-  const handleTextChange = (qid: string, val: string) => setAnswers((a) => ({ ...a, [qid]: val }));
+  const answeredQs = Object.values(answers).filter((answer) => answer && answer.scale && answer.justification?.trim())
+
   const handlePeerEvaluate = (peerId: string) => navigate(`/avaliarpar/${peerId}`);
 
   return (
@@ -139,8 +148,7 @@ export default function Avaliacao() {
                   <QuestionList 
                     questions={currentSectionData.questions}
                     answers={answers}
-                    onScaleChange={handleScaleChange}
-                    onTextChange={handleTextChange}
+                    onAnswerChange={handleAnswerChange}
                   />
                 )}
                 

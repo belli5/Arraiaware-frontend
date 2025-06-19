@@ -20,3 +20,8 @@ export interface Section {
   done?: number;
   questions: Question[];
 }
+
+export interface Answer {
+    scale?: string;
+    justification?: string;
+}
