@@ -1,24 +1,9 @@
 import { useState } from 'react';
-import {PlusCircle,Search } from 'lucide-react';
+import { PlusCircle, Search } from 'lucide-react';
 import Modal from '../Modal/Modal'; 
 import TrackCriteria from '../TrackCriteria/TrackCriteria';
-import AddCriteriaForm from '../AddCriteriaForm/AddCriteriaForm'; 
-
-type CriterionType = 'Comportamento' | 'Execução' | 'Gestão e Liderança';
-
-interface Criterion {
-  id: number;
-  name: string;
-  description: string;
-  type: CriterionType;
-}
-
-interface Track {
-  id: number;
-  name: string;
-  department: string;
-  criteria: Criterion[];
-}
+import CriteriaForm from '../CriteriaForm/CriteriaForm';
+import type { Criterion, Track } from '../../types/RH_types'; 
 
 const initialTracks: Track[] = [
   {
@@ -37,6 +22,7 @@ const initialTracks: Track[] = [
     criteria: [
       { id: 201, name: 'Atender aos prazos', description: 'Consegue cumprir os prazos acordados para as tarefas.', type: 'Execução' },
       { id: 105, name: 'Ser "team player"', description: 'Colabora efetivamente com os membros da equipe.', type: 'Comportamento' },
+      { id: 203, name: 'Conhecimento em nuvem', description: 'Experiência com arquiteturas e serviços de cloud computing.', type: 'Gestão e Liderança' },
     ],
   },
 ];
@@ -44,9 +30,9 @@ const initialTracks: Track[] = [
 export default function CriteriaPanel() {
   const [viewMode, setViewMode] = useState<'manage' | 'create'>('manage');
   const [tracks, setTracks] = useState<Track[]>(initialTracks);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingCriterion, setEditingCriterion] = useState<{ trackId: number; criterion: Criterion } | null>(null);
   const [trackSearchTerm, setTrackSearchTerm] = useState('');
-
 
   const filteredTracks = tracks.filter(track =>
     track.name.toLowerCase().includes(trackSearchTerm.toLowerCase())
@@ -54,25 +40,48 @@ export default function CriteriaPanel() {
 
   const handleAddCriterion = (trackId: number, newCriterionData: Omit<Criterion, 'id'>) => {
     const newCriterion: Criterion = {
-        id: Date.now(),
-        ...newCriterionData
+      id: Date.now(), 
+      ...newCriterionData
     };
 
-    setTracks(currentTracks => 
-        currentTracks.map(track => 
-            track.id === trackId ? { ...track, criteria: [...track.criteria, newCriterion] } : track
-        )
+    setTracks(currentTracks =>
+      currentTracks.map(track =>
+        track.id === trackId ? { ...track, criteria: [...track.criteria, newCriterion] } : track
+      )
     );
-    
-    setIsModalOpen(false); 
+    closeModals(); 
+  };
+
+  const handleEditCriterion = (trackId: number, updatedCriterion: Criterion) => {
+    setTracks(currentTracks =>
+      currentTracks.map(track => {
+        if (track.id === trackId) {
+          const updatedCriteria = track.criteria.map(c =>
+            c.id === updatedCriterion.id ? updatedCriterion : c
+          );
+          return { ...track, criteria: updatedCriteria };
+        }
+        return track;
+      })
+    );
+    closeModals(); 
   };
 
   const handleDeleteCriterion = (trackId: number, criterionId: number) => {
-    setTracks(currentTracks => 
-        currentTracks.map(track => 
-            track.id === trackId ? { ...track, criteria: track.criteria.filter(c => c.id !== criterionId) } : track
-        )
+    setTracks(currentTracks =>
+      currentTracks.map(track =>
+        track.id === trackId ? { ...track, criteria: track.criteria.filter(c => c.id !== criterionId) } : track
+      )
     );
+  };
+
+  const openEditModal = (trackId: number, criterion: Criterion) => {
+    setEditingCriterion({ trackId, criterion });
+  };
+
+  const closeModals = () => {
+    setIsAddModalOpen(false);
+    setEditingCriterion(null); 
   };
 
   return (
@@ -87,44 +96,45 @@ export default function CriteriaPanel() {
         {/* Abas internas */}
         <div className="mt-6 border-b border-gray-200">
           <div className="flex space-x-4">
-              <button onClick={() => setViewMode('manage')} className={`pb-2 text-sm font-semibold ${viewMode === 'manage' ? 'border-b-2 border-orange-500 text-orange-500' : 'text-gray-500 hover:text-gray-700'}`}>
-                  Gerenciar Trilhas
-              </button>
-              <button onClick={() => setViewMode('create')} className={`pb-2 text-sm font-semibold ${viewMode === 'create' ? 'border-b-2 border-orange-500 text-orange-500' : 'text-gray-500 hover:text-gray-700'}`}>
-                  Criar Nova Trilha
-              </button>
+            <button onClick={() => setViewMode('manage')} className={`pb-2 text-sm font-semibold ${viewMode === 'manage' ? 'border-b-2 border-orange-500 text-orange-500' : 'text-gray-500 hover:text-gray-700'}`}>
+              Gerenciar Trilhas
+            </button>
+            <button onClick={() => setViewMode('create')} className={`pb-2 text-sm font-semibold ${viewMode === 'create' ? 'border-b-2 border-orange-500 text-orange-500' : 'text-gray-500 hover:text-gray-700'}`}>
+              Criar Nova Trilha
+            </button>
           </div>
         </div>
-        
+
         {/* Conteúdo da Aba */}
         <div className="mt-6">
           {viewMode === 'manage' && (
             <div className="space-y-6">
               <div className="relative w-full md:w-1/2">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-                <input 
-                    type="text"
-                    placeholder="Buscar por trilha..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    value={trackSearchTerm}
-                    onChange={(e) => setTrackSearchTerm(e.target.value)}
+                <input
+                  type="text"
+                  placeholder="Buscar por trilha..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  value={trackSearchTerm}
+                  onChange={(e) => setTrackSearchTerm(e.target.value)}
                 />
               </div>
               {filteredTracks.map(track => (
-                <TrackCriteria 
-                  key={track.id} 
-                  track={track} 
-                  onDeleteCriterion={handleDeleteCriterion} 
+                <TrackCriteria
+                  key={track.id}
+                  track={track}
+                  onDeleteCriterion={handleDeleteCriterion}
+                  onEditCriterion={(criterion) => openEditModal(track.id, criterion)}
                 />
               ))}
               {filteredTracks.length === 0 && (
                 <p className="text-center text-gray-500 py-4">Nenhuma trilha encontrada.</p>
               )}
 
-              {/* Botão para abrir o modal */}
+              {/* Botão para abrir o modal de ADIÇÃO */}
               <div className="mt-8 pt-6 border-t border-gray-300 flex justify-center">
                 <button
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={() => setIsAddModalOpen(true)}
                   className="inline-flex items-center gap-3 px-6 py-3 border border-transparent text-base font-bold rounded-lg shadow-lg text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-transform hover:scale-105"
                 >
                   <PlusCircle size={20} />
@@ -133,19 +143,27 @@ export default function CriteriaPanel() {
               </div>
             </div>
           )}
-
           {viewMode === 'create' && (
             <div><p>Formulário para criar nova trilha (Em breve)</p></div>
           )}
         </div>
       </div>
-
-      {/* O Modal agora usa o componente de formulário dedicado */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Adicionar Novo Critério">
-        <AddCriteriaForm 
+      <Modal
+        isOpen={isAddModalOpen || !!editingCriterion}
+        onClose={closeModals}
+        title={editingCriterion ? 'Editar Critério' : 'Adicionar Novo Critério'}
+      >
+        <CriteriaForm
           tracks={tracks}
-          onCancel={() => setIsModalOpen(false)}
-          onSubmit={handleAddCriterion}
+          onCancel={closeModals}
+          onSubmit={(trackId, data) => {
+            if (editingCriterion) {
+              handleEditCriterion(trackId, data as Criterion);
+            } else {
+              handleAddCriterion(trackId, data as Omit<Criterion, 'id'>);
+            }
+          }}
+          initialData={editingCriterion}
         />
       </Modal>
     </>
