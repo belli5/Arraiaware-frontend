@@ -16,6 +16,7 @@
       {
         "link-name": "off"
       }
-    ]
+    ],
+    "typescript-config/strict": "off"
   }
 }

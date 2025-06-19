@@ -1,18 +1,18 @@
 import { FaRegFileAlt, FaChartLine, FaBullseye, FaClock } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header/Header_geral';
 import Footer from '../components/Footer/Footer';
 
 export default function Home() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-orange-50 flex flex-col">
-      {/* Header fixa no topo */}
       <div className="fixed top-0 left-0 w-full z-50">
         <Header />
       </div>
 
-      {/* Conteúdo principal */}
       <main className="flex-1 pt-24 px-6 lg:px-10">
-        {/* Saudação */}
         <section className="mb-10 text-center">
           <h1 className="text-4xl font-bold flex items-center gap-2 mb-2">
             Olá, Maria! <span className="wave">👋</span>
@@ -23,7 +23,6 @@ export default function Home() {
           </p>
         </section>
 
-        {/* Cards principais */}
         <section className="flex flex-wrap gap-6 justify-center pb-6">
           <Card
             title="Avaliações Completas"
@@ -51,9 +50,7 @@ export default function Home() {
           />
         </section>
 
-        {/* Avaliação em Andamento + Visão Geral */}
         <section className="flex flex-row gap-4 justify-center mb-6">
-          {/* Avaliação em Andamento */}
           <div className="bg-white rounded-xl shadow-md p-6 w-[65%]">
             <div className="flex items-center mb-4 gap-2">
               <FaRegFileAlt className="text-orange-500 text-2xl" />
@@ -64,23 +61,22 @@ export default function Home() {
             </p>
             <p className="text-sm font-medium mb-1">Progresso</p>
             <div className="w-full bg-gray-200 h-2 rounded-full mb-3">
-              <div
-                className="bg-orange-500 h-2 rounded-full"
-                style={{ width: '60%' }}
-              />
+              <div className="bg-orange-500 h-2 rounded-full" style={{ width: '60%' }} />
             </div>
             <div className="flex gap-2 mb-4 flex-wrap">
-              <Badge text="Competências" checked />
-              <Badge text="Objetivos" checked />
-              <Badge text="Desenvolvimento" />
-              <Badge text="Feedback" />
+              <Badge text="Competências" checked onClick={() => navigate('/avaliacao/tech')} />
+              <Badge text="Objetivos" checked onClick={() => navigate('/avaliacao/goals')} />
+              <Badge text="Desenvolvimento" onClick={() => navigate('/avaliacao/growth')} />
+              <Badge text="Feedback" onClick={() => navigate('/avaliacao/collab')} />
             </div>
-            <button className="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition">
+            <button
+              onClick={() => navigate('/avaliacao/tech')}
+              className="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition"
+            >
               Continuar Avaliação
             </button>
           </div>
 
-          {/* Visão Geral */}
           <div className="bg-white rounded-xl shadow-md p-6 w-[35%]">
             <h2 className="text-xl font-semibold mb-4 text-center">
               Visão Geral
@@ -92,9 +88,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Atividade Recente + Ações Rápidas */}
         <section className="flex flex-row gap-4 justify-center mb-10">
-          {/* Atividade Recente */}
           <div className="bg-white rounded-xl shadow-md p-6 w-[65%]">
             <div className="flex items-center mb-3 gap-2">
               <FaChartLine className="text-orange-500 text-xl" />
@@ -116,19 +110,27 @@ export default function Home() {
             </ul>
           </div>
 
-          {/* Ações Rápidas */}
           <div className="bg-white rounded-xl shadow-md p-6 w-[35%]">
             <h3 className="text-lg font-semibold mb-4">Ações Rápidas</h3>
             <div className="space-y-2">
-              <div className="flex items-center px-4 py-2 border border-gray-200 rounded-md hover:bg-gray-50 transition">
+              <div
+                className="flex items-center px-4 py-2 border border-gray-200 rounded-md hover:bg-gray-50 transition cursor-pointer"
+                onClick={() => navigate('/avaliacao/tech')}
+              >
                 <FaRegFileAlt className="text-gray-600" />
                 <span className="ml-3 text-gray-800">Nova Avaliação</span>
               </div>
-              <div className="flex items-center px-4 py-2 border border-gray-200 rounded-md hover:bg-gray-50 transition">
+              <div
+                className="flex items-center px-4 py-2 border border-gray-200 rounded-md hover:bg-gray-50 transition cursor-pointer"
+                onClick={() => navigate('/avaliacao/goals')}
+              >
                 <FaChartLine className="text-gray-600" />
                 <span className="ml-3 text-gray-800">Ver Resultados</span>
               </div>
-              <div className="flex items-center px-4 py-2 border border-gray-200 rounded-md hover:bg-gray-50 transition">
+              <div
+                className="flex items-center px-4 py-2 border border-gray-200 rounded-md hover:bg-gray-50 transition cursor-pointer"
+                onClick={() => navigate('/avaliacao/collab')}
+              >
                 <FaBullseye className="text-gray-600" />
                 <span className="ml-3 text-gray-800">Definir Metas</span>
               </div>
@@ -137,7 +139,6 @@ export default function Home() {
         </section>
       </main>
 
-      {/* Rodapé */}
       <Footer />
     </div>
   );
@@ -168,11 +169,20 @@ const Card = ({
   </div>
 );
 
-const Badge = ({ text, checked }: { text: string; checked?: boolean }) => (
+const Badge = ({
+  text,
+  checked,
+  onClick,
+}: {
+  text: string;
+  checked?: boolean;
+  onClick?: () => void;
+}) => (
   <div
-    className={`px-3 py-1 rounded-full text-sm ${
+    onClick={onClick}
+    className={`px-3 py-1 rounded-full text-sm cursor-pointer ${
       checked ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-    }`}
+    } hover:brightness-95 transition`}
   >
     {text} {checked && '✓'}
   </div>
