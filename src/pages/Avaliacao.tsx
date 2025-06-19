@@ -104,7 +104,9 @@ export default function Avaliacao() {
 
   // Lógica para a barra de progresso geral
   const totalQs = sections.reduce((sum, s) => sum + s.questions.length, 0);
-  const answeredQs = Object.values(answers).filter((answer) => answer && answer.scale && answer.justification?.trim())
+  const answeredQs = Object.values(answers).filter(
+    (answer) => answer && answer.scale && answer.justification?.trim()
+  ).length;
 
   const handlePeerEvaluate = (peerId: string) => navigate(`/avaliarpar/${peerId}`);
 
