@@ -22,6 +22,7 @@ export interface Section {
 }
 
 export interface Answer {
+    trim(): unknown;
     scale?: string;
     justification?: string;
 }
