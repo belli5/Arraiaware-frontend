@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { PlusCircle, Search } from 'lucide-react';
-import Modal from '../Modal/Modal'; 
+import Modal from '../Modal/Modal';
 import TrackCriteria from '../TrackCriteria/TrackCriteria';
 import CriteriaForm from '../CriteriaForm/CriteriaForm';
-import type { Criterion, Track } from '../../types/RH_types'; 
+import type { Criterion, Track } from '../../types/RH_types';
 
 const initialTracks: Track[] = [
   {
@@ -40,7 +40,7 @@ export default function CriteriaPanel() {
 
   const handleAddCriterion = (trackId: number, newCriterionData: Omit<Criterion, 'id'>) => {
     const newCriterion: Criterion = {
-      id: Date.now(), 
+      id: Date.now(),
       ...newCriterionData
     };
 
@@ -49,7 +49,7 @@ export default function CriteriaPanel() {
         track.id === trackId ? { ...track, criteria: [...track.criteria, newCriterion] } : track
       )
     );
-    closeModals(); 
+    closeModals();
   };
 
   const handleEditCriterion = (trackId: number, updatedCriterion: Criterion) => {
@@ -64,7 +64,7 @@ export default function CriteriaPanel() {
         return track;
       })
     );
-    closeModals(); 
+    closeModals();
   };
 
   const handleDeleteCriterion = (trackId: number, criterionId: number) => {
@@ -81,7 +81,7 @@ export default function CriteriaPanel() {
 
   const closeModals = () => {
     setIsAddModalOpen(false);
-    setEditingCriterion(null); 
+    setEditingCriterion(null);
   };
 
   return (
@@ -93,8 +93,9 @@ export default function CriteriaPanel() {
           <p className="text-base text-gray-500 mt-1">Configure critérios personalizados para cada trilha de desenvolvimento</p>
         </div>
 
-        {/* Abas internas */}
-        <div className="mt-6 border-b border-gray-200">
+        {/* Abas internas e Botão de Ação */}
+        <div className="mt-6 border-b border-gray-200 flex justify-between items-center">
+          {/* Filho 1: Agrupamento das abas */}
           <div className="flex space-x-4">
             <button onClick={() => setViewMode('manage')} className={`pb-2 text-sm font-semibold ${viewMode === 'manage' ? 'border-b-2 border-orange-500 text-orange-500' : 'text-gray-500 hover:text-gray-700'}`}>
               Gerenciar Trilhas
@@ -103,6 +104,17 @@ export default function CriteriaPanel() {
               Criar Nova Trilha
             </button>
           </div>
+
+          {/* Filho 2: Botão de ação */}
+          {viewMode === 'manage' && (
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-semibold rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+            >
+              <PlusCircle size={18} />
+              Criar Novo Critério
+            </button>
+          )}
         </div>
 
         {/* Conteúdo da Aba */}
@@ -130,17 +142,6 @@ export default function CriteriaPanel() {
               {filteredTracks.length === 0 && (
                 <p className="text-center text-gray-500 py-4">Nenhuma trilha encontrada.</p>
               )}
-
-              {/* Botão para abrir o modal de ADIÇÃO */}
-              <div className="mt-8 pt-6 border-t border-gray-300 flex justify-center">
-                <button
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="inline-flex items-center gap-3 px-6 py-3 border border-transparent text-base font-bold rounded-lg shadow-lg text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-transform hover:scale-105"
-                >
-                  <PlusCircle size={20} />
-                  Criar Novo Critério
-                </button>
-              </div>
             </div>
           )}
           {viewMode === 'create' && (
@@ -148,6 +149,7 @@ export default function CriteriaPanel() {
           )}
         </div>
       </div>
+      
       <Modal
         isOpen={isAddModalOpen || !!editingCriterion}
         onClose={closeModals}
