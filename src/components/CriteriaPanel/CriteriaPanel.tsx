@@ -109,10 +109,10 @@ export default function CriteriaPanel() {
           {viewMode === 'manage' && (
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-semibold rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              className="mb-2 inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-semibold rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
-              <PlusCircle size={18} />
               Criar Novo Critério
+              <PlusCircle size={18} />
             </button>
           )}
         </div>
