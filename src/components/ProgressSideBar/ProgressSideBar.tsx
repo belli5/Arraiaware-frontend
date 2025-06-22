@@ -1,5 +1,5 @@
 import { FaRegLightbulb } from 'react-icons/fa';
-import type { Answer, Section, Colleague } from '../../types/evaluation';
+import type { Answer, Section, Colleague, Question } from '../../types/evaluation';
 
 interface ProgressSidebarProps {
   sections: Section[];
@@ -7,6 +7,7 @@ interface ProgressSidebarProps {
   peerAnswers: Record<string, Record<string, Answer>>;
   leaderAnswers: Record<string, Record<string, Answer>>;
   colleagues: Colleague[];
+  leaders: Colleague[];
 }
 
 export default function ProgressSidebar({
@@ -15,26 +16,20 @@ export default function ProgressSidebar({
   peerAnswers,
   leaderAnswers,
   colleagues,
+  leaders
 }: ProgressSidebarProps) {
-  const peerSection = sections.find(s => s.key === 'peer');
-  const leaderSection = sections.find(s => s.key === 'leader');
-  const totalPeers = colleagues.length;
 
-  const completedPeers = colleagues.filter(col => {
-    const ans = peerAnswers[col.id] || {};
-    const doneCount = peerSection?.questions.filter(q =>
-      ans[q.id]?.scale && ans[q.id]?.justification?.trim()
-    ).length || 0;
-    return doneCount === (peerSection?.questions.length || 0);
-  }).length;
-
-  const completedLeaders = colleagues.filter(col => {
-    const ans = leaderAnswers[col.id] || {};
-    const doneCount = leaderSection?.questions.filter(q =>
-      ans[q.id]?.scale && ans[q.id]?.justification?.trim()
-    ).length || 0;
-    return doneCount === (leaderSection?.questions.length || 0);
-  }).length;
+  const isPersonEvaluationComplete = (
+    personId: string, 
+    questions: Question[], 
+    answersMap: Record<string, Record<string, Answer>>
+  ) => {
+    const personAnswers = answersMap[personId] || {};
+    const answeredCount = questions.filter(q => 
+      personAnswers[q.id]?.scale && personAnswers[q.id]?.justification?.trim() !== ''
+    ).length;
+    return answeredCount === questions.length;
+  };
 
   return (
     <aside className="w-1/3 space-y-6">
@@ -58,59 +53,24 @@ export default function ProgressSidebar({
         </h3>
         <div className="space-y-4">
           {sections.map(s => {
+            let done = 0;
+            let total = 0;
             if (s.key === 'peer') {
-              const pct = totalPeers === 0 ? 0 : (completedPeers / totalPeers) * 100;
-              return (
-                <div key={s.key}>
-                  <div className="flex justify-between mb-1 text-sm font-medium">
-                    <div className="flex items-center gap-2 text-gray-700">
-                      <span className="text-orange-500">{s.icon}</span>
-                      <span>{s.title}</span>
-                    </div>
-                    <span className="text-gray-500">
-                      {completedPeers}/{totalPeers}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="h-2 bg-orange-500 rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
+              total = colleagues.length;
+              done = colleagues.filter(p => isPersonEvaluationComplete(p.id, s.questions, peerAnswers)).length;
+            } else if (s.key === 'leader') {
+              total = leaders.length;
+              done = leaders.filter(l => isPersonEvaluationComplete(l.id, s.questions, leaderAnswers)).length;
+            } else {
+              total = s.questions.length;
+              done = s.questions.filter(q => {
+                const ans = answers[q.id];
+                return ans && ans.scale && ans.justification?.trim() !== '';
+              }).length;
             }
-
-            if (s.key === 'leader') {
-              const pct = totalPeers === 0 ? 0 : (completedLeaders / totalPeers) * 100;
-              return (
-                <div key={s.key}>
-                  <div className="flex justify-between mb-1 text-sm font-medium">
-                    <div className="flex items-center gap-2 text-gray-700">
-                      <span className="text-orange-500">{s.icon}</span>
-                      <span>{s.title}</span>
-                    </div>
-                    <span className="text-gray-500">
-                      {completedLeaders}/{totalPeers}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="h-2 bg-orange-500 rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            }
-
-            const done = s.questions.filter(q => {
-              const ans = answers[q.id];
-              return ans && ans.scale && ans.justification?.trim();
-            }).length;
-            const total = s.questions.length;
-            const pct = total === 0 ? 0 : (done / total) * 100;
-            const display = total === 0 ? 'N/A' : `${done}/${total}`;
+            
+            const progress = total > 0 ? (done / total) * 100 : 0;
+            const display = total > 0 ? `${done}/${total}` : 'N/A';
 
             return (
               <div key={s.key}>
@@ -121,10 +81,10 @@ export default function ProgressSidebar({
                   </div>
                   <span className="text-gray-500">{display}</span>
                 </div>
-                <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                <div className="w-full bg-gray-200 h-2 rounded-full">
                   <div
                     className="h-2 bg-orange-500 rounded-full transition-all duration-500"
-                    style={{ width: `${pct}%` }}
+                    style={{ width: `${progress}%` }}
                   />
                 </div>
               </div>

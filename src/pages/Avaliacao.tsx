@@ -320,7 +320,8 @@ export default function Avaliacao() {
               answers={answers}
               peerAnswers={peerAnswers}
               leaderAnswers={leaderAnswers}
-              colleagues={[...peerColleagues, ...leaderColleagues]}
+              colleagues={peerColleagues}
+              leaders={leaderColleagues}
             />
           </div>
         </div>
