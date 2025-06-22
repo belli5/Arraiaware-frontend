@@ -137,22 +137,48 @@ export default function Avaliacao() {
     setAvaliandoId(id);
     window.scrollTo(0, 0);
   };
+  
+  const isAnswerComplete = (answer?: Answer) => 
+    !!answer && !!answer.scale && !!answer.justification && answer.justification.trim() !== '';
 
   const getSectionProgress = (answersMap: Record<string, Record<string, Answer>>, questions: Question[]) => (id: string) => {
-    const ans = answersMap[id] || {};
-    const done = questions.filter(q => ans[q.id]?.scale && ans[q.id]?.justification?.trim()).length;
-    return Math.round((done / questions.length) * 100);
+    const personAnswers = answersMap[id] || {};
+    const doneCount = questions.filter(q => isAnswerComplete(personAnswers[q.id])).length;
+    if (questions.length === 0) return 0;
+    return Math.round((doneCount / questions.length) * 100);
   };
 
-  const totalQs = currentSectionData.questions.length;
-  const answeredQs = currentSectionData.questions.filter(q => {
-    const src = currentSectionData.key === 'peer' && avaliandoId
-      ? peerAnswers[avaliandoId]!
-      : currentSectionData.key === 'leader' && avaliandoId
-      ? leaderAnswers[avaliandoId]!
-      : answers;
-    return src?.[q.id]?.scale && src?.[q.id]?.justification?.trim();
-  }).length;
+  let totalProgressItems = 0;
+  let completedProgressItems = 0;
+  const is360Section = currentSectionData.key === 'peer' || currentSectionData.key === 'leader';
+
+  if (is360Section) {
+    const colleaguesList = currentSectionData.key === 'peer' ? peerColleagues : leaderColleagues;
+    const answersSource = currentSectionData.key === 'peer' ? peerAnswers : leaderAnswers;
+
+    if (avaliandoId) {
+      //  UMA pessoa
+      totalProgressItems = currentSectionData.questions.length;
+      const personAnswers = answersSource[avaliandoId] || {};
+      completedProgressItems = currentSectionData.questions.filter(q => isAnswerComplete(personAnswers[q.id])).length;
+    } else {
+      //LISTA de pessoas
+      totalProgressItems = colleaguesList.length;
+      completedProgressItems = colleaguesList.filter(person => {
+        const personAnswers = answersSource[person.id] || {};
+        const answeredCount = currentSectionData.questions.filter(q => isAnswerComplete(personAnswers[q.id])).length;
+        return answeredCount === currentSectionData.questions.length;
+      }).length;
+    }
+  } else {
+    // AUTOAVALIAÇÃO
+    totalProgressItems = currentSectionData.questions.length;
+    completedProgressItems = currentSectionData.questions.filter(q => isAnswerComplete(answers[q.id])).length;
+  }
+
+  const overallProgressPercentage = totalProgressItems > 0 
+    ? (completedProgressItems / totalProgressItems) * 100 
+    : 0;
 
   const currentColleagues = currentSectionData.key === 'peer' ? peerColleagues : currentSectionData.key === 'leader' ? leaderColleagues : [];
   const colegaSelecionado = currentColleagues.find(c => c.id === avaliandoId);
@@ -169,15 +195,19 @@ export default function Avaliacao() {
             <div className="relative bg-gray-200 h-2 rounded-full">
               <div
                 className="absolute h-2 bg-orange-500 transition-all duration-500"
-                style={{ width: `${totalQs ? (answeredQs / totalQs) * 100 : 0}%` }}
+                style={{ width: `${overallProgressPercentage}%` }}
               />
             </div>
           </header>
 
           <EvaluationTabs
             sections={sections}
-            answers={answers}
             currentSectionIndex={currentSectionIndex}
+            answers={answers}
+            peerAnswers={peerAnswers}
+            leaderAnswers={leaderAnswers}
+            peerColleagues={peerColleagues}
+            leaderColleagues={leaderColleagues}
           />
 
           <div className="flex gap-6">
