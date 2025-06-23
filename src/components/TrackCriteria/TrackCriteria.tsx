@@ -1,5 +1,5 @@
 import { Trash2, Pencil } from 'lucide-react'; 
-import type { Criterion, Track, CriterionType } from '../../types/RH_types';
+import type { Criterion, Track, CriterionType } from '../../types/RH';
 
 const TypeBadge = ({ type }: { type: CriterionType }) => {
   const typeStyles = {

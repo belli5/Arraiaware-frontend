@@ -1,6 +1,6 @@
 import { useState,useEffect } from 'react';
 import { Check } from 'lucide-react';
-import type {Criterion,Track, CriterionType} from '../../types/RH_types';
+import type {Criterion,Track, CriterionType} from '../../types/RH';
 
 interface NewCriterionData {
   name: string;

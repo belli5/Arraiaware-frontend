@@ -3,7 +3,7 @@ import { PlusCircle, Search } from 'lucide-react';
 import Modal from '../Modal/Modal';
 import TrackCriteria from '../TrackCriteria/TrackCriteria';
 import CriteriaForm from '../CriteriaForm/CriteriaForm';
-import type { Criterion, Track } from '../../types/RH_types';
+import type { Criterion, Track } from '../../types/RH';
 
 const initialTracks: Track[] = [
   {
