@@ -13,3 +13,5 @@ export interface Track {
   department: string;
   criteria: Criterion[];
 }
+
+export type RHTabId = 'status' | 'criterios' | 'historico';

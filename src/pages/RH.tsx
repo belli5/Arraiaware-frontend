@@ -1,25 +1,33 @@
 import Header from '../components/Header/Header_RH';
 import StatCard from '../components/StatCard/StatCard'; 
-import { Users, CheckCircle2, Clock, AlertTriangle } from 'lucide-react'; 
+import { Users, CheckCircle2, Clock, AlertTriangle,ClipboardList, SlidersHorizontal, Import } from 'lucide-react'; 
 import OverallProgress from '../components/OverallProgressRH/OverallProgress';
 import { useState,useRef } from 'react';
+import type { Tab } from '../types/tabs';
 import Tabs from '../components/Tabs/Tabs';
-import type {Tab} from '../components/Tabs/Tabs';
 import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
 import CriteriaPanel from '../components/CriteriaPanel/CriteriaPanel'; 
 import HistoryPanel from '../components/HistoryPanel/HistoryPanel'; 
 import Footer from '../components/Footer/Footer';
+import type { RHTabId } from '../types/RH';
+
+const rhTabOptions: Tab[] = [
+  { id: 'status', label: 'Status das Avaliações', icon: <ClipboardList size={18} /> },
+  { id: 'criterios', label: 'Critérios por Trilha', icon: <SlidersHorizontal size={18} /> },
+  { id: 'historico', label: 'Importar Históricos', icon: <Import size={18} /> },
+];
 
 export default function RH() {
-  const [activeTab, setActiveTab] = useState<Tab>('status');
+  const [activeTab, setActiveTab] = useState<RHTabId>('status');
+
   const contentPanelRef = useRef<HTMLDivElement>(null);
-  const handleTabChange = (tab: Tab) => {
-    setActiveTab(tab);
+  const handleTabClick = (tabId: string) => {
+    setActiveTab(tabId as RHTabId);
 
     setTimeout(() => {
       if (contentPanelRef.current) {
         const elementTop = contentPanelRef.current.getBoundingClientRect().top + window.scrollY;
-        const offset = 110; 
+        const offset = 150; 
 
         window.scrollTo({
           top: elementTop - offset,
@@ -80,9 +88,10 @@ export default function RH() {
             <OverallProgress />  
 
             <Tabs 
+              tabs={rhTabOptions}
               activeTab={activeTab} 
-              setActiveTab={handleTabChange}
-              className="mt-8" 
+              onTabClick={handleTabClick}
+              className="mt-4 mb-4" 
             />
             <div ref={contentPanelRef} className="mt-[-1px]">
             {activeTab === 'status' && <EvaluationsPanel />}

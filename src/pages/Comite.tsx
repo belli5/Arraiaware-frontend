@@ -3,9 +3,17 @@ import Header from '../components/Header/Header_comite';
 import Footer from '../components/Footer/Footer';
 import CommitteeStatsGrid from '../components/CommitteeStatsGrid/CommitteeStatsGrid';
 import DataExportPanel from '../components/DataExportPanel/DataExportPanel'
-import CommitteeTabs from '../components/CommitteeTabs/CommitteeTabs'; 
 import CommitteeInsightsPanel from '../components/CommitteeInsightsPanel/CommitteeInsightsPanel';
 import type { CommitteeTab, ColaboradorAvaliacao } from '../types/committee';
+import Tabs from '../components/Tabs/Tabs';
+import type { Tab } from '../types/tabs';
+import { DownloadCloud, BarChart2, CheckCircle2 } from 'lucide-react';
+
+const committeeTabOptions: Tab[] = [
+  { id: 'equalizacao', label: 'Equalização por Colaborador', icon: <CheckCircle2 size={18} /> },
+  { id: 'insights', label: 'Insights Comparativos', icon: <BarChart2 size={18} /> },
+  { id: 'exportacao', label: 'Exportar Dados', icon: <DownloadCloud size={18} /> },
+];
 
 const mockColaboradores: ColaboradorAvaliacao[] = [
   { id: 'emp001', nome: 'Ana Costa', cargo: 'Dev Frontend Jr.', status: 'Completo', autoavaliacaoMedia: 8.5, paresMedia: 7.8, lideresMedia: 8.2 },
@@ -92,8 +100,8 @@ export default function Comite() {
   const [activeTab, setActiveTab] = useState<CommitteeTab>('equalizacao');
   const contentPanelRef = useRef<HTMLDivElement>(null);
 
-  const handleTabChange = (tab: CommitteeTab) => {
-    setActiveTab(tab);
+  const handleTabClick = (tabId: string) => {
+    setActiveTab(tabId as CommitteeTab);
     setTimeout(() => {
       if (contentPanelRef.current) {
         contentPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -110,10 +118,11 @@ export default function Comite() {
           <CommitteeStatsGrid /> 
 
           {/* Abas de Navegação do Comitê */}
-          <CommitteeTabs
+          <Tabs
+            tabs={committeeTabOptions}
             activeTab={activeTab}
-            setActiveTab={handleTabChange}
-            className="mb-8"
+            onTabClick={handleTabClick}
+            className="mb-4"
           />
 
           {/* Conteúdo das Abas */}

@@ -1,33 +1,34 @@
-export type Tab = 'status' | 'criterios' | 'historico';
+import type { Tab } from '../../types/tabs';
 
 interface TabsProps {
-  activeTab: Tab;
-  setActiveTab: (tab: Tab) => void;
+  tabs: Tab[];
+  activeTab: string;
+  onTabClick: (id: string) => void;
   className?: string;
 }
 
-const tabOptions = [
-  { id: 'status', label: 'Status das Avaliações' },
-  { id: 'criterios', label: 'Critérios por Trilha' },
-  { id: 'historico', label: 'Importar Históricos' },
-];
-
-export default function Tabs({ activeTab, setActiveTab, className='' }: TabsProps) {
+export default function Tabs({ 
+  tabs, 
+  activeTab, 
+  onTabClick, 
+  className = '' 
+}: TabsProps) {
   return (
-    <nav className={`flex space-x-4 ${className}`}>
-      {tabOptions.map((tab) => (
+    <nav className={`flex border-b border-gray-200 ${className}`}>
+      {tabs.map((tab) => (
         <button
           key={tab.id}
-          onClick={() => setActiveTab(tab.id as Tab)}
+          onClick={() => onTabClick(tab.id)}
           className={`
-            px-5 py-2.5 flex-1 text-base rounded-t-lg text-sent font-medium transition-colors
-            ${activeTab === tab.id
-              ? 'bg-white text-orange-500 shadow-sm' 
-              : 'bg-gray-100 text-gray-500 hover:text-gray-700' 
+            py-3 px-6 text-sm font-medium flex items-center justify-center gap-2 transition-colors duration-200 border-b-2
+            ${activeTab === tab.id 
+              ? 'border-orange-500 text-orange-600' // Estilo da aba ATIVA
+              : 'text-gray-500 hover:text-gray-700 border-b-transparent hover:border-gray-300' // Estilo da aba INATIVA
             }
           `}
         >
-          {tab.label}
+          {tab.icon && tab.icon}
+          <span>{tab.label}</span>
         </button>
       ))}
     </nav>
