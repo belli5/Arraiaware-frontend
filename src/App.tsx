@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Avaliacao from './pages/Avaliacao'
 import RH from './pages/RH';
 import Comite from './pages/Comite';
+import Gestor from './pages/Gestor'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/avaliacao/:section" element={<Avaliacao />} />
         <Route path="/RH" element= {<RH />} />
         <Route path="/Comite" element={<Comite />} />
+        <Route path="/Gestor" element={<Gestor />} />
       </Routes>
     </BrowserRouter>
   );

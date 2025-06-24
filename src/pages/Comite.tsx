@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import Header from '../components/Header/Header_geral';
+import Header from '../components/Header/Header_comite';
 import Footer from '../components/Footer/Footer';
 import CommitteeStatsGrid from '../components/CommitteeStatsGrid/CommitteeStatsGrid';
 import DataExportPanel from '../components/DataExportPanel/DataExportPanel'
@@ -104,7 +104,7 @@ export default function Comite() {
   return (
     <div className="min-h-screen bg-orange-50 flex flex-col">
       <Header />
-      <main className="flex-1 pt-24 px-8 lg:px-20">
+      <main className="flex-1 pt-24 px-6 lg:px-10">
         <div className="max-w-[1600px] mx-auto px-6 lg:px-10">
           {/* Cards de Estatísticas para o Comitê */}
           <CommitteeStatsGrid /> 

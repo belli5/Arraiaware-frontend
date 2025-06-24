@@ -1,9 +1,8 @@
-import Header from '../components/Header/Header_RH';
+import Header from '../components/Header/Header_Gestor';
 import StatCard from '../components/StatCard/StatCard'; 
 import { Users, CheckCircle2, Clock, AlertTriangle } from 'lucide-react'; 
-import OverallProgress from '../components/OverallProgressRH/OverallProgress';
+import OverallProgress from '../components/OverallProgressRH/OverallProgress_Gestor';
 import { useState,useRef } from 'react';
-import Tabs from '../components/Tabs/Tabs';
 import type {Tab} from '../components/Tabs/Tabs';
 import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
 import CriteriaPanel from '../components/CriteriaPanel/CriteriaPanel'; 
@@ -26,17 +25,25 @@ export default function RH() {
     <div className="min-h-screen bg-orange-50">
       <Header />
       <main className="pt-24">
+        <section className="mb-10 pl-12 text-left">
+            <h1 className="text-4xl font-bold flex items-center gap-2 mb-2">
+                Acompanhamento de Liderados <span></span>
+            </h1>
+            <p className="text-gray-600 flex items-center gap-2">
+                Monitore o progresso de preenchimento da sua equipe
+            </p>
+        </section>
         <div className='max-w-[1600px] mx-auto px-6 lg:px-10'>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard 
-                title="Total de Avaliações"
-                value="150"
+                title="Total de Liderados"
+                value="5"
                 subtitle="Colaboradores ativos"
                 Icon={Users}
             />
             <StatCard 
-                title="Concluídas"
-                value="89"
+                title="Concluídos"
+                value="2"
                 subtitle="59% do total"
                 Icon={CheckCircle2}
                 borderColor="border-green-500"
@@ -45,7 +52,7 @@ export default function RH() {
             />
             <StatCard 
                 title="Pendentes"
-                value="61"
+                value="2"
                 subtitle="Aguardando conclusão"
                 Icon={Clock}
                 borderColor="border-amber-500"
@@ -54,7 +61,7 @@ export default function RH() {
             />
             <StatCard 
                 title="Em Atraso"
-                value="12"
+                value="1"
                 subtitle="Requer atenção"
                 Icon={AlertTriangle}
                 borderColor="border-red-500"
@@ -64,12 +71,8 @@ export default function RH() {
             </div>
             <OverallProgress />  
 
-            <Tabs 
-              activeTab={activeTab} 
-              setActiveTab={handleTabChange}
-              className="mt-8" 
-            />
-            <div ref={contentPanelRef} className="mt-[-1px]">
+            
+            <div ref={contentPanelRef}  className="mt-8">
             {activeTab === 'status' && <EvaluationsPanel />}
             {activeTab === 'criterios' && <CriteriaPanel />}
             {activeTab === 'historico' && <HistoryPanel />}
