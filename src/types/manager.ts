@@ -1,0 +1,1 @@
+export type managerTabId = 'status' | 'criterios' | 'historico';

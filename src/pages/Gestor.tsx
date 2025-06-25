@@ -1,19 +1,27 @@
 import Header from '../components/Header/Header_Gestor';
 import StatCard from '../components/StatCard/StatCard'; 
-import { Users, CheckCircle2, Clock, AlertTriangle } from 'lucide-react'; 
+import { Users, CheckCircle2, Clock, AlertTriangle,BarChart2,DownloadCloud } from 'lucide-react'; 
 import OverallProgress from '../components/OverallProgressRH/OverallProgress_Gestor';
 import { useState,useRef } from 'react';
-import type {Tab} from '../components/Tabs/Tabs';
+import Tabs from '../components/Tabs/Tabs';
+import type { Tab } from '../types/tabs';
+import type { managerTabId } from '../types/manager';
 import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
 import CriteriaPanel from '../components/CriteriaPanel/CriteriaPanel'; 
 import HistoryPanel from '../components/HistoryPanel/HistoryPanel'; 
 import Footer from '../components/Footer/Footer';
 
+const managerTabOptions: Tab[] = [
+  { id: 'status', label: 'Status dos liderados', icon: <CheckCircle2 size={18} /> },
+  { id: 'insights', label: 'Insights Comparativos', icon: <BarChart2 size={18} /> },               
+  { id: 'exportacao', label: 'Exportar Dados', icon: <DownloadCloud size={18} /> }, 
+];
+
 export default function RH() {
-  const [activeTab, setActiveTab] = useState<Tab>('status');
+  const [activeTab, setActiveTab] = useState<managerTabId>('status');
   const contentPanelRef = useRef<HTMLDivElement>(null);
-  const handleTabChange = (tab: Tab) => {
-      setActiveTab(tab);
+  const handleTabClick = (tabId: string) => {
+      setActiveTab(tabId as managerTabId);
       setTimeout(() => {
         if (contentPanelRef.current) {
           contentPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -71,7 +79,13 @@ export default function RH() {
             </div>
             <OverallProgress />  
 
-            
+            <Tabs 
+              tabs={managerTabOptions}
+              activeTab={activeTab}          
+              onTabClick={handleTabClick}
+              className="mt-4 mb-4" 
+            />
+          
             <div ref={contentPanelRef}  className="mt-8">
             {activeTab === 'status' && <EvaluationsPanel />}
             {activeTab === 'criterios' && <CriteriaPanel />}
