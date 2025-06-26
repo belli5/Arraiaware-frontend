@@ -1,14 +1,15 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useState } from 'react';
+import { FaChartLine, FaEye, FaEyeSlash, FaRegSmile, FaTrophy } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import HeaderLogin from '../components/Header/Header_login';
-import { FaRegSmile, FaChartLine, FaTrophy } from 'react-icons/fa';
 
 export default function Login() {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -27,17 +28,29 @@ export default function Login() {
       const roleType = user.role?.type?.toLowerCase();
 
       if (roleType === 'rh') {
-        navigate('/RH');
+        navigate('/RH'); 
       } else {
-        navigate('/Home');
+        navigate('/Home'); 
       }
 
-    } catch (error) {
-      console.error('Erro no login:', error);
-      alert('E-mail ou senha inválidos');
+    }  catch (error: unknown) { 
+    console.error('Erro no login:', error);
+
+   
+    if (axios.isAxiosError(error) && error.response) {
+      const errorMessage = error.response.data?.message || 'Erro desconhecido. Tente novamente.';
+      alert(`Erro no login: ${errorMessage}`);
+    } else if (error instanceof Error) {
+      alert(`Erro no login: ${error.message}`);
+    } else {
+      alert('Erro no login: Ocorreu um erro inesperado.');
     }
+}
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   return (
     <div className="min-h-screen bg-orange-100 flex flex-col">
@@ -97,17 +110,23 @@ export default function Login() {
               />
             </div>
 
-            <div className="mb-2">
+            <div className="mb-2 relative">
               <label htmlFor="senha" className="block text-gray-700">Senha</label>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 id="senha"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
-                className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full p-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 pr-10"
                 placeholder="Sua senha"
                 required
               />
+              <span
+                className="absolute inset-y-0 right-0 pr-3 flex items-center pt-8 cursor-pointer text-gray-500"
+                onClick={togglePasswordVisibility}
+              >
+                {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+              </span>
             </div>
 
             <div className="flex items-center justify-between mb-6">
@@ -115,6 +134,7 @@ export default function Login() {
                 <input type="checkbox" className="mr-2" />
                 <span className="text-gray-600">Lembrar-me</span>
               </div>
+              {/* Sugestão de Link para rota interna, se aplicável */}
               <a href="#" className="text-sm text-orange-500">Esqueceu a senha?</a>
             </div>
 
@@ -126,7 +146,9 @@ export default function Login() {
             </button>
 
             <p className="text-center mt-4 text-gray-600">
-              Não tem uma conta? <a href="#" className="text-orange-500">Fale com RH</a>
+              Não tem uma conta?
+              {/* Sugestão de Link para rota interna, se aplicável */}
+              <a href="#" className="text-orange-500">Fale com RH</a>
             </p>
           </form>
         </div>
