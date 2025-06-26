@@ -1,6 +1,6 @@
 import Header from '../components/Header/Header_RH';
 import StatCard from '../components/StatCard/StatCard'; 
-import { Users, CheckCircle2, Clock, AlertTriangle,ClipboardList, SlidersHorizontal, Import } from 'lucide-react'; 
+import { Users, CheckCircle2, Clock, AlertTriangle,ClipboardList, SlidersHorizontal, Import, } from 'lucide-react'; 
 import OverallProgress from '../components/OverallProgressRH/OverallProgress';
 import { useState,useRef } from 'react';
 import type { Tab } from '../types/tabs';
@@ -9,12 +9,14 @@ import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
 import CriteriaPanel from '../components/CriteriaPanel/CriteriaPanel'; 
 import HistoryPanel from '../components/HistoryPanel/HistoryPanel'; 
 import Footer from '../components/Footer/Footer';
+import SignUpPanel from '../components/SignUpPanel/SignUpPanel';
 import type { RHTabId } from '../types/RH';
-
+ 
 const rhTabOptions: Tab[] = [
   { id: 'status', label: 'Status das Avaliações', icon: <ClipboardList size={18} /> },
   { id: 'criterios', label: 'Critérios por Trilha', icon: <SlidersHorizontal size={18} /> },
   { id: 'historico', label: 'Importar Históricos', icon: <Import size={18} /> },
+  { id:'Cadastrar',  label:'Cadastrar Usuário',icon: <Users size={18}/>}
 ];
 
 export default function RH() {
@@ -97,6 +99,7 @@ export default function RH() {
             {activeTab === 'status' && <EvaluationsPanel />}
             {activeTab === 'criterios' && <CriteriaPanel />}
             {activeTab === 'historico' && <HistoryPanel />}
+            {activeTab === 'Cadastrar' && <SignUpPanel />}
           </div>
         </div>
 

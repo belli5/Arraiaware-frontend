@@ -14,4 +14,6 @@ export interface Track {
   criteria: Criterion[];
 }
 
-export type RHTabId = 'status' | 'criterios' | 'historico';
+export type RHTabId = 'Cadastrar' |'status' | 'criterios' | 'historico' ;
+
+export type Role = 'Colaborador' | 'Gestor' | 'RH';
