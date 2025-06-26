@@ -1,29 +1,29 @@
 import axios from 'axios';
 import { useState } from 'react';
 import { FaChartLine, FaEye, FaEyeSlash, FaRegSmile, FaTrophy } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
 import HeaderLogin from '../components/Header/Header_login';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
+  const { login } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
+    console.log("Botão 'Entrar' clicado, a função handleLogin foi chamada!");
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', {
-        email,
-        password: senha,
-      });
-
+      const response = await axios.post('http://localhost:3000/api/auth/login', { 
+        email: email,
+        password: senha
+       });
       const { user, access_token } = response.data;
-
-      localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('token', access_token);
+      // Salva o token e o usuário no estado global (em memória)
+      login(access_token, user); 
 
       const roleType = user.role?.type?.toLowerCase();
 
@@ -32,11 +32,10 @@ export default function Login() {
       } else {
         navigate('/Home'); 
       }
-
-    }  catch (error: unknown) { 
+    } 
+    catch (error: unknown) { 
     console.error('Erro no login:', error);
 
-   
     if (axios.isAxiosError(error) && error.response) {
       const errorMessage = error.response.data?.message || 'Erro desconhecido. Tente novamente.';
       alert(`Erro no login: ${errorMessage}`);
@@ -45,7 +44,8 @@ export default function Login() {
     } else {
       alert('Erro no login: Ocorreu um erro inesperado.');
     }
-}
+  }
+  
   };
 
   const togglePasswordVisibility = () => {
