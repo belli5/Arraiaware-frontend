@@ -1,9 +1,18 @@
 import { Bell, Settings, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import logo from "../../../imagens/logo_arraiware.png";
 
 export default function Header() {
   const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('user');
+    if (stored) {
+      setUser(JSON.parse(stored));
+    }
+  }, []);
 
   return (
     <header className="fixed inset-x-0 top-0 bg-gradient-to-br from-white to-orange-300 shadow-md z-50">
@@ -27,37 +36,34 @@ export default function Header() {
           <nav>
             <ul className="flex space-x-6 text-gray-900">
               <li>
-                <button
-                  onClick={() => navigate('/home')}
-                  className="hover:text-orange-500 hover:opacity-90"
-                >
+                <button onClick={() => navigate('/home')} className="hover:text-orange-500 hover:opacity-90">
                   Home
                 </button>
               </li>
               <li>
-                <button
-                  onClick={() => navigate('/avaliacao/tech')}
-                  className="hover:text-orange-500"
-                >
+                <button onClick={() => navigate('/avaliacao/tech')} className="hover:text-orange-500">
                   Avaliação
                 </button>
               </li>
               <li>
-                <button
-                  onClick={() => navigate('/avaliacao/goals')}
-                  className="hover:text-orange-500"
-                >
+                <button onClick={() => navigate('/avaliacao/goals')} className="hover:text-orange-500">
                   Resultados
                 </button>
               </li>
               <li>
-                <button
-                  onClick={() => navigate('/avaliacao/growth')}
-                  className="hover:text-orange-500"
-                >
+                <button onClick={() => navigate('/avaliacao/growth')} className="hover:text-orange-500">
                   Metas
                 </button>
               </li>
+
+              {/* Botão RH só aparece se for role.type === 'rh' */}
+              {user?.role?.type?.toLowerCase() === 'rh' && (
+                <li>
+                  <button onClick={() => navigate('/RH')} className="hover:text-orange-500 font-semibold">
+                    Painel RH
+                  </button>
+                </li>
+              )}
             </ul>
           </nav>
         </div>
@@ -76,7 +82,7 @@ export default function Header() {
             <div className="p-1 bg-orange-200 rounded-full">
               <User className="h-5 w-5 text-gray-600" />
             </div>
-            <span className="text-gray-800 font-medium">Maria Silva</span>
+            <span className="text-gray-800 font-medium">{user?.name || 'Usuário'}</span>
           </div>
         </div>
       </div>
