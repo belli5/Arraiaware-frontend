@@ -43,6 +43,13 @@ export default function SignUpPanel() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error("Token de autenticação não encontrado. Redirecionando para o login.");
+      // navigate('/login'); 
+      return; 
+    }
+    console.log(token);
     if (!validate()) return;
 
     setIsSubmitting(true);
@@ -55,10 +62,14 @@ export default function SignUpPanel() {
         userType: formData.role.toUpperCase(),
         unidade: formData.unit,
       };
+      console.log(requestBody);
       
-      const response = await fetch('/api/users', { 
+      const response = await fetch('http://localhost:3000/api/users', { 
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
         body: JSON.stringify(requestBody),
       });
 
