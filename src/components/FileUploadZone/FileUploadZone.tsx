@@ -126,7 +126,7 @@ export default function FileUploadZone() {
           status={uploadResult.status}
           title={uploadResult.title}
           message={uploadResult.message}
-          onClose={() => setUploadResult(null)} // O botão 'X' do toast limpa o estado
+          onClose={() => setUploadResult(null)} 
         />
       )}
     </div>
