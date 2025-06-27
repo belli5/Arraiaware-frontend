@@ -26,16 +26,25 @@ export default function RH() {
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId as RHTabId);
   };
+  
   useEffect(() => {
     if (contentPanelRef.current) {
       const elementTop = contentPanelRef.current.getBoundingClientRect().top + window.scrollY;
-      const offset = 150; 
+      const offset = 150;
       window.scrollTo({
         top: elementTop - offset,
         behavior: 'smooth'
       });
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'auto' }); 
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []); 
+
   return (
     <div className="min-h-screen bg-orange-50">
       <Header />
