@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, File, X } from 'lucide-react';
-import UploadSucessfulMessage from '../UploadSucessfulMessage/UploadSucessfulMessage';
+import NotificationMessages from '../NotificationMessages/NotificationMessages';
 import type { UploadResult } from '../../types/RH';
 
 export default function FileUploadZone() {
@@ -122,7 +122,7 @@ export default function FileUploadZone() {
         </div>
       )}
       {uploadResult && (
-        <UploadSucessfulMessage
+        <NotificationMessages
           status={uploadResult.status}
           title={uploadResult.title}
           message={uploadResult.message}

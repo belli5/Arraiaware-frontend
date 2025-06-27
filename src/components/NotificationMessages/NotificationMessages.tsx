@@ -1,13 +1,13 @@
 import { CheckCircle2, AlertTriangle, X } from 'lucide-react';
 
-interface UploadSucessfulMessageProps {
+interface NotificationMessagesProps {
   status: 'success' | 'error';
   title: string;
   message: string;
   onClose: () => void;
 }
 
-export default function UploadSucessfulMessage({ status, title, message, onClose }: UploadSucessfulMessageProps) {
+export default function NotificationMessages({ status, title, message, onClose }: NotificationMessagesProps) {
   const isSuccess = status === 'success';
   
   const baseClasses = 'fixed top-5 right-5 w-full max-w-sm p-4 rounded-lg shadow-lg flex items-start gap-3 z-50';
