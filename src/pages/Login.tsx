@@ -4,9 +4,11 @@ import { FaChartLine, FaEye, FaEyeSlash, FaRegSmile, FaTrophy } from 'react-icon
 import HeaderLogin from '../components/Header/Header_login';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+import type { DecodedToken } from '../types/context';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login } = useAuth();  
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
@@ -21,17 +23,10 @@ export default function Login() {
         email: email,
         password: senha
        });
-      const { user, access_token } = response.data;
-      // Salva o token e o usuário no estado global (em memória)
-      login(access_token, user); 
-
-      const roleType = user.role?.type?.toLowerCase();
-
-      if (roleType === 'rh') {
-        navigate('/RH'); 
-      } else {
-        navigate('/Home'); 
-      }
+      const {access_token} = response.data;
+      const decodedToken = jwtDecode<DecodedToken>(access_token);
+      login(access_token, decodedToken); 
+      navigate('/Home'); 
     } 
     catch (error: unknown) { 
     console.error('Erro no login:', error);

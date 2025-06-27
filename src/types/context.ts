@@ -1,7 +1,7 @@
-export interface UserData {
-    name: string;
-    email: string;
-    role: {
-    type: 'rh' | 'gestor' | 'colaborador';
-  };
+export interface DecodedToken {
+  name: string;
+  email: string;
+  userType: 'ADMIN' | 'RH' | 'GESTOR' | 'COLABORADOR';
+  iat: number;
+  exp: number;
 }

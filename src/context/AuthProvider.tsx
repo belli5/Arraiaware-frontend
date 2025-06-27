@@ -1,12 +1,12 @@
 import { useState, type ReactNode } from 'react';
 import { AuthContext, type AuthContextType } from './AuthContext';
-import type { UserData } from '../types/context';
+import type { DecodedToken } from '../types/context';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<UserData | null>(null);
+  const [user, setUser] = useState<DecodedToken | null>(null);
 
-  const login = (newToken: string, userData: UserData) => {
+  const login = (newToken: string, userData: DecodedToken) => {
     setToken(newToken);
     setUser(userData);
     localStorage.setItem('token', newToken);
