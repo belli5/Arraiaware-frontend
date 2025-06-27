@@ -26,3 +26,23 @@ export interface Answer {
     scale?: string;
     justification?: string;
 }
+
+export interface Evaluation {
+    id: number;
+    collaborator: string;
+    department: string;
+    track: string;
+    status: string;
+    progress: number;
+    deadline: string;
+    completedAt: string;
+}
+
+export interface EvaluationTableType {
+    data: Evaluation[];
+    pagination: {
+        totalItems: number;
+        totalPages: number;
+        currentPage: number;
+    }
+}

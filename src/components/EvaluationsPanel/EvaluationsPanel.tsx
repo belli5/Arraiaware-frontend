@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState,useEffect,useRef } from 'react';
 import { Search, Filter, Download, ChevronDown } from "lucide-react";
 import EvaluationsTable from "../EvaluationsTable/EvaluationsTable";
+import type { EvaluationTableType,Evaluation } from '../../types/evaluation';
+import Pagination from '../Pagination/Pagination';
+import EvaluationsTableSkeleton from '../EvaluationsTableSkeleton/EvaluationsTableSkeleton';
 
 const statusOptions = ['Todos', 'Concluída', 'Pendente', 'Em Atraso'];
 const departmentOptions = ['Todos', 'Tecnologia', 'Marketing', 'Vendas', 'RH'];
@@ -10,24 +13,93 @@ export default function EvaluationsPanel() {
     const [statusFilter, setStatusFilter] = useState('Todos');
     const [departmentFilter, setDepartmentFilter] = useState('Todos');
     
+    const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(0);
+    const panelRef = useRef<HTMLDivElement>(null);
+
     const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
     const [isDepartmentDropdownOpen, setIsDepartmentDropdownOpen] = useState(false);
 
     const handleStatusSelect = (status: string) => {
         setStatusFilter(status);
         setIsStatusDropdownOpen(false); 
+        setCurrentPage(1); 
     }
 
     const handleDepartmentSelect = (department: string) => {
         setDepartmentFilter(department);
         setIsDepartmentDropdownOpen(false); 
+        setCurrentPage(1); 
     }
+
+    const handleSearchChange = (term: string) => {
+        setSearchTerm(term);
+        setCurrentPage(1); 
+    }
+
+    useEffect(() => {
+        const fetchEvaluations = async () => {
+            setIsLoading(true);
+            setError(null);
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setError("Você não está autenticado.");
+                setIsLoading(false);
+                return;
+            }
+
+            try {
+                const params = new URLSearchParams();
+                if (searchTerm) params.append('search', searchTerm);
+                if (statusFilter !== 'Todos') params.append('status', statusFilter);
+                if (departmentFilter !== 'Todos') params.append('department', departmentFilter);
+                params.append('page', currentPage.toString());
+                params.append('limit', '10'); 
+
+                const response = await fetch(`http://localhost:3000/api/rh/evaluations?${params.toString()}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro ao buscar dados: ${response.statusText}`);
+                }
+
+                const result: EvaluationTableType = await response.json();
+                setEvaluations(result.data);
+                setTotalPages(result.pagination.totalPages);
+
+            } catch (err) {
+                setError((err as Error).message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchEvaluations();
+    }, [searchTerm, statusFilter, departmentFilter, currentPage]);
+
+    useEffect(() => {
+    if (panelRef.current) {
+        const elementTop = panelRef.current.getBoundingClientRect().top + window.scrollY;
+        const offset = 150; 
+        window.scrollTo({
+        top: elementTop - offset,
+        behavior: 'smooth'
+        });
+    }
+    }, [currentPage]); 
 
     return (
         <div className="bg-white p-6 md:p-8 rounded-b-lg rounded-r-lg shadow-md">
             
             {/* Cabeçalho do Painel */}
-            <div>
+            <div ref={panelRef} >
                 <h2 className="text-xl font-bold text-gray-800">Painel de Avaliações - Arraiware</h2>
                 <p className="text-base text-gray-500 mt-1">Acompanhe o progresso de todas as avaliações em andamento</p>
             </div>
@@ -43,7 +115,7 @@ export default function EvaluationsPanel() {
                         placeholder="Buscar por colaborador, departamento ou trilha..."
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => handleSearchChange(e.target.value)}
                     />
                 </div>
                 
@@ -104,11 +176,22 @@ export default function EvaluationsPanel() {
 
             {/* Tabela de Dados */}
             <div className="mt-8">
-                <EvaluationsTable 
-                    searchTerm={searchTerm} 
-                    statusFilter={statusFilter} 
-                    departmentFilter={departmentFilter}
-                />
+                {error && <p className="text-red-500">{error}</p>}
+                
+                {isLoading ? (
+                <EvaluationsTableSkeleton />
+                ) : (
+                !error && (
+                    <>
+                    <EvaluationsTable evaluations={evaluations} />
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                    </>
+                )
+                )}
             </div>
         </div>
     );

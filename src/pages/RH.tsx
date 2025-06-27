@@ -2,7 +2,7 @@ import Header from '../components/Header/Header_RH';
 import StatCard from '../components/StatCard/StatCard'; 
 import { Users, CheckCircle2, Clock, AlertTriangle,ClipboardList, SlidersHorizontal, Import, } from 'lucide-react'; 
 import OverallProgress from '../components/OverallProgressRH/OverallProgress';
-import { useState,useRef } from 'react';
+import { useState,useRef,useEffect } from 'react';
 import type { Tab } from '../types/tabs';
 import Tabs from '../components/Tabs/Tabs';
 import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
@@ -25,20 +25,17 @@ export default function RH() {
   const contentPanelRef = useRef<HTMLDivElement>(null);
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId as RHTabId);
-
-    setTimeout(() => {
-      if (contentPanelRef.current) {
-        const elementTop = contentPanelRef.current.getBoundingClientRect().top + window.scrollY;
-        const offset = 150; 
-
-        window.scrollTo({
-          top: elementTop - offset,
-          behavior: 'smooth'
-        });
-      }
-    }, 50); 
   };
-
+  useEffect(() => {
+    if (contentPanelRef.current) {
+      const elementTop = contentPanelRef.current.getBoundingClientRect().top + window.scrollY;
+      const offset = 150; 
+      window.scrollTo({
+        top: elementTop - offset,
+        behavior: 'smooth'
+      });
+    }
+  }, [activeTab]);
   return (
     <div className="min-h-screen bg-orange-50">
       <Header />
