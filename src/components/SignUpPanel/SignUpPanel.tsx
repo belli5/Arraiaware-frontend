@@ -7,7 +7,6 @@ export default function SignUpPanel() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
     role: '',
     unit: '',
   });
@@ -15,7 +14,6 @@ export default function SignUpPanel() {
   const [errors, setErrors] = useState({
     name: '',
     email: '',
-    password: '',
     role: '',
     unit: '',
   });
@@ -29,11 +27,10 @@ export default function SignUpPanel() {
 
   const validate = (): boolean => {
     let isValid = true;
-    const newErrors = { name: '', email: '', password: '', role: '', unit: '' };
+    const newErrors = { name: '', email: '', role: '', unit: '' };
 
     if (!formData.name.trim()) { newErrors.name = 'Nome é obrigatório.'; isValid = false; }
     if (!formData.email.trim()) { newErrors.email = 'Email é obrigatório.'; isValid = false; }
-    if (!formData.password.trim()) { newErrors.password = 'Senha é obrigatória.'; isValid = false; }
     if (!formData.role) { newErrors.role = 'Vínculo é obrigatório.'; isValid = false; }
     if (!formData.unit.trim()) { newErrors.unit = 'Unidade é obrigatória.'; isValid = false; }
 
@@ -58,7 +55,6 @@ export default function SignUpPanel() {
       const requestBody = {
         name: formData.name,
         email: formData.email,
-        password: formData.password,
         userType: formData.role.toUpperCase(),
         unidade: formData.unit,
       };
@@ -75,8 +71,8 @@ export default function SignUpPanel() {
 
       if (response.status === 201) {
         alert(`Usuário ${formData.name} cadastrado com sucesso!`);
-        setFormData({ name: '', email: '', password: '', role: '', unit: '' });
-        setErrors({ name: '', email: '', password: '', role: '', unit: '' });
+        setFormData({ name: '', email: '', role: '', unit: '' });
+        setErrors({ name: '', email: '', role: '', unit: '' });
       
       } else if (response.status === 400) {
         throw new Error('Parâmetros inválidos. Verifique os dados e tente novamente.');
@@ -106,35 +102,28 @@ export default function SignUpPanel() {
             
             {/* Nome */}
             <div className="md:col-span-2">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nome Completo</label>
+              <label htmlFor="name" className="block text-sm font-bold text-gray-700">Nome Completo</label>
               <input type="text" name="name" id="name" value={formData.name} onChange={handleChange} className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.name ? 'border-red-500' : 'border-gray-300'}`} />
               {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
             </div>
 
             {/* Email */}
             <div className="md:col-span-2">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+              <label htmlFor="email" className="block text-sm font-bold text-gray-700">Email</label>
               <input type="email" name="email" id="email" value={formData.email} onChange={handleChange} className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.email ? 'border-red-500' : 'border-gray-300'}`} />
               {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
             </div>
 
-            {/* Senha */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Senha Provisória</label>
-              <input type="password" name="password" id="password" value={formData.password} onChange={handleChange} className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.password ? 'border-red-500' : 'border-gray-300'}`} />
-              {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
-            </div>
-
             {/* Vínculo */}
             <div className="md:col-span-2">
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">Vínculo</label>
+              <label htmlFor="role" className="block text-sm font-bold text-gray-700">Vínculo</label>
               <div className="relative mt-1">
                 <select 
                   name="role" 
                   id="role" 
                   value={formData.role} 
                   onChange={handleChange} 
-                  className={`block w-full appearance-none rounded-md border py-2 px-3 shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm 
+                  className={`block w-full appearance-none rounded-md border py-2 px-3 shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-base 
                     ${errors.role ? 'border-red-500' : 'border-gray-300'}
                     ${formData.role ? 'text-gray-900' : 'text-gray-500'}` 
                   }
