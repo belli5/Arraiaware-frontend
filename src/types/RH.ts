@@ -17,3 +17,9 @@ export interface Track {
 export type RHTabId = 'Cadastrar' |'status' | 'criterios' | 'historico' ;
 
 export type Role = 'Colaborador' | 'Gestor' | 'RH';
+
+export type UploadResult = {
+  status: 'success' | 'error';
+  title: string;
+  message: string;
+}
