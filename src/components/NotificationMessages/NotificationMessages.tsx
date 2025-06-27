@@ -1,4 +1,5 @@
 import { CheckCircle2, AlertTriangle, X } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface NotificationMessagesProps {
   status: 'success' | 'error';
@@ -8,6 +9,12 @@ interface NotificationMessagesProps {
 }
 
 export default function NotificationMessages({ status, title, message, onClose }: NotificationMessagesProps) {
+
+  useEffect(() => {
+    const timer = setTimeout(onClose, 5000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
   const isSuccess = status === 'success';
   
   const baseClasses = 'fixed top-5 right-5 w-full max-w-sm p-4 rounded-lg shadow-lg flex items-start gap-3 z-50';
