@@ -6,11 +6,11 @@ export interface Colleague {
   tempo: string;
 }
 
-export interface Question {
+export type Question = {
   id: string;
-  type: 'scale' | 'text'; 
+  type: 'scale' | 'justification' | 'text';
   text: string;
-}
+};
 
 export interface Section {
   key: string;

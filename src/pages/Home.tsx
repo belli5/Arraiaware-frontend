@@ -1,10 +1,14 @@
+import React, { useContext } from 'react';
 import { FaRegFileAlt, FaChartLine, FaBullseye, FaClock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header/Header_geral';
 import Footer from '../components/Footer/Footer';
+import { AuthContext } from '../context/AuthContext';
 
 export default function Home() {
   const navigate = useNavigate();
+  const auth = useContext(AuthContext)!;
+  const user = auth.user;
 
   return (
     <div className="min-h-screen bg-orange-50 flex flex-col">
@@ -15,11 +19,10 @@ export default function Home() {
       <main className="flex-1 pt-24 px-6 lg:px-10">
         <section className="mb-10 text-center">
           <h1 className="text-4xl font-bold flex items-center gap-2 mb-2">
-            Olá, Maria! <span className="wave">👋</span>
+            Olá, {user?.name || 'visitante'}! <span className="wave">👋</span>
           </h1>
           <p className="text-gray-600 flex items-center gap-2">
-            Bem-vinda ao seu painel de autoavaliação. Acompanhe seu progresso e
-            desenvolvimento profissional.
+            Bem-vinda ao seu painel de autoavaliação, {user?.name || ''}. Seu cargo é <strong>{user?.userType || '—'}</strong>
           </p>
         </section>
 
@@ -158,7 +161,7 @@ const Card = ({
   bgIcon: string;
 }) => (
   <div
-    className="bg-white rounded-xl shadow-md p-6 w-85 flex justify-between items-center
+    className="bg-white rounded-xl shadow-md p-6  w-[23%] flex justify-between items-center
                hover:shadow-lg hover:-translate-y-1 transform transition duration-300"
   >
     <div className="flex flex-col items-start">
@@ -183,9 +186,7 @@ const Badge = ({
     className={`px-3 py-1 rounded-full text-sm cursor-pointer ${
       checked ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
     } hover:brightness-95 transition`}
-  >
-    {text} {checked && '✓'}
-  </div>
+  >{text} {checked && '✓'}</div>
 );
 
 const Progress = ({ title, value }: { title: string; value: number }) => (

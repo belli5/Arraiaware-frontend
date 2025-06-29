@@ -63,7 +63,7 @@ export default function Header() {
                   onClick={() => navigate('/home')}
                   className="hover:text-orange-500 hover:opacity-90"
                 >
-                  RH
+                  Painel RH
                 </button>
               </li>
             </ul>

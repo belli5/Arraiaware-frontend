@@ -41,7 +41,7 @@ export default function Header() {
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('/avaliacao/tech')} className="hover:text-orange-500">
+                <button onClick={() => navigate('/avaliacao/comportamento')} className="hover:text-orange-500">
                   Avaliação
                 </button>
               </li>
@@ -57,9 +57,9 @@ export default function Header() {
               </li>
 
               {/* Botão RH só aparece se for role.type === 'rh' */}
-              {user?.role?.type?.toLowerCase() === 'rh' && (
+              {user?.userType?.toLowerCase() === 'rh' && (
                 <li>
-                  <button onClick={() => navigate('/RH')} className="hover:text-orange-500 font-semibold">
+                  <button onClick={() => navigate('/RH')} className="hover:text-orange-500 ">
                     Painel RH
                   </button>
                 </li>
