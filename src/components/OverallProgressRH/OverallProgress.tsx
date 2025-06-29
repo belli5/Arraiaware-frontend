@@ -1,11 +1,27 @@
-// src/components/OverallProgress/OverallProgress.tsx
+interface OverallProgressProps {
+  data: {
+    completed: number;
+    pending: number;
+    overdue: number;
+    total: number;
+  } | null; 
+}
 
-export default function OverallProgress() {
-  const completed = 89;
-  const pending = 61;
-  const overdue = 12;
-  const total = completed + pending + overdue;
-  const progressPercentage = Math.round((completed / total) * 100);
+export default function OverallProgress({ data }: OverallProgressProps) {
+  if (!data) {
+    return (
+      <div className="text-left bg-white p-6 rounded-lg shadow-sm mt-8 animate-pulse">
+        <div className="h-8 bg-gray-300 rounded-md w-3/4 mb-2"></div>
+        <div className="h-4 bg-gray-200 rounded-md w-1/2"></div>
+        <div className="mt-6">
+          <div className="h-2 bg-gray-200 rounded-full w-full"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const { completed, pending, overdue, total } = data;
+  const progressPercentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (
     <div className="text-left bg-white p-6 rounded-lg shadow-sm mt-8">

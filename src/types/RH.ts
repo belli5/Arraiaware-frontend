@@ -47,3 +47,10 @@ export interface ImportHistoryEntry {
   date: string;
   status: string;
 }
+
+export interface DashboardData {
+  totalEvaluations: number;
+  completedEvaluations: number;
+  pendingEvaluations: number;
+  overdueEvaluations: number;
+}
