@@ -40,3 +40,10 @@ export interface TracksFromApi{
   criterios: Criterion[];
   department?: string;
 }
+
+export interface ImportHistoryEntry {
+  id: string;
+  file: string;
+  date: string;
+  status: string;
+}
