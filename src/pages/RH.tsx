@@ -10,7 +10,7 @@ import CriteriaPanel from '../components/CriteriaPanel/CriteriaPanel';
 import HistoryPanel from '../components/HistoryPanel/HistoryPanel'; 
 import Footer from '../components/Footer/Footer';
 import SignUpPanel from '../components/SignUpPanel/SignUpPanel';
-import type { RHTabId } from '../types/RH';
+import type { RHTabId,DashboardData } from '../types/RH';
  
 const rhTabOptions: Tab[] = [
   { id: 'status', label: 'Status das Avaliações', icon: <ClipboardList size={18} /> },
@@ -22,11 +22,46 @@ const rhTabOptions: Tab[] = [
 export default function RH() {
   const [activeTab, setActiveTab] = useState<RHTabId>('status');
 
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   const contentPanelRef = useRef<HTMLDivElement>(null);
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId as RHTabId);
   };
   
+  const completedPercentage = dashboardData && dashboardData.totalEvaluations > 0
+    ? Math.round((dashboardData.completedEvaluations / dashboardData.totalEvaluations) * 100)
+    : 0;
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setIsLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error("Autenticação necessária.");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:3000/api/evaluations/dashboard', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!response.ok) throw new Error('Falha ao buscar dados do dashboard.');
+        
+        const data: DashboardData = await response.json();
+        setDashboardData(data);
+      } catch (error) {
+        console.error("Erro no dashboard:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchDashboardData();
+  }, []);
+
   useEffect(() => {
     if (contentPanelRef.current) {
       const elementTop = contentPanelRef.current.getBoundingClientRect().top + window.scrollY;
@@ -44,7 +79,7 @@ export default function RH() {
     }, 0);
     return () => clearTimeout(timer);
   }, []); 
-
+  
   return (
     <div className="min-h-screen bg-orange-50">
       <Header />
@@ -59,42 +94,48 @@ export default function RH() {
         </section>
         <div className='max-w-[1600px] mx-auto px-6 lg:px-10'>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard 
-                title="Total de Avaliações"
-                value="150"
-                subtitle="Colaboradores ativos"
-                Icon={Users}
-            />
-            <StatCard 
+              <StatCard
+              title="Total de Avaliações"
+              value={dashboardData?.totalEvaluations.toString() ?? '...'}
+              subtitle="Colaboradores ativos"
+              Icon={Users}
+              />
+              <StatCard
                 title="Concluídas"
-                value="89"
-                subtitle="59% do total"
+                value={dashboardData?.completedEvaluations.toString() ?? '...'}
+                subtitle={`${completedPercentage}% do total`}
                 Icon={CheckCircle2}
                 borderColor="border-green-500"
                 valueColor="text-green-500"
                 iconColor="text-green-500"
-            />
-            <StatCard 
+              />
+              <StatCard
                 title="Pendentes"
-                value="61"
+                value={dashboardData?.pendingEvaluations.toString() ?? '...'}
                 subtitle="Aguardando conclusão"
                 Icon={Clock}
                 borderColor="border-amber-500"
                 valueColor="text-amber-500"
                 iconColor="text-amber-500"
-            />
-            <StatCard 
+              />
+              <StatCard
                 title="Em Atraso"
-                value="12"
+                value={dashboardData?.overdueEvaluations.toString() ?? '...'}
                 subtitle="Requer atenção"
                 Icon={AlertTriangle}
                 borderColor="border-red-500"
                 valueColor="text-red-500"
                 iconColor="text-red-500"
-            />
+              />
             </div>
-            <OverallProgress />  
-
+            <OverallProgress data={
+              dashboardData ? {
+                completed: dashboardData.completedEvaluations,
+                pending: dashboardData.pendingEvaluations,
+                overdue: dashboardData.overdueEvaluations,
+                total: dashboardData.totalEvaluations
+              } : null }
+            />  
             <Tabs 
               tabs={rhTabOptions}
               activeTab={activeTab} 
