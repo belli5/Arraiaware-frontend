@@ -17,6 +17,7 @@
         "link-name": "off"
       }
     ],
-    "typescript-config/strict": "off"
+    "typescript-config/strict": "off",
+    "typescript-config/is-valid": "off"
   }
 }

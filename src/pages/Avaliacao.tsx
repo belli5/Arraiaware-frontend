@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type JSX } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   FaStar,
@@ -14,14 +14,17 @@ import EvaluationTabs from '../components/EvaluationTabs/EvaluationTabs';
 import QuestionList from '../components/QuestionList/QuestionList';
 import PeerEvaluationPanel from '../components/PeerEvaluationPanel/PeerEvaluationPanel';
 import ProgressSidebar from '../components/ProgressSideBar/ProgressSideBar';
-
+//import jwtDecode from 'jwt-decode'
 import type { Section, Colleague, Answer, Question } from '../types/evaluation';
+type Cycle = { id: string; name: string; status: string };
+//type JWTPayload = { sub: string; /* … */ }
+
 
 const peerQuestions: Question[] = [
-  { id: 'pq1', type: 'scale', text: 'Comunicação e clareza' },
-  { id: 'pq2', type: 'scale', text: 'Colaboração e trabalho em equipe' },
-  { id: 'pq3', type: 'scale', text: 'Qualidade técnica' },
-  { id: 'pq4', type: 'scale', text: 'Proatividade e iniciativa' },
+  { id: 'pq1', type: 'scale', text: 'Você ficaria motivado em trabalhar novamente com este colaborador?' },
+  { id: 'pq2', type: 'scale', text: 'Dê uma nota geral para o colaborador' },
+  { id: 'pq3', type: 'scale', text: 'Pontos que deve melhorar' },
+  { id: 'pq4', type: 'scale', text: 'Pontos que faz bem e deve explorar' },
 ];
 
 const leaderQuestions: Question[] = [
@@ -31,43 +34,23 @@ const leaderQuestions: Question[] = [
   { id: 'lq4', type: 'scale', text: 'Feedback construtivo e transparente' },
 ];
 
-const sections: Section[] = [
-  {
-    key: 'behavior',
+const predefinedSections: Record<string, { key: string; title: string; icon: JSX.Element }> = {
+  comportamento: {
+    key: 'comportamento',
     title: 'Comportamento',
     icon: <FaStar />,
-    questions: [
-      { id: 'q1', type: 'scale', text: '1. Você possui Sentimento de Dono?' },
-      { id: 'q2', type: 'scale', text: '2. Você possui Resiliência nas adversidades?' },
-      { id: 'q3', type: 'scale', text: '3. Você é organizado em relação ao seu trabalho?' },
-      { id: 'q4', type: 'scale', text: '4. Você acredita que tem uma boa capacidade de aprendizado?' },
-      { id: 'q5', type: 'scale', text: '5. Você é "team player"?' },
-    ],
   },
-  {
-    key: 'execution',
+  execução: {
+    key: 'execução',
     title: 'Execução',
     icon: <FaUsers />,
-    questions: [
-      { id: 'q7', type: 'scale', text: '1. Como você avalia suas entregas?' },
-      { id: 'q8', type: 'scale', text: '2. Como você considera seu comprometimento com prazos?' },
-      { id: 'q9', type: 'scale', text: '3. Você acredita que consegue tirar leite de pedra?' },
-      { id: 'q10', type: 'scale', text: '4. Você acha que consegue pensar fora da caixa?' },
-    ],
   },
-  {
-    key: 'management',
+  'gestão e liderança': {
+    key: 'gestão-e-liderança',
     title: 'Gestão e Liderança',
     icon: <FaChartLine />,
-    questions: [
-      { id: 'q12', type: 'scale', text: '1. Como você avalia sua interação com os colegas?' },
-      { id: 'q13', type: 'scale', text: '2. Como você avalia os resultados do seu grupo?' },
-      { id: 'q14', type: 'scale', text: '3. Como você avalia a evolução da empresa?' },
-    ],
   },
-  { key: 'peer', title: 'Avaliação de Pares', icon: <FaUsers />, questions: peerQuestions },
-  { key: 'leader', title: 'Avaliação de Líderes', icon: <FaCrown />, questions: leaderQuestions },
-];
+};
 
 const peerColleagues: Colleague[] = [
   { id: '1', nome: 'João Santos', cargo: 'Desenvolvedor Pleno', area: 'Tecnologia', tempo: '3 meses' },
@@ -82,18 +65,182 @@ const leaderColleagues: Colleague[] = [
   { id: '7', nome: 'Roberto Cunha', cargo: 'Gerente de Design', area: 'Design', tempo: '15 meses' },
 ];
 
+
+
 export default function Avaliacao() {
   const navigate = useNavigate();
   const { section } = useParams();
+
+  const [sections, setSections] = useState<Section[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const userId = localStorage.getItem('userId') ?? '';
+
+
+  const [cycleId, setCycleId] = useState<string>('');
+
+  //const rawToken = localStorage.getItem('token') ?? ''
+  //const { sub: userId } = rawToken
+    //? jwtDecode<JWTPayload>(rawToken)
+    //: { sub: '' }
+
+
+  ///useEffect(() => {
+    ///const raw = localStorage.getItem('token')
+    //if (!raw) return
+    //try {
+      //const { sub } = jwtDecode<JWTPayload>(raw)
+      //setUserId(sub)
+    //} catch (err) {
+      //console.error('token inválido', err)
+    //}
+  //}, [])
+
+  useEffect(() => {
+    async function fetchCycles() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const res = await fetch('http://localhost:3000/api/cycles', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const cycles: Cycle[] = await res.json();
+        const open = cycles.find(c => c.status.toLowerCase() === 'aberto');
+        if (open) setCycleId(open.id);
+      } catch (err) {
+        console.error('Erro ao buscar ciclos:', err);
+      }
+    }
+    fetchCycles();
+  }, []);
+
+  useEffect(() => {
+    async function fetchCriteria() {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      setError('Você não está autenticado.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3000/api/criteria', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao buscar critérios.');
+      }
+
+      const data = await response.json();
+      console.log('Resposta da API:', data);
+
+      if (!Array.isArray(data)) {
+        throw new Error('A resposta da API não é um array');
+      }
+
+      const groupedByPillar: Record<string, Question[]> = {};
+
+      data.forEach((c: any) => {
+        const pillarKey = c.pillar?.toLowerCase().trim() || 'comportamento';
+
+        if (!groupedByPillar[pillarKey]) {
+          groupedByPillar[pillarKey] = [];
+        }
+
+        groupedByPillar[pillarKey].push({
+          id: c.id,
+          type: 'scale',
+          text: c.criterionName,
+        });
+      });
+
+      const mapped: Section[] = Object.entries(groupedByPillar).map(([pillarKey, questions]) => {
+        const predefined = predefinedSections[pillarKey] || {
+          key: pillarKey.replace(/\s/g, '-'),
+          title: pillarKey.charAt(0).toUpperCase() + pillarKey.slice(1),
+          icon: <FaUsers />,
+        };
+
+        return {
+          ...predefined,
+          questions,
+        };
+      });
+
+      // Adiciona seções de pares e líderes no fim
+      mapped.push(
+        { key: 'peer', title: 'Avaliação de Pares', icon: <FaUsers />, questions: peerQuestions },
+        { key: 'leader', title: 'Avaliação de Líderes', icon: <FaCrown />, questions: leaderQuestions }
+      );
+
+      setSections(mapped);
+    } catch (err) {
+      console.error(err);
+      setError('Erro ao carregar os critérios.');
+    } finally {
+      setLoading(false);
+    }
+  }
+  fetchCriteria(); 
+  }, []);
 
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [peerAnswers, setPeerAnswers] = useState<Record<string, Record<string, Answer>>>({});
   const [leaderAnswers, setLeaderAnswers] = useState<Record<string, Record<string, Answer>>>({});
   const [avaliandoId, setAvaliandoId] = useState<string | null>(null);
 
-  const currentSectionIndex = Math.max(sections.findIndex(s => s.key === section), 0);
-  const currentSectionData = sections[currentSectionIndex];
-  useEffect(() => { window.scrollTo(0, 0); }, [section]);
+  const currentSectionIndex = sections.findIndex(s => s.key === section);
+  const currentSectionData = currentSectionIndex >= 0 ? sections[currentSectionIndex] : null;
+
+  if (!currentSectionData) {
+    return (
+      <div className="p-6 text-red-600">
+        Seção inválida ou ainda não carregada.
+      </div>
+    );
+  }
+
+  
+
+  async function handleSubmitSelfEvaluation() {
+    if (!userId) {
+      alert('Ainda não carregou seu usuário, aguarde um instante')
+      return
+    }
+    const payload = {
+      userId,
+      cycleId,
+      evaluations: Object.entries(answers).map(([criterionId, ans]) => ({
+        criterionId,
+        score: Number(ans.scale),
+        justification: ans.justification,
+        //scoreDescription: '',
+      })),
+    };
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:3000/api/evaluations/self', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      alert('Autoavaliação enviada!');
+    } catch (err: any) {
+      console.error(err);
+      alert('Falha ao enviar autoavaliação: ' + err.message);
+    }
+  }
+
 
   const handleAnswerChange = (
     questionId: string,
@@ -182,6 +329,9 @@ export default function Avaliacao() {
 
   const currentColleagues = currentSectionData.key === 'peer' ? peerColleagues : currentSectionData.key === 'leader' ? leaderColleagues : [];
   const colegaSelecionado = currentColleagues.find(c => c.id === avaliandoId);
+  if (loading) return <div className="p-6">Carregando critérios...</div>;
+  if (error) return <div className="p-6 text-red-600">{error}</div>;
+  if (sections.length === 0) return <div className="p-6">Nenhum critério encontrado.</div>;
 
   return (
     <div className="min-h-screen bg-orange-50 flex flex-col">
@@ -284,11 +434,22 @@ export default function Avaliacao() {
                     />
                   )
                 ) : (
-                  <QuestionList
-                    questions={currentSectionData.questions}
-                    answers={answers}
-                    onAnswerChange={handleAnswerChange}
-                  />
+                  // AUTOAVALIAÇÃO: QuestionList + botão de envio
+                  <>
+                    <QuestionList
+                      questions={currentSectionData.questions}
+                      answers={answers}
+                      onAnswerChange={handleAnswerChange}
+                    />
+                    <div className="mt-8 pt-6 border-t flex justify-end">
+                      <button
+                        onClick={handleSubmitSelfEvaluation}
+                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                      >
+                        Enviar Autoavaliação
+                      </button>
+                    </div>
+                  </>
                 )}
 
                 <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
