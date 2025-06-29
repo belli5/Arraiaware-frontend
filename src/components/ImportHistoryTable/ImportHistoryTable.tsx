@@ -1,4 +1,6 @@
 import { FileText, Download, Trash2,Loader2 } from 'lucide-react';
+import FormattedDate from '../FormattedDate/FormattedDate';
+
 
 interface ImportHistoryEntry {
   id: string;
@@ -55,7 +57,19 @@ export default function ImportHistoryTable({ history,onDelete,onDownload,downloa
                 <span className="truncate" title={item.file}>{item.file}</span>
               </td>
               {/* Coluna 2: Data */}
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.date}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                <FormattedDate 
+                  isoDate={item.date} 
+                  options={{
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  timeZone: 'America/Sao_Paulo'
+                  }} 
+                />
+              </td>
               {/* Coluna 3: Status */}
               <td className="px-6 py-4 whitespace-nowrap">
                 <ImportStatusBadge status={item.status} />
