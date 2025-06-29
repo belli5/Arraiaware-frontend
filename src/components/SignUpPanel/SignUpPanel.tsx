@@ -4,6 +4,7 @@ import type { NotificationState } from '../../types/global';
 import NotificationMessages from '../NotificationMessages/NotificationMessages';
 import CustomSelect from '../CustomSelect/CustomSelect';
 import type { SelectOption } from '../CustomSelect/CustomSelect';
+import type { RoleFromApi, TrackSignUp } from '../../types/RH';
 
 const rolesOptions: SelectOption[] = [
   { id: 'COLABORADOR', name: 'Colaborador' },
@@ -11,57 +12,71 @@ const rolesOptions: SelectOption[] = [
   { id: 'RH', name: 'RH' },
 ];
 
-interface Track {
-  id: string; 
-  name: string; 
-}
-
 export default function SignUpPanel() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [selectedRole, setSelectedRole] = useState<SelectOption | null>(null);
   const [selectedTrack, setSelectedTrack] = useState<SelectOption | null>(null);
-  
-
+  const [cargos, setCargos] = useState<SelectOption[]>([]);
+  const [selectedCargo, setSelectedCargo] = useState<SelectOption | null>(null);
+  const [tracks, setTracks] = useState<TrackSignUp[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState<NotificationState | null>(null);
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [isLoadingTracks, setIsLoadingTracks] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); 
   
+  const fetchCargos = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const response = await fetch('http://localhost:3000/api/roles', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Falha ao buscar cargos');
+      const allRoles: RoleFromApi[] = await response.json();
+      const filteredCargos = allRoles
+        .filter(role => role.type === 'CARGO')
+        .map(role => ({ id: role.id, name: role.name }));
+      setCargos(filteredCargos);
+    } catch (error) {
+      console.error("Erro ao buscar cargos:", error);
+    }
+  };
+  
+  const fetchTracks = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setNotification({ status: 'error', title: 'Autenticação', message: 'Não foi possível buscar as trilhas.' });
+      return;
+    }
+    try {
+      const response = await fetch('http://localhost:3000/api/roles/trilhas', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Falha ao buscar trilhas');
+      const tracksFromApi: { id: string; nome_da_trilha: string }[] = await response.json();
+      setTracks(tracksFromApi.map(track => ({ id: track.id, name: track.nome_da_trilha })));
+    } catch (error) {
+      console.error("Erro ao buscar trilhas:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchTracks = async () => {
-      setIsLoadingTracks(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setNotification({ status: 'error', title: 'Autenticação', message: 'Não foi possível buscar as trilhas.' });
-        setIsLoadingTracks(false);
-        return;
-      }
+    const loadInitialData = async () => {
+      setIsLoading(true); 
+      await Promise.all([
+        fetchTracks(),
+        fetchCargos()
+      ]);
 
-      try {
-        const response = await fetch('http://localhost:3000/api/roles/trilhas', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-        if (!response.ok) throw new Error('Falha ao buscar trilhas');
-        const tracksFromApi: { id: string; nome_da_trilha: string }[] = await response.json();
-        setTracks(tracksFromApi.map(track => ({
-          id: track.id,
-          name: track.nome_da_trilha,
-        })));
-
-      } catch (error) {
-        console.error("Erro ao buscar trilhas:", error);
-      } finally {
-        setIsLoadingTracks(false);
-      }
+      setIsLoading(false); 
     };
 
-    fetchTracks();
+    loadInitialData();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-     if (!name.trim() || !email.trim() || !selectedRole || !selectedTrack) {
+     if (!name.trim() || !email.trim() || !selectedRole || !selectedTrack || !selectedCargo) {
       setNotification({ status: 'error', title: 'Campos Inválidos', message: 'Por favor, preencha todos os campos.' });
       return;
     }
@@ -81,7 +96,10 @@ export default function SignUpPanel() {
         name,
         email,
         userType: selectedRole.id, 
-        trackID: selectedTrack.id, 
+        roleIds: [
+          selectedTrack.id, 
+          selectedCargo.id
+        ],
       };
       console.log(requestBody);
       
@@ -104,6 +122,7 @@ export default function SignUpPanel() {
         setEmail('');
         setSelectedRole(null);
         setSelectedTrack(null);
+        setSelectedCargo(null);
       } else if (response.status === 400) {
         throw new Error('Parâmetros inválidos. Verifique os dados e tente novamente.');
       
@@ -128,48 +147,45 @@ export default function SignUpPanel() {
       <div className="bg-white p-6 md:p-8 rounded-b-lg rounded-r-lg shadow-md">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Cadastrar Novo Usuário</h2>
-          <p className="text-base text-gray-500 mt-1">Preencha os dados abaixo para criar um novo usuário no sistema RPE.</p>
+          <p className="text-base text-gray-500 mt-1">Preencha os dados abaixo para criar um novo usuário no sistema.</p>
         </div>
-
         <div className="mt-8 mx-auto ">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
-              <div>
+              {/* Nome e Email */}
+              <div className="md:col-span-3">
                 <label htmlFor="name" className="block text-sm font-bold text-gray-700">Nome Completo</label>
                 <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500`} />
               </div>
-
-              <div>
+              <div className="md:col-span-3">
                 <label htmlFor="email" className="block text-sm font-bold text-gray-700">Email</label>
                 <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500`} />
               </div>
-
-              <div>
+              
+              {/* Vínculo:*/}
+              <div className="md:col-span-1">
                 <label className="block text-sm font-bold text-gray-700">Vínculo</label>
-                <CustomSelect
-                  options={rolesOptions}
-                  selected={selectedRole}
-                  onChange={setSelectedRole}
-                  placeholder="Selecione um vínculo"
-                />
+                <CustomSelect options={rolesOptions} selected={selectedRole} onChange={setSelectedRole} placeholder="Selecione um vínculo" />
               </div>
-
-              <div>
+              
+              {/* Cargo */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-bold text-gray-700">Cargo</label>
+                <CustomSelect options={cargos} selected={selectedCargo} onChange={setSelectedCargo} placeholder={isLoading ? "Carregando..." : "Selecione um cargo"} />
+              </div>
+              
+              {/* Trilha */}
+              <div className="md:col-span-3">
                 <label className="block text-sm font-bold text-gray-700">Trilha</label>
-                <CustomSelect
-                  options={tracks}
-                  selected={selectedTrack}
-                  onChange={setSelectedTrack}
-                  placeholder={isLoadingTracks ? "Carregando trilhas..." : "Selecione uma trilha"}
-                />
+                <CustomSelect options={tracks} selected={selectedTrack} onChange={setSelectedTrack} placeholder={isLoading ? "Carregando..." : "Selecione uma trilha"} />
               </div>
             </div>
             
             <div className="flex justify-end pt-4">
               <button 
                 type="submit" 
-                disabled={isSubmitting || isLoadingTracks}
+                disabled={isSubmitting || isLoading}
                 className="inline-flex items-center justify-center gap-2 px-6 py-2.5 border border-transparent text-sm font-semibold rounded-lg shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-orange-300 disabled:cursor-not-allowed"
               >
                 <UserPlus size={18} />

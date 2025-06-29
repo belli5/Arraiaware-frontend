@@ -14,7 +14,7 @@ export interface Track {
   criteria: Criterion[];
 }
 
-export type RHTabId = 'Cadastrar' |'status' | 'criterios' | 'historico' ;
+export type RHTabId = 'Cadastrar' |'status' | 'criterios' | 'historico' | 'cargos' ;
 
 export type Role = 'Colaborador' | 'Gestor' | 'RH';
 
@@ -53,4 +53,16 @@ export interface DashboardData {
   completedEvaluations: number;
   pendingEvaluations: number;
   overdueEvaluations: number;
+}
+
+export interface TrackSignUp {
+  id: string; 
+  name: string; 
+}
+
+export interface RoleFromApi {
+  id: string;
+  name: string;
+  type: "TRILHA" | "CARGO" | "VINCULO";
+  description: string;
 }
