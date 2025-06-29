@@ -32,9 +32,16 @@ export default function CriteriaPanel() {
   );
 
   useEffect(() => {
-    fetchTracks();
-    fetchAllCriteria();
-  }, []);
+  const loadInitialData = async () => {
+    setIsLoading(true);
+    await Promise.all([
+      fetchTracks(),
+      fetchAllCriteria()
+    ]);
+    setIsLoading(false);
+  };
+  loadInitialData();
+}, []);
 
   const fetchAllCriteria = async () => {
     const token = localStorage.getItem('token');
@@ -53,43 +60,36 @@ export default function CriteriaPanel() {
   };
 
   const fetchTracks = async () => {
-    setIsLoading(true);
-    setError(null);
-    const token = localStorage.getItem('token');
+  setError(null);
+  const token = localStorage.getItem('token');
+  if (!token) {
+    setError("Autenticação necessária.");
+    return;
+  }
+  
+  try {
+    const response = await fetch('http://localhost:3000/api/roles/trilhas', {
+      method: "GET",
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
 
-    if (!token) {
-      setError("Autenticação necessária.");
-      setIsLoading(false);
-      return;
+    if (!response.ok) {
+      throw new Error(`Erro ao buscar trilhas: ${response.statusText}`);
     }
-    
-    try {
-      const response = await fetch('http://localhost:3000/api/roles/trilhas', {
-        method: "GET",
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
 
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar critérios: ${response.statusText}`);
-      }
+    const apiTracks: TracksFromApi[] = await response.json();
+    const formattedTracks: Track[] = apiTracks.map(trackFromApi => ({
+      id: trackFromApi.id,
+      name: trackFromApi.nome_da_trilha, 
+      department: trackFromApi.department || 'Departamento não informado', 
+      criteria: trackFromApi.criterios, 
+    }));
 
-      const tracks: TracksFromApi[] = await response.json();
-      const formattedTracks: Track[] = tracks.map(trackFromApi => ({
-        id: trackFromApi.id,
-        name: trackFromApi.nome_da_trilha, 
-        department: trackFromApi.department || 'Departamento não informado', 
-        criteria: trackFromApi.criterios, 
-      }));
-
-      setTracks(formattedTracks);
-      console.log(formattedTracks);
-
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    setTracks(formattedTracks);
+  } catch (err) {
+    setError((err as Error).message);
+  }
+};
 
   const handleAssociateCriterionSubmit = async (trackId: string, criterionId: string) => {
     setIsSubmitting(true);
@@ -239,9 +239,52 @@ const handleCreateTrackSubmit = async (data: { name: string; description: string
     setIsSubmitting(false);
   }
 };
-  const handleDeleteCriterion = (trackId: string, criterionId: string) => {
-    console.log("Deletando critério:", { trackId, criterionId });
-  };
+  const handleDeleteCriterion = async (trackId: string, criterionId: string) => {
+  const isConfirmed = window.confirm(
+    "Você tem certeza que deseja desassociar este critério desta trilha? A ação não pode ser desfeita."
+  );
+
+  if (!isConfirmed) {
+    return; 
+  }
+
+  setIsSubmitting(true);
+  setNotification(null);
+  const token = localStorage.getItem('token');
+
+  if (!token) {
+    setNotification({ status: 'error', title: 'Erro de Autenticação', message: 'Por favor, faça login novamente.' });
+    setIsSubmitting(false);
+    return;
+  }
+
+  const endpoint = `http://localhost:3000/api/criteria/${criterionId}/disassociate-role`;
+  const requestBody = { roleId: trackId };
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'DELETE', 
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Erro ${response.status} ao desassociar o critério.`);
+    }
+
+    setNotification({ status: 'success', title: 'Sucesso!', message: 'Critério desassociado da trilha.' });
+    fetchTracks();
+
+  } catch (error) {
+    setNotification({ status: 'error', title: 'Falha na Operação', message: (error as Error).message });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleOpenCreateModal = () => {
     setEditingCriterion(null); 
