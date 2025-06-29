@@ -1,4 +1,4 @@
-import { Trash2, Pencil } from 'lucide-react'; 
+import { Trash2, Pencil,Link2 } from 'lucide-react'; 
 import type { Criterion, Track, CriterionType } from '../../types/RH';
 
 const TypeBadge = ({ type }: { type: CriterionType }) => {
@@ -13,11 +13,12 @@ const TypeBadge = ({ type }: { type: CriterionType }) => {
 
 interface TrackCriteriaProps {
   track: Track;
-  onDeleteCriterion: (trackId: number, criterionId: number) => void;
+  onDeleteCriterion: (trackId: string, criterionId: string) => void;
   onEditCriterion: (criterion: Criterion) => void;
+  onOpenAssociateModal: (track: Track) => void;
 }
 
-export default function TrackCriteria({ track, onDeleteCriterion, onEditCriterion }: TrackCriteriaProps) {
+export default function TrackCriteria({ track, onDeleteCriterion, onEditCriterion, onOpenAssociateModal }: TrackCriteriaProps) {
   return (
     <div className="border border-gray-200 rounded-lg p-4">
       {/* Cabeçalho da Trilha */}
@@ -31,20 +32,30 @@ export default function TrackCriteria({ track, onDeleteCriterion, onEditCriterio
 
       {/* Lista de Critérios Configurados */}
       <div className="mt-4 space-y-3">
-        <h4 className="font-semibold text-sm text-gray-700">Critérios Configurados:</h4>
+        <div className="flex justify-between items-center">
+          <h4 className="font-semibold text-sm text-gray-700">Critérios Configurados:</h4>
+          <button 
+            onClick={() => onOpenAssociateModal(track)}
+            className="flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-800 font-semibold"
+            title="Associar critério existente"
+          >
+            <Link2 size={16}/>
+            Associar Critério
+          </button>
+        </div>
         {track.criteria.map(criterion => (
           <div key={criterion.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
             <div>
               <div className="flex items-center gap-3">
-                <p className="font-semibold text-gray-800">{criterion.name}</p>
-                <TypeBadge type={criterion.type} />
+                <p className="font-semibold text-gray-800">{criterion.criterionName}</p>
+                <TypeBadge type={criterion.pillar} />
               </div>
               <p className="text-sm text-gray-600 mt-1">{criterion.description}</p>
             </div>
             {/* Botões de ação: Editar e Excluir */}
             <div className="flex items-center gap-2">
               <button
-                onClick={() => onEditCriterion(criterion)} // Chama a função de edição do pai
+                onClick={() => onEditCriterion(criterion)}
                 className="text-gray-400 hover:text-blue-500"
                 title="Editar critério"
               >

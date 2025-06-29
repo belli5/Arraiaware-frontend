@@ -1,31 +1,25 @@
 import { useState,useEffect } from 'react';
 import { Check } from 'lucide-react';
 import type {Criterion,Track, CriterionType} from '../../types/RH';
-
-interface NewCriterionData {
-  name: string;
-  type: CriterionType;
-  description: string;
-}
-
-interface ExistingCriterionData extends NewCriterionData {
-  id: number;
-}
+import type { NewCriterionData,ExistingCriterionData } from '../../types/RH';
 
 interface CriteriaFormProps {
   tracks: Track[];
   onCancel: () => void;
-  onSubmit: (trackId: number, data: NewCriterionData | ExistingCriterionData) => void;
-  initialData?: { trackId: number; criterion: Criterion } | null;
+  onSubmit: (trackId: string, data: NewCriterionData | ExistingCriterionData) => void;
+  initialData?: { trackId: string; criterion: Criterion } | null;
+  isSubmitting: boolean; 
 }
+
 
 const criterionTypes: CriterionType[] = ['Comportamento', 'Execução', 'Gestão e Liderança'];
 
-export default function CriteriaForm({ tracks, onCancel, onSubmit, initialData}: CriteriaFormProps) {
+export default function CriteriaForm({ tracks, onCancel, onSubmit, initialData, isSubmitting }: CriteriaFormProps) {
   const [name, setName] = useState('');
   const [type, setType] = useState<CriterionType | ''>('');
   const [description, setDescription] = useState('');
   const [selectedTrackId, setSelectedTrackId] = useState<string>('');
+
 
   const [errors, setErrors] = useState({
     trackId: '', name: '', type: '', description: ''
@@ -49,10 +43,10 @@ export default function CriteriaForm({ tracks, onCancel, onSubmit, initialData}:
   const isEditing = !!initialData;
   useEffect(() => {
     if (isEditing && initialData) {
-      setSelectedTrackId(initialData.trackId.toString()); 
-      setName(initialData.criterion.name);
+      setSelectedTrackId(initialData.trackId); 
+      setName(initialData.criterion.criterionName);
       setDescription(initialData.criterion.description);
-      setType(initialData.criterion.type);
+      setType(initialData.criterion.pillar);
     } else {
       setSelectedTrackId('');
       setName('');
@@ -63,26 +57,14 @@ export default function CriteriaForm({ tracks, onCancel, onSubmit, initialData}:
 
   
   const handleSubmit = () => {
-    if (!validate()) return; 
-
+    if (!validate()) return;
     if (selectedTrackId && type) {
       if (isEditing && initialData) {
-        // Se estiver editando, envia o objeto completo, incluindo o ID original
-        const dataToSubmit: ExistingCriterionData = {
-          id: initialData.criterion.id,
-          name,
-          description,
-          type,
-        };
-        onSubmit(Number(selectedTrackId), dataToSubmit);
+        const dataToSubmit: ExistingCriterionData = { id: initialData.criterion.id, name, description, type };
+        onSubmit(selectedTrackId, dataToSubmit);
       } else {
-        // Se estiver criando, envia apenas os dados novos (sem ID)
-        const dataToSubmit: NewCriterionData = {
-          name,
-          description,
-          type,
-        };
-        onSubmit(Number(selectedTrackId), dataToSubmit);
+        const dataToSubmit: NewCriterionData = { name, description, type };
+        onSubmit(selectedTrackId, dataToSubmit);
       }
     }
   };
@@ -97,7 +79,7 @@ export default function CriteriaForm({ tracks, onCancel, onSubmit, initialData}:
           value={selectedTrackId}
           onChange={e => setSelectedTrackId(e.target.value)}
           className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.trackId ? 'border-red-500' : 'border-gray-300'}`}
-          disabled={isEditing} // NAO PODEMOS EDITAR A TRILHA (ATE ENTAO)
+          disabled={isEditing}
         >
           <option disabled value="">Selecione uma trilha</option>
           {tracks.map(track => (
@@ -172,10 +154,11 @@ export default function CriteriaForm({ tracks, onCancel, onSubmit, initialData}:
         </button>
         <button
           onClick={handleSubmit}
+          disabled={isSubmitting}
           className="inline-flex items-center justify-center gap-x-2 px-4 py-2 border border-transparent text-sm font-semibold rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
         >
           <Check size={16} />
-          {isEditing ? 'Salvar Edição' : 'Salvar Critério'} {/* Texto do botão dinâmico */}
+          {isSubmitting ? 'Salvando...' : (isEditing ? 'Salvar Edição' : 'Salvar Critério')}
         </button>
       </div>
     </div>
