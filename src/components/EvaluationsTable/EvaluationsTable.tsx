@@ -1,4 +1,6 @@
 import type { Evaluation } from "../../types/evaluation";
+import FormattedDate from "../FormattedDate/FormattedDate"; 
+
 interface EvaluationsTableProps {
     evaluations: Evaluation[];
 }
@@ -38,7 +40,7 @@ export default function EvaluationsTable({ evaluations }: EvaluationsTableProps)
                 <thead className="bg-gray-50">
                     <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Colaborador</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ciclo</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trilha</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progresso</th>
@@ -50,12 +52,36 @@ export default function EvaluationsTable({ evaluations }: EvaluationsTableProps)
                     {evaluations.map((evalItem) => (
                         <tr key={evalItem.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{evalItem.collaborator}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{evalItem.department}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{evalItem.cycleName}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{evalItem.track}</td>
                             <td className="pl-3 pr-6 py-4 whitespace-nowrap"><StatusBadge status={evalItem.status} /></td>
                             <td className="px-6 py-4 whitespace-nowrap"><ProgressBar progress={evalItem.progress} /></td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{evalItem.deadline}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{evalItem.completedAt}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                <FormattedDate 
+                                    isoDate={evalItem.deadline} 
+                                    options={{
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    timeZone: 'America/Sao_Paulo'
+                                    }} 
+                                />
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                <FormattedDate 
+                                    isoDate={evalItem.completedAt} 
+                                    options={{
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    timeZone: 'America/Sao_Paulo'
+                                    }} 
+                                />
+                            </td>
                         </tr>
                     ))}
                 </tbody>

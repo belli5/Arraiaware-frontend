@@ -1,18 +1,25 @@
 import { useState,useEffect,useRef } from 'react';
-import { Search, Filter, Download, ChevronDown } from "lucide-react";
+import { Search, Filter, Download, ChevronDown,Loader2 } from "lucide-react";
 import EvaluationsTable from "../EvaluationsTable/EvaluationsTable";
-import type { EvaluationTableType,Evaluation } from '../../types/evaluation';
+import type { EvaluationTableType,Evaluation,Cycle } from '../../types/evaluation';
 import Pagination from '../Pagination/Pagination';
 import EvaluationsTableSkeleton from '../EvaluationsTableSkeleton/EvaluationsTableSkeleton';
 
-const statusOptions = ['Todos', 'Concluída', 'Pendente', 'Em Atraso'];
-const departmentOptions = ['Todos', 'Tecnologia', 'Marketing', 'Vendas', 'RH'];
+const statusOptions = [
+  { value: 'all', label: 'Progresso' },
+  { value: 'Concluída', label: 'Concluída' },
+  { value: 'Pendente', label: 'Pendente' },
+  { value: 'Em Atraso', label: 'Em Atraso' }
+];
 
 export default function EvaluationsPanel() {
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('Todos');
-    const [departmentFilter, setDepartmentFilter] = useState('Todos');
-    
+    const [statusFilter, setStatusFilter] = useState('all');
+
+    const [cycleFilter, setCycleFilter] = useState('all');
+    const [cycles, setCycles] = useState<Cycle[]>([]);
+    const [isLoadingCycles, setIsLoadingCycles] = useState(true);
+
     const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -21,7 +28,7 @@ export default function EvaluationsPanel() {
     const panelRef = useRef<HTMLDivElement>(null);
 
     const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-    const [isDepartmentDropdownOpen, setIsDepartmentDropdownOpen] = useState(false);
+    const [isCycleDropdownOpen, setIsCycleDropdownOpen] = useState(false);
 
     const handleStatusSelect = (status: string) => {
         setStatusFilter(status);
@@ -29,10 +36,10 @@ export default function EvaluationsPanel() {
         setCurrentPage(1); 
     }
 
-    const handleDepartmentSelect = (department: string) => {
-        setDepartmentFilter(department);
-        setIsDepartmentDropdownOpen(false); 
-        setCurrentPage(1); 
+    const handleCycleSelect = (cycleId: string) => {
+        setCycleFilter(cycleId);
+        setIsCycleDropdownOpen(false);
+        setCurrentPage(1);
     }
 
     const handleSearchChange = (term: string) => {
@@ -55,8 +62,8 @@ export default function EvaluationsPanel() {
             try {
                 const params = new URLSearchParams();
                 if (searchTerm) params.append('search', searchTerm);
-                if (statusFilter !== 'Todos') params.append('status', statusFilter);
-                if (departmentFilter !== 'Todos') params.append('department', departmentFilter);
+                if (statusFilter !== 'all') params.append('status', statusFilter);
+                if (cycleFilter !== 'all') params.append('cycleId', cycleFilter); 
                 params.append('page', currentPage.toString());
                 params.append('limit', '10'); 
 
@@ -82,10 +89,10 @@ export default function EvaluationsPanel() {
         };
 
         fetchEvaluations();
-    }, [searchTerm, statusFilter, departmentFilter, currentPage]);
+    }, [searchTerm, statusFilter, cycleFilter, currentPage]);
 
     useEffect(() => {
-    if (panelRef.current) {
+    if (currentPage > 1 && panelRef.current) {
         const elementTop = panelRef.current.getBoundingClientRect().top + window.scrollY;
         const offset = 150; 
         window.scrollTo({
@@ -94,6 +101,33 @@ export default function EvaluationsPanel() {
         });
     }
     }, [currentPage]); 
+
+    useEffect(() => {
+        const fetchCycles = async () => {
+            setIsLoadingCycles(true);
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            try {
+                const response = await fetch('http://localhost:3000/api/cycles', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('Falha ao buscar ciclos de avaliação.');
+                const data: Cycle[] = await response.json();
+                setCycles(data);
+            } catch (err) {
+                console.error("Erro ao buscar ciclos:", err);
+            } finally {
+                setIsLoadingCycles(false);
+            }
+        };
+        fetchCycles();
+    }, []);
+
+    const selectedStatusLabel = statusOptions.find(opt => opt.value === statusFilter)?.label || 'Progresso';
+    const selectedCycleName = cycleFilter === 'all' 
+        ? 'Ciclo' 
+        : cycles.find(c => c.id === cycleFilter)?.cycleName || 'Ciclo';
 
     return (
         <div className="bg-white p-6 md:p-8 rounded-b-lg rounded-r-lg shadow-md">
@@ -125,44 +159,47 @@ export default function EvaluationsPanel() {
                     <div className="relative">
                         <button 
                             onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                            className="flex items-center justify-between gap-2 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 text-sm w-36"
+                            className="flex items-center justify-between gap-2 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 text-sm w-40" 
                         >
                             <Filter className="h-4 w-4 text-gray-500" />
-                            <span className="flex-grow text-left">{statusFilter}</span>
+                            <span className="flex-grow text-left">{selectedStatusLabel}</span> 
                             <ChevronDown className="h-4 w-4 text-gray-500" />
                         </button>
                         {isStatusDropdownOpen && (
-                            <div className="absolute top-full mt-2 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                                <ul>
-                                    {statusOptions.map(option => (
-                                        <li key={option} onClick={() => handleStatusSelect(option)} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
-                                            {option}
-                                        </li>
-                                    ))}
-                                </ul>
+                            <div className="absolute top-full mt-2 w-40 bg-white border rounded-lg shadow-lg z-10">
+                            <ul>
+                                {statusOptions.map(option => (
+                                <li 
+                                    key={option.value} 
+                                    onClick={() => handleStatusSelect(option.value)} 
+                                    className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                                >
+                                    {option.label}
+                                </li>
+                                ))}
+                            </ul>
                             </div>
                         )}
                     </div>
-
-                    {/* Container do Dropdown de Departamento */}
+                    {/* Container do Dropdown de ciclo */}
                     <div className="relative">
-                        <button 
-                            onClick={() => setIsDepartmentDropdownOpen(!isDepartmentDropdownOpen)}
-                            className="flex items-center justify-between gap-2 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 text-sm w-36"
-                        >
-                            <span className="flex-grow text-left">{departmentFilter}</span>
-                            <ChevronDown className="h-4 w-4 text-gray-500" />
+                        <button onClick={() => setIsCycleDropdownOpen(!isCycleDropdownOpen)} className="flex items-center justify-between gap-2 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 text-sm w-48">
+                        <span className="flex-grow text-left">{selectedCycleName}</span>
+                        <ChevronDown className="h-4 w-4 text-gray-500" />
                         </button>
-                        {isDepartmentDropdownOpen && (
-                            <div className="absolute top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                                <ul>
-                                    {departmentOptions.map(option => (
-                                        <li key={option} onClick={() => handleDepartmentSelect(option)} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
-                                            {option}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
+                        {isCycleDropdownOpen && (
+                        <div className="absolute top-full right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-10">
+                            {isLoadingCycles ? (
+                            <p className="px-4 py-2 text-sm text-gray-500 flex items-center gap-2"><Loader2 className="animate-spin h-4 w-4" /> Carregando...</p>
+                            ) : (
+                            <ul>
+                                <li onClick={() => handleCycleSelect('all')} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">Todos os Ciclos</li>
+                                {cycles.map(cycle => (
+                                <li key={cycle.id} onClick={() => handleCycleSelect(cycle.id)} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">{cycle.cycleName}</li>
+                                ))}
+                            </ul>
+                            )}
+                        </div>
                         )}
                     </div>
 
