@@ -1,87 +1,271 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { PlusCircle, Search } from 'lucide-react';
 import Modal from '../Modal/Modal';
 import TrackCriteria from '../TrackCriteria/TrackCriteria';
 import CriteriaForm from '../CriteriaForm/CriteriaForm';
 import type { Criterion, Track } from '../../types/RH';
-
-const initialTracks: Track[] = [
-  {
-    id: 1,
-    name: 'Desenvolvimento Frontend',
-    department: 'Tecnologia',
-    criteria: [
-      { id: 101, name: 'Entregar com qualidade', description: 'Capacidade de entregar tarefas com alta qualidade e poucos bugs.', type: 'Execução' },
-      { id: 102, name: 'Sentimento de Dono', description: 'Proatividade e responsabilidade com as entregas e o produto.', type: 'Comportamento' },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Desenvolvimento Backend',
-    department: 'Tecnologia',
-    criteria: [
-      { id: 201, name: 'Atender aos prazos', description: 'Consegue cumprir os prazos acordados para as tarefas.', type: 'Execução' },
-      { id: 105, name: 'Ser "team player"', description: 'Colabora efetivamente com os membros da equipe.', type: 'Comportamento' },
-      { id: 203, name: 'Conhecimento em nuvem', description: 'Experiência com arquiteturas e serviços de cloud computing.', type: 'Gestão e Liderança' },
-    ],
-  },
-];
+import NotificationMessages from '../NotificationMessages/NotificationMessages';
+import type { NotificationState } from '../../types/global';
+import type { NewCriterionData,ExistingCriterionData,TracksFromApi} from '../../types/RH';
+import CreateTrackForm from '../CreateTrackForm/CreateTrackForm';
+import AssociateCriterionForm from '../AssociateCriterionForm/AssociateCriterionForm';
+import TrackCriteriaSkeleton from '../TrackCriteriaSkeleton/TrackCriteriaSkeleton';
 
 export default function CriteriaPanel() {
   const [viewMode, setViewMode] = useState<'manage' | 'create'>('manage');
-  const [tracks, setTracks] = useState<Track[]>(initialTracks);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingCriterion, setEditingCriterion] = useState<{ trackId: number; criterion: Criterion } | null>(null);
+
+  const [tracks, setTracks] = useState<Track[]>([]); 
+  const [isLoading, setIsLoading] = useState(true); 
+  const [error, setError] = useState<string | null>(null);
+  
   const [trackSearchTerm, setTrackSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [editingCriterion, setEditingCriterion] = useState<{ trackId: string; criterion: Criterion } | null>(null); 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notification, setNotification] = useState<NotificationState | null>(null);
+  const [allCriteria, setAllCriteria] = useState<Criterion[]>([]);
+  const [isAssociateModalOpen, setIsAssociateModalOpen] = useState(false);
+  const [associatingTrack, setAssociatingTrack] = useState<Track | null>(null);
 
   const filteredTracks = tracks.filter(track =>
-    track.name.toLowerCase().includes(trackSearchTerm.toLowerCase())
+    track.name && track.name.toLowerCase().includes(trackSearchTerm.toLowerCase())
   );
 
-  const handleAddCriterion = (trackId: number, newCriterionData: Omit<Criterion, 'id'>) => {
-    const newCriterion: Criterion = {
-      id: Date.now(),
-      ...newCriterionData
+  useEffect(() => {
+    fetchTracks();
+    fetchAllCriteria();
+  }, []);
+
+  const fetchAllCriteria = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const response = await fetch('http://localhost:3000/api/criteria', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Falha ao buscar a lista de critérios.');
+      const criteria: Criterion[] = await response.json();
+      setAllCriteria(criteria);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchTracks = async () => {
+    setIsLoading(true);
+    setError(null);
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      setError("Autenticação necessária.");
+      setIsLoading(false);
+      return;
+    }
+    
+    try {
+      const response = await fetch('http://localhost:3000/api/roles/trilhas', {
+        method: "GET",
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro ao buscar critérios: ${response.statusText}`);
+      }
+
+      const tracks: TracksFromApi[] = await response.json();
+      const formattedTracks: Track[] = tracks.map(trackFromApi => ({
+        id: trackFromApi.id,
+        name: trackFromApi.nome_da_trilha, 
+        department: trackFromApi.department || 'Departamento não informado', 
+        criteria: trackFromApi.criterios, 
+      }));
+
+      setTracks(formattedTracks);
+      console.log(formattedTracks);
+
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAssociateCriterionSubmit = async (trackId: string, criterionId: string) => {
+    setIsSubmitting(true);
+    setNotification(null);
+    const token = localStorage.getItem('token');
+    const endpoint = `http://localhost:3000/api/criteria/${criterionId}/associate-role`;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ roleId: trackId })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Erro ${response.status} ao associar critério.`);
+      }
+
+      setNotification({ status: 'success', title: 'Sucesso!', message: 'Critério associado à trilha com sucesso!' });
+      setIsAssociateModalOpen(false); 
+      fetchTracks(); 
+    } catch (error) {
+      setNotification({ status: 'error', title: 'Falha na Associação', message: (error as Error).message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFormSubmit = async (trackId: string, data: NewCriterionData | ExistingCriterionData) => {
+  setIsSubmitting(true);
+  setNotification(null);
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    setNotification({ status: 'error', title: 'Erro de Autenticação', message: 'Por favor, faça login.' });
+    setIsSubmitting(false);
+    return;
+  }
+  const isEditing = 'id' in data;
+  
+  try {
+    if (isEditing) {
+      const endpoint = `http://localhost:3000/api/criteria/${data.id}`;
+      const requestBody = {
+        criterionName: data.name,
+        description: data.description,
+        pillar: data.type,
+      };
+
+      const response = await fetch(endpoint, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Erro ${response.status} ao atualizar.`);
+      }
+
+      setNotification({ status: 'success', title: 'Sucesso!', message: 'Critério atualizado com sucesso.' });
+
+    } else {
+      const createEndpoint = 'http://localhost:3000/api/criteria';
+      const createRequestBody = {
+        criterionName: data.name,
+        description: data.description,
+        pillar: data.type,
+      };
+
+      const createResponse = await fetch(createEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(createRequestBody)
+      });
+
+      if (!createResponse.ok) {
+        throw new Error('Falha ao criar o novo critério.');
+      }
+      
+      const newCriterion: Criterion = await createResponse.json();
+      const associateEndpoint = `http://localhost:3000/api/criteria/${newCriterion.id}/associate-role`;
+      const associateRequestBody = { roleId: trackId };
+
+      const associateResponse = await fetch(associateEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(associateRequestBody)
+      });
+      
+      if (!associateResponse.ok) {
+        throw new Error('Critério foi criado, mas ocorreu uma falha ao associá-lo à trilha.');
+      }
+      setNotification({ status: 'success', title: 'Sucesso!', message: 'Critério criado e associado à trilha com sucesso!' });
+    }
+    handleCloseModal();
+    fetchTracks();
+
+  } catch (error) {
+    setNotification({ status: 'error', title: 'Falha na Operação', message: (error as Error).message });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+const handleCreateTrackSubmit = async (data: { name: string; description: string }) => {
+  setIsSubmitting(true);
+  setNotification(null);
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    setNotification({ status: 'error', title: 'Erro de Autenticação', message: 'Por favor, faça login novamente.' });
+    setIsSubmitting(false);
+    return;
+  }
+
+  try {
+    const requestBody = {
+      name: data.name,
+      type: 'TRILHA', 
+      description: data.description,
     };
 
-    setTracks(currentTracks =>
-      currentTracks.map(track =>
-        track.id === trackId ? { ...track, criteria: [...track.criteria, newCriterion] } : track
-      )
-    );
-    closeModals();
+    const response = await fetch('http://localhost:3000/api/roles', { 
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro ${response.status}: Não foi possível criar a trilha.`);
+    }
+
+    setNotification({ status: 'success', title: 'Sucesso!', message: `A trilha "${data.name}" foi criada.` });
+    setViewMode('manage'); 
+    fetchTracks(); 
+
+  } catch (error) {
+    setNotification({ status: 'error', title: 'Falha na Criação', message: (error as Error).message });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+  const handleDeleteCriterion = (trackId: string, criterionId: string) => {
+    console.log("Deletando critério:", { trackId, criterionId });
   };
 
-  const handleEditCriterion = (trackId: number, updatedCriterion: Criterion) => {
-    setTracks(currentTracks =>
-      currentTracks.map(track => {
-        if (track.id === trackId) {
-          const updatedCriteria = track.criteria.map(c =>
-            c.id === updatedCriterion.id ? updatedCriterion : c
-          );
-          return { ...track, criteria: updatedCriteria };
-        }
-        return track;
-      })
-    );
-    closeModals();
+  const handleOpenCreateModal = () => {
+    setEditingCriterion(null); 
+    setIsModalOpen(true);      
   };
 
-  const handleDeleteCriterion = (trackId: number, criterionId: number) => {
-    setTracks(currentTracks =>
-      currentTracks.map(track =>
-        track.id === trackId ? { ...track, criteria: track.criteria.filter(c => c.id !== criterionId) } : track
-      )
-    );
+  const handleOpenEditModal = (trackId: string, criterion: Criterion) => {
+    setEditingCriterion({ trackId, criterion }); 
+    setIsModalOpen(true);                       
   };
 
-  const openEditModal = (trackId: number, criterion: Criterion) => {
-    setEditingCriterion({ trackId, criterion });
-  };
-
-  const closeModals = () => {
-    setIsAddModalOpen(false);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
     setEditingCriterion(null);
+  };
+
+  const handleOpenAssociateModal = (track: Track) => {
+    setAssociatingTrack(track);
+    setIsAssociateModalOpen(true);
+  };
+
+  const handleCloseAssociateModal = () => {
+    setIsAssociateModalOpen(false);
+    setAssociatingTrack(null);
   };
 
   return (
@@ -95,7 +279,6 @@ export default function CriteriaPanel() {
 
         {/* Abas internas e Botão de Ação */}
         <div className="mt-6 border-b border-gray-200 flex justify-between items-center">
-          {/* Filho 1: Agrupamento das abas */}
           <div className="flex space-x-4">
             <button onClick={() => setViewMode('manage')} className={`pb-2 text-sm font-semibold ${viewMode === 'manage' ? 'border-b-2 border-orange-500 text-orange-500' : 'text-gray-500 hover:text-gray-700'}`}>
               Gerenciar Trilhas
@@ -105,10 +288,10 @@ export default function CriteriaPanel() {
             </button>
           </div>
 
-          {/* Filho 2: Botão de ação */}
+          {/* Botão de ação "Criar Novo Critério" */}
           {viewMode === 'manage' && (
             <button
-              onClick={() => setIsAddModalOpen(true)}
+              onClick={handleOpenCreateModal} 
               className="mb-2 inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-semibold rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
               Criar Novo Critério
@@ -121,53 +304,93 @@ export default function CriteriaPanel() {
         <div className="mt-6">
           {viewMode === 'manage' && (
             <div className="space-y-6">
+              {/* Input de Busca */}
               <div className="relative w-full md:w-1/2">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Buscar por trilha..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-50"
                   value={trackSearchTerm}
                   onChange={(e) => setTrackSearchTerm(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
-              {filteredTracks.map(track => (
-                <TrackCriteria
-                  key={track.id}
-                  track={track}
-                  onDeleteCriterion={handleDeleteCriterion}
-                  onEditCriterion={(criterion) => openEditModal(track.id, criterion)}
-                />
-              ))}
-              {filteredTracks.length === 0 && (
-                <p className="text-center text-gray-500 py-4">Nenhuma trilha encontrada.</p>
+              
+              {isLoading ? (
+                <div className="space-y-6">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <TrackCriteriaSkeleton key={index} />
+                  ))}
+                </div>
+              ) : (
+                <>
+                  {filteredTracks.map(track => (
+                    <TrackCriteria
+                      key={track.id}
+                      track={track}
+                      onDeleteCriterion={handleDeleteCriterion}
+                      onEditCriterion={(criterion) => handleOpenEditModal(track.id, criterion)}
+                      onOpenAssociateModal={handleOpenAssociateModal}
+                    />
+                  ))}
+                  {filteredTracks.length === 0 && (
+                    <p className="text-center text-gray-500 py-4">Nenhuma trilha encontrada.</p>
+                  )}
+                </>
               )}
             </div>
           )}
           {viewMode === 'create' && (
-            <div><p>Formulário para criar nova trilha (Em breve)</p></div>
+            <CreateTrackForm
+              onSubmit={handleCreateTrackSubmit}
+              isSubmitting={isSubmitting}               
+            />
           )}
         </div>
       </div>
       
+      {/* Modal para Adicionar ou Editar Critérios */}
       <Modal
-        isOpen={isAddModalOpen || !!editingCriterion}
-        onClose={closeModals}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
         title={editingCriterion ? 'Editar Critério' : 'Adicionar Novo Critério'}
       >
         <CriteriaForm
           tracks={tracks}
-          onCancel={closeModals}
-          onSubmit={(trackId, data) => {
-            if (editingCriterion) {
-              handleEditCriterion(trackId, data as Criterion);
-            } else {
-              handleAddCriterion(trackId, data as Omit<Criterion, 'id'>);
-            }
-          }}
+          onCancel={handleCloseModal}
+          onSubmit={handleFormSubmit}
           initialData={editingCriterion}
+          isSubmitting={isSubmitting}
         />
       </Modal>
+      
+      {/* Modal para Associar Critérios */}
+      {associatingTrack && (
+        <Modal
+          isOpen={isAssociateModalOpen}
+          onClose={handleCloseAssociateModal}
+          title={`Associar Critério à Trilha "${associatingTrack.name}"`}
+        >
+          <AssociateCriterionForm
+            track={associatingTrack}
+            allCriteria={allCriteria}
+            onCancel={handleCloseAssociateModal}
+            onSubmit={handleAssociateCriterionSubmit}
+            isSubmitting={isSubmitting}
+          />
+        </Modal>
+      )}
+
+      {/* Notificações */}
+      {notification && (
+        <NotificationMessages
+          status={notification.status}
+          title={notification.title}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </>
   );
 }
