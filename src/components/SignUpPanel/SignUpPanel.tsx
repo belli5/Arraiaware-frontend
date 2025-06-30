@@ -1,48 +1,71 @@
-import { useState } from 'react';
-import { UserPlus,ChevronDown } from 'lucide-react';
-import type { Role } from '../../types/RH';
+import { useState,useEffect } from 'react';
+import { UserPlus} from 'lucide-react';
 import type { NotificationState } from '../../types/global';
 import NotificationMessages from '../NotificationMessages/NotificationMessages';
+import CustomSelect from '../CustomSelect/CustomSelect';
+import type { SelectOption } from '../CustomSelect/CustomSelect';
 
-const roles: Role[] = ['Colaborador', 'Gestor', 'RH'];
+const rolesOptions: SelectOption[] = [
+  { id: 'COLABORADOR', name: 'Colaborador' },
+  { id: 'GESTOR', name: 'Gestor' },
+  { id: 'RH', name: 'RH' },
+];
+
+interface Track {
+  id: string; 
+  name: string; 
+}
+
 export default function SignUpPanel() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    role: '',
-    unit: '',
-  });
-
-  const [errors, setErrors] = useState({
-    name: '',
-    email: '',
-    role: '',
-    unit: '',
-  });
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [selectedRole, setSelectedRole] = useState<SelectOption | null>(null);
+  const [selectedTrack, setSelectedTrack] = useState<SelectOption | null>(null);
+  
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState<NotificationState | null>(null);
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [isLoadingTracks, setIsLoadingTracks] = useState(true);
+  
+  useEffect(() => {
+    const fetchTracks = async () => {
+      setIsLoadingTracks(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setNotification({ status: 'error', title: 'Autenticação', message: 'Não foi possível buscar as trilhas.' });
+        setIsLoadingTracks(false);
+        return;
+      }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+      try {
+        const response = await fetch('http://localhost:3000/api/roles/trilhas', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!response.ok) throw new Error('Falha ao buscar trilhas');
+        const tracksFromApi: { id: string; nome_da_trilha: string }[] = await response.json();
+        setTracks(tracksFromApi.map(track => ({
+          id: track.id,
+          name: track.nome_da_trilha,
+        })));
 
-  const validate = (): boolean => {
-    let isValid = true;
-    const newErrors = { name: '', email: '', role: '', unit: '' };
+      } catch (error) {
+        console.error("Erro ao buscar trilhas:", error);
+      } finally {
+        setIsLoadingTracks(false);
+      }
+    };
 
-    if (!formData.name.trim()) { newErrors.name = 'Nome é obrigatório.'; isValid = false; }
-    if (!formData.email.trim()) { newErrors.email = 'Email é obrigatório.'; isValid = false; }
-    if (!formData.role) { newErrors.role = 'Vínculo é obrigatório.'; isValid = false; }
-    if (!formData.unit.trim()) { newErrors.unit = 'Unidade é obrigatória.'; isValid = false; }
-
-    setErrors(newErrors);
-    return isValid;
-  };
+    fetchTracks();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+     if (!name.trim() || !email.trim() || !selectedRole || !selectedTrack) {
+      setNotification({ status: 'error', title: 'Campos Inválidos', message: 'Por favor, preencha todos os campos.' });
+      return;
+    }
+
     const token = localStorage.getItem('token');
     if (!token) {
       console.error("Token de autenticação não encontrado. Redirecionando para o login.");
@@ -50,17 +73,15 @@ export default function SignUpPanel() {
       return; 
     }
     console.log(token);
-    if (!validate()) return;
-
     setIsSubmitting(true);
     setNotification(null); 
 
     try {
       const requestBody = {
-        name: formData.name,
-        email: formData.email,
-        userType: formData.role.toUpperCase(),
-        unidade: formData.unit,
+        name,
+        email,
+        userType: selectedRole.id, 
+        trackID: selectedTrack.id, 
       };
       console.log(requestBody);
       
@@ -77,11 +98,12 @@ export default function SignUpPanel() {
         setNotification({
           status: 'success',
           title: 'Cadastro Realizado!',
-          message: `O usuário ${formData.name} foi criado com sucesso.`
+          message: `O usuário ${name} foi criado com sucesso.`
         });
-        setFormData({ name: '', email: '', role: '', unit: '' });
-        setErrors({ name: '', email: '', role: '', unit: '' });
-      
+        setName('');
+        setEmail('');
+        setSelectedRole(null);
+        setSelectedTrack(null);
       } else if (response.status === 400) {
         throw new Error('Parâmetros inválidos. Verifique os dados e tente novamente.');
       
@@ -113,57 +135,41 @@ export default function SignUpPanel() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-6">
               
-              {/* Nome */}
-              <div className="md:col-span-2">
+              <div>
                 <label htmlFor="name" className="block text-sm font-bold text-gray-700">Nome Completo</label>
-                <input type="text" name="name" id="name" value={formData.name} onChange={handleChange} className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.name ? 'border-red-500' : 'border-gray-300'}`} />
-                {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+                <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500`} />
               </div>
 
-              {/* Email */}
-              <div className="md:col-span-2">
+              <div>
                 <label htmlFor="email" className="block text-sm font-bold text-gray-700">Email</label>
-                <input type="email" name="email" id="email" value={formData.email} onChange={handleChange} className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.email ? 'border-red-500' : 'border-gray-300'}`} />
-                {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
+                <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500`} />
               </div>
 
-              {/* Vínculo */}
-              <div className="md:col-span-2">
-                <label htmlFor="role" className="block text-sm font-bold text-gray-700">Vínculo</label>
-                <div className="relative mt-1">
-                  <select 
-                    name="role" 
-                    id="role" 
-                    value={formData.role} 
-                    onChange={handleChange} 
-                    className={`block w-full appearance-none rounded-md border py-2 px-3 shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-base 
-                      ${errors.role ? 'border-red-500' : 'border-gray-300'}
-                      ${formData.role ? 'text-gray-900' : 'text-gray-500'}` 
-                    }
-                  >
-                    <option value="" disabled>Selecione um vínculo</option>
-                    {roles.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
-
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <ChevronDown size={20} />
-                  </div>
-                </div>
-                {errors.role && <p className="mt-1 text-xs text-red-600">{errors.role}</p>}
+              <div>
+                <label className="block text-sm font-bold text-gray-700">Vínculo</label>
+                <CustomSelect
+                  options={rolesOptions}
+                  selected={selectedRole}
+                  onChange={setSelectedRole}
+                  placeholder="Selecione um vínculo"
+                />
               </div>
 
-              {/* Unidade */}
-              <div className="md:col-span-2">
-                <label htmlFor="unit" className="block text-sm font-medium text-gray-700">Unidade/Departamento</label>
-                <input type="text" name="unit" id="unit" value={formData.unit} onChange={handleChange} className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 ${errors.unit ? 'border-red-500' : 'border-gray-300'}`} />
-                {errors.unit && <p className="mt-1 text-xs text-red-600">{errors.unit}</p>}
+              <div>
+                <label className="block text-sm font-bold text-gray-700">Trilha</label>
+                <CustomSelect
+                  options={tracks}
+                  selected={selectedTrack}
+                  onChange={setSelectedTrack}
+                  placeholder={isLoadingTracks ? "Carregando trilhas..." : "Selecione uma trilha"}
+                />
               </div>
             </div>
-
-            <div className="flex justify-end">
+            
+            <div className="flex justify-end pt-4">
               <button 
                 type="submit" 
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoadingTracks}
                 className="inline-flex items-center justify-center gap-2 px-6 py-2.5 border border-transparent text-sm font-semibold rounded-lg shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-orange-300 disabled:cursor-not-allowed"
               >
                 <UserPlus size={18} />

@@ -36,6 +36,8 @@ export interface Evaluation {
     progress: number;
     deadline: string;
     completedAt: string;
+    cycleId: string;
+    cycleName: string;
 }
 
 export interface EvaluationTableType {
@@ -45,4 +47,10 @@ export interface EvaluationTableType {
         totalPages: number;
         currentPage: number;
     }
+}
+
+export interface Cycle {
+  id: string;
+  cycleName: string;
+  status: string;
 }
