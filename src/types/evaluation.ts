@@ -40,7 +40,7 @@ export interface Evaluation {
     cycleName: string;
 }
 
-export interface EvaluationTableType {
+export interface EvaluationTableFromApi {
     data: Evaluation[];
     pagination: {
         totalItems: number;

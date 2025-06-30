@@ -1,7 +1,7 @@
 import { useState,useEffect,useRef } from 'react';
 import { Search, Filter, Download, ChevronDown,Loader2 } from "lucide-react";
 import EvaluationsTable from "../EvaluationsTable/EvaluationsTable";
-import type { EvaluationTableType,Evaluation,Cycle } from '../../types/evaluation';
+import type { EvaluationTableFromApi,Evaluation,Cycle } from '../../types/evaluation';
 import Pagination from '../Pagination/Pagination';
 import EvaluationsTableSkeleton from '../EvaluationsTableSkeleton/EvaluationsTableSkeleton';
 
@@ -77,7 +77,7 @@ export default function EvaluationsPanel() {
                     throw new Error(`Erro ao buscar dados: ${response.statusText}`);
                 }
 
-                const result: EvaluationTableType = await response.json();
+                const result: EvaluationTableFromApi = await response.json();
                 setEvaluations(result.data);
                 setTotalPages(result.pagination.totalPages);
 
@@ -127,7 +127,7 @@ export default function EvaluationsPanel() {
     const selectedStatusLabel = statusOptions.find(opt => opt.value === statusFilter)?.label || 'Progresso';
     const selectedCycleName = cycleFilter === 'all' 
         ? 'Ciclo' 
-        : cycles.find(c => c.id === cycleFilter)?.cycleName || 'Ciclo';
+        : cycles.find(c => c.id === cycleFilter)?.cycleName|| 'Ciclo';
 
     return (
         <div className="bg-white p-6 md:p-8 rounded-b-lg rounded-r-lg shadow-md">
