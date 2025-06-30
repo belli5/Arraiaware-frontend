@@ -7,17 +7,14 @@ import {
   FaCrown,
 } from 'react-icons/fa';
 import { ArrowLeft, Check } from 'lucide-react';
-
 import Header from '../components/Header/Header_geral';
 import Footer from '../components/Footer/Footer';
 import EvaluationTabs from '../components/EvaluationTabs/EvaluationTabs';
 import QuestionList from '../components/QuestionList/QuestionList';
 import PeerEvaluationPanel from '../components/PeerEvaluationPanel/PeerEvaluationPanel';
 import ProgressSidebar from '../components/ProgressSideBar/ProgressSideBar';
-//import jwtDecode from 'jwt-decode'
 import type { Section, Colleague, Answer, Question } from '../types/evaluation';
 type Cycle = { id: string; name: string; status: string };
-//type JWTPayload = { sub: string; /* … */ }
 
 
 const peerQuestions: Question[] = [
@@ -75,27 +72,30 @@ export default function Avaliacao() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const userId = localStorage.getItem('userId') ?? '';
-
-
   const [cycleId, setCycleId] = useState<string>('');
+  
+  const [userId, setUserId] = useState<string>('');
 
-  //const rawToken = localStorage.getItem('token') ?? ''
-  //const { sub: userId } = rawToken
-    //? jwtDecode<JWTPayload>(rawToken)
-    //: { sub: '' }
+  useEffect(() => {
+    const raw = localStorage.getItem('token');
+    if (!raw) return;
 
-
-  ///useEffect(() => {
-    ///const raw = localStorage.getItem('token')
-    //if (!raw) return
-    //try {
-      //const { sub } = jwtDecode<JWTPayload>(raw)
-      //setUserId(sub)
-    //} catch (err) {
-      //console.error('token inválido', err)
-    //}
-  //}, [])
+    try {
+      const base64Payload = raw.split('.')[1]
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+      const json = decodeURIComponent(
+        atob(base64Payload)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const { sub } = JSON.parse(json);
+      setUserId(sub);            
+    } catch (e) {
+      console.error('Não conseguiu decodificar token:', e);
+    }
+  }, []);
 
   useEffect(() => {
     async function fetchCycles() {
@@ -220,7 +220,7 @@ export default function Avaliacao() {
         criterionId,
         score: Number(ans.scale),
         justification: ans.justification,
-        //scoreDescription: '',
+        scoreDescription: '',
       })),
     };
     try {

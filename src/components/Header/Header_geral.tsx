@@ -1,5 +1,5 @@
 import { Bell, Settings, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom";
 import { useEffect, useState } from "react";
 import logo from "../../../imagens/logo_arraiware.png";
 
@@ -13,6 +13,13 @@ export default function Header() {
       setUser(JSON.parse(stored));
     }
   }, []);
+
+  const linkClass = (isActive: boolean) =>
+    `px-2 py-1 rounded font-medium ${
+      isActive
+        ? 'text-orange-500'
+        : 'text-gray-900 hover:text-orange-500'
+    }`;
 
   return (
     <header className="fixed inset-x-0 top-0 bg-gradient-to-br from-white to-orange-300 shadow-md z-50">
@@ -34,34 +41,70 @@ export default function Header() {
           </div>
 
           <nav>
-            <ul className="flex space-x-6 text-gray-900">
+            <ul className="flex space-x-6">
               <li>
-                <button onClick={() => navigate('/home')} className="hover:text-orange-500 hover:opacity-90">
+                <NavLink
+                  to="/home"
+                  className={({ isActive }) => linkClass(isActive)}
+                >
                   Home
-                </button>
+                </NavLink>
               </li>
               <li>
-                <button onClick={() => navigate('/avaliacao/comportamento')} className="hover:text-orange-500">
+                <NavLink
+                  to="/avaliacao/comportamento"
+                  className={({ isActive }) => linkClass(isActive)}
+                >
                   Avaliação
-                </button>
+                </NavLink>
               </li>
               <li>
-                <button onClick={() => navigate('/avaliacao/goals')} className="hover:text-orange-500">
+                <NavLink
+                  to="/avaliacao/goals"
+                  className={({ isActive }) => linkClass(isActive)}
+                >
                   Resultados
-                </button>
+                </NavLink>
               </li>
               <li>
-                <button onClick={() => navigate('/avaliacao/growth')} className="hover:text-orange-500">
+                <NavLink
+                  to="/avaliacao/growth"
+                  className={({ isActive }) => linkClass(isActive)}
+                >
                   Metas
-                </button>
+                </NavLink>
               </li>
 
-              {/* Botão RH só aparece se for role.type === 'rh' */}
-              {user?.userType?.toLowerCase() === 'rh' && (
+              {(user?.userType?.toLowerCase() === 'rh' || user?.userType?.toLowerCase() === 'admin') && (
                 <li>
-                  <button onClick={() => navigate('/RH')} className="hover:text-orange-500 ">
+                  <NavLink
+                    to="/RH"
+                    className={({ isActive }) => linkClass(isActive)}
+                  >
                     Painel RH
-                  </button>
+                  </NavLink>
+                </li>
+              )}
+
+              {(user?.userType?.toLowerCase() === 'gestor' || user?.userType?.toLowerCase() === 'admin') && (
+                <li>
+                  <NavLink
+                    to="/gestor"
+                    className={({ isActive }) => linkClass(isActive)}
+                  >
+                    Painel Gestor
+                  </NavLink>
+                </li>
+              )}
+
+              {user?.userType?.toLowerCase() === 'admin' && (
+                <li>
+                  <NavLink
+                    to="/comite"
+                    className={({ isActive }) => linkClass(isActive)}
+                  >
+                    Painel Comitê
+                  </NavLink>
                 </li>
               )}
             </ul>
@@ -82,7 +125,9 @@ export default function Header() {
             <div className="p-1 bg-orange-200 rounded-full">
               <User className="h-5 w-5 text-gray-600" />
             </div>
-            <span className="text-gray-800 font-medium">{user?.name || 'Usuário'}</span>
+            <span className="text-gray-800 font-medium">
+              {user?.name || 'Usuário'}
+            </span>
           </div>
         </div>
       </div>
