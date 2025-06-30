@@ -96,13 +96,17 @@ export default function RH() {
         </section>
         <div className='max-w-[1600px] mx-auto px-6 lg:px-10'>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard
-              title="Total de Avaliações"
-              value={dashboardData?.totalEvaluations.toString() ?? '...'}
-              subtitle="Colaboradores ativos"
-              Icon={Users}
-              />
-              <StatCard
+
+            <StatCard 
+                title="Total de Avaliações"
+                value="150"
+                subtitle="Colaboradores ativos"
+                Icon={Users}
+                borderColor="border-black-500"
+                valueColor="text-black-500"
+                iconColor="text-black-500"
+            />
+            <StatCard 
                 title="Concluídas"
                 value={dashboardData?.completedEvaluations.toString() ?? '...'}
                 subtitle={`${completedPercentage}% do total`}

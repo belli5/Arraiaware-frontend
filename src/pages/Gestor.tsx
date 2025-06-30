@@ -48,6 +48,9 @@ export default function RH() {
                 value="5"
                 subtitle="Colaboradores ativos"
                 Icon={Users}
+                borderColor="border-black-500"
+                valueColor="text-black-500"
+                iconColor="text-black-500"
             />
             <StatCard 
                 title="Concluídos"

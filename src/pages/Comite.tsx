@@ -113,6 +113,14 @@ export default function Comite() {
     <div className="min-h-screen bg-orange-50 flex flex-col">
       <Header />
       <main className="flex-1 pt-24 px-6 lg:px-10">
+        <section className="mb-10 pl-12 text-left">
+            <h1 className="text-4xl font-bold flex items-center gap-2 mb-2">
+                Acompanhamento da equalização <span></span>
+            </h1>
+            <p className="text-gray-600 flex items-center gap-2">
+                Gerencie a equalização de avaliações e garanta justiça na calibração de notas.
+            </p>
+        </section>
         <div className="max-w-[1600px] mx-auto px-6 lg:px-10">
           {/* Cards de Estatísticas para o Comitê */}
           <CommitteeStatsGrid /> 

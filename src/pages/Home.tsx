@@ -1,9 +1,11 @@
-import React, { useContext } from 'react';
-import { FaRegFileAlt, FaChartLine, FaBullseye, FaClock } from 'react-icons/fa';
+import { useContext } from 'react';
+import { FaRegFileAlt, FaChartLine, FaBullseye} from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header/Header_geral';
 import Footer from '../components/Footer/Footer';
 import { AuthContext } from '../context/AuthContext';
+import StatCard from '../components/StatCard/StatCard';
+import { CheckCircle2, Clock, Users } from 'lucide-react';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -11,13 +13,13 @@ export default function Home() {
   const user = auth.user;
 
   return (
-    <div className="min-h-screen bg-orange-50 flex flex-col">
+    <div className="min-h-screen bg-orange-50">
       <div className="fixed top-0 left-0 w-full z-50">
         <Header />
       </div>
 
-      <main className="flex-1 pt-24 px-6 lg:px-10">
-        <section className="mb-10 text-center">
+      <main className="pt-24">
+        <section className="mb-10 text-center ml-12">
           <h1 className="text-4xl font-bold flex items-center gap-2 mb-2">
             Olá, {user?.name || 'visitante'}! <span className="wave">👋</span>
           </h1>
@@ -26,34 +28,50 @@ export default function Home() {
           </p>
         </section>
 
-        <section className="flex flex-wrap gap-6 justify-center pb-6">
-          <Card
-            title="Avaliações Completas"
-            value="12"
-            icon={<FaRegFileAlt className="text-orange-500" />}
-            bgIcon="bg-orange-100"
-          />
-          <Card
-            title="Pontuação Média"
-            value="8.5"
-            icon={<FaChartLine className="text-green-600" />}
-            bgIcon="bg-green-100"
-          />
-          <Card
-            title="Metas Atingidas"
-            value="7/10"
-            icon={<FaBullseye className="text-blue-600" />}
-            bgIcon="bg-blue-100"
-          />
-          <Card
-            title="Próxima Avaliação"
-            value="15 dias"
-            icon={<FaClock className="text-purple-600" />}
-            bgIcon="bg-purple-100"
-          />
-        </section>
+        <div className='max-w-[1600px] mx-auto px-6 lg:px-10'>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-7">
+            <StatCard 
+                title="Avaliaçãoes Concluídas"
+                value="12"
+                subtitle="59% do total"
+                Icon={CheckCircle2}
+                borderColor="border-green-500"
+                valueColor="text-green-500"
+                iconColor="text-green-500"
+            />
 
-        <section className="flex flex-row gap-4 justify-center mb-6">
+            <StatCard 
+                title="Pontuação Media"
+                value="8.5"
+                subtitle="Colaboradores ativos"
+                Icon={Users}
+                borderColor="border-black-500"
+                valueColor="text-black-500"
+                iconColor="text-black-500"
+            />
+            
+            <StatCard 
+                title="Metas Atingidas"
+                value="7/10"
+                subtitle="Aguardando conclusão"
+                Icon={FaBullseye}
+                borderColor="border-amber-500"
+                valueColor="text-amber-500"
+                iconColor="text-amber-500"
+            />
+            <StatCard 
+                title="Proxima Avaliação"
+                value="15 Dias"
+                subtitle="Requer atenção"
+                Icon={Clock}
+                borderColor="border-purple-500"
+                valueColor="text-purple-500"
+                iconColor="text-purple-500"
+              />
+         </div>
+        
+
+        <section className="flex flex-row gap-4 justify-center mb-6 mt-6">
           <div className="bg-white rounded-xl shadow-md p-6 w-[65%]">
             <div className="flex items-center mb-4 gap-2">
               <FaRegFileAlt className="text-orange-500 text-2xl" />
@@ -140,6 +158,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+      </div>
       </main>
 
       <Footer />
@@ -149,28 +168,6 @@ export default function Home() {
 
 //////////////////// COMPONENTES AUXILIARES ////////////////////
 
-const Card = ({
-  title,
-  value,
-  icon,
-  bgIcon,
-}: {
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-  bgIcon: string;
-}) => (
-  <div
-    className="bg-white rounded-xl shadow-md p-6  w-[23%] flex justify-between items-center
-               hover:shadow-lg hover:-translate-y-1 transform transition duration-300"
-  >
-    <div className="flex flex-col items-start">
-      <p className="text-sm text-gray-500 mb-2">{title}</p>
-      <p className="text-3xl font-bold text-gray-800">{value}</p>
-    </div>
-    <div className={`p-5 rounded-lg ${bgIcon}`}>{icon}</div>
-  </div>
-);
 
 const Badge = ({
   text,
