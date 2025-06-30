@@ -340,7 +340,11 @@ export default function Avaliacao() {
         <div className="max-w-screen-2xl mx-auto">
           <header className="mb-8">
             <h1 className="text-4xl font-bold text-gray-800 mb-2">
-              Autoavaliação Q4 2024
+              {currentSectionData.key === 'peer'
+                ? 'Avaliação de Pares Q4 2024'
+                : currentSectionData.key === 'leader'
+                ? 'Avaliação de Líderes Q4 2024'
+                : `Autoavaliação Q4 2024`}
             </h1>
             <div className="relative bg-gray-200 h-2 rounded-full">
               <div
