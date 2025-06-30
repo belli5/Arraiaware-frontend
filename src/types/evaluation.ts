@@ -51,6 +51,6 @@ export interface EvaluationTableFromApi {
 
 export interface Cycle {
   id: string;
-  cycleName: string;
+  name: string;
   status: string;
 }

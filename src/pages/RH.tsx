@@ -47,7 +47,7 @@ export default function RH() {
       }
 
       try {
-        const response = await fetch('http://localhost:3000/api/evaluations/dashboard', {
+        const response = await fetch('http://localhost:3000/api/dashboard/overall-stats', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!response.ok) throw new Error('Falha ao buscar dados do dashboard.');

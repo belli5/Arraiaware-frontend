@@ -127,7 +127,7 @@ export default function EvaluationsPanel() {
     const selectedStatusLabel = statusOptions.find(opt => opt.value === statusFilter)?.label || 'Progresso';
     const selectedCycleName = cycleFilter === 'all' 
         ? 'Ciclo' 
-        : cycles.find(c => c.id === cycleFilter)?.cycleName|| 'Ciclo';
+        : cycles.find(c => c.id === cycleFilter)?.name || 'Ciclo';
 
     return (
         <div className="bg-white p-6 md:p-8 rounded-b-lg rounded-r-lg shadow-md">
@@ -195,7 +195,7 @@ export default function EvaluationsPanel() {
                             <ul>
                                 <li onClick={() => handleCycleSelect('all')} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">Todos os Ciclos</li>
                                 {cycles.map(cycle => (
-                                <li key={cycle.id} onClick={() => handleCycleSelect(cycle.id)} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">{cycle.cycleName}</li>
+                                <li key={cycle.id} onClick={() => handleCycleSelect(cycle.id)} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">{cycle.name}</li>
                                 ))}
                             </ul>
                             )}
