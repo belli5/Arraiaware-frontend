@@ -14,7 +14,7 @@ export default function CommitteeExportPanel() {
   } = useExportPanelLogic();
 
   return (
-    <div className="bg-white p-6 md:p-8 rounded-lg shadow-md max-w-7xl mx-auto">
+    <div className="bg-white p-6 md:p-8 rounded-lg shadow-md">
         <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-800">Exportar Avaliações</h2>
             <p className="text-gray-500 mt-1">Selecione o ciclo para baixar o relatório completo em formato Excel.</p>

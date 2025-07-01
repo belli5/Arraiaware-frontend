@@ -96,7 +96,7 @@ const EqualizationTable: React.FC = () => (
 );
 
 export default function Comite() {
-  const [activeTab, setActiveTab] = useState<CommitteeTab>('equalizacao');
+  const [activeTab, setActiveTab] = useState<CommitteeTab>('exportacao');
   const contentPanelRef = useRef<HTMLDivElement>(null);
 
   const handleTabClick = (tabId: string) => {
