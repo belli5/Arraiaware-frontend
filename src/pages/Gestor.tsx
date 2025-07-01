@@ -128,6 +128,9 @@ export default function Manager() {
               value={dashboardData?.summary.totalCollaborators.toString() ?? '0'}
               subtitle="Colaboradores ativos"
               Icon={Users}
+              borderColor="border-black-500"
+              valueColor="text-black-500"
+              iconColor="text-black-500"
             />
             <StatCard 
               title="Concluídos"
