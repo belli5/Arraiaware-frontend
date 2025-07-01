@@ -1,78 +1,22 @@
-import { useState, useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
 import { UploadCloud, File, X } from 'lucide-react';
 import NotificationMessages from '../NotificationMessages/NotificationMessages';
-import type { UploadResult } from '../../types/RH';
+import { useFileUploadLogic } from '../../hooks/useFileUploadLogic'; 
 
-export default function FileUploadZone() {
-  const [files, setFiles] = useState<File[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
-
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    setFiles(prevFiles => [...prevFiles, ...acceptedFiles]);
-  }, []);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-      'text/csv': ['.csv'], 
-    }
-  });
-
-  const removeFile = (fileToRemove: File) => {
-    setFiles(prevFiles => prevFiles.filter(file => file !== fileToRemove));
-  };
-
-  const handleUpload = async () => {
-    if (files.length === 0)
-      return;
-
-    setIsUploading(true);
-    setUploadResult(null);
-
-    const formData = new FormData();
-    files.forEach(file => {
-      formData.append('files', file); 
-    });
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert("Erro de autenticação. Por favor, faça login novamente.");
-      setIsUploading(false);
-      return;
-    }
-
-    try {
-      const response = await fetch('http://localhost:3000/api/rh/import/history/batch', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (response.status === 201) {
-        setUploadResult({
-          status: 'success',
-          title: 'Importação Bem-Sucedida!',
-          message: `${files.length} arquivo(s) foram enviados para processamento.`
-        });
-        setFiles([]); 
-      } else {
-        throw new Error(`Falha no upload. O servidor respondeu com status ${response.status}`);
-      }
-    } catch (error) {
-      setUploadResult({
-        status: 'error',
-        title: 'Erro na Importação',
-        message: (error as Error).message,
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
+interface FileUploadZoneProps {
+  onUploadSuccess?: () => void;
+}
+export default function FileUploadZone({ onUploadSuccess }: FileUploadZoneProps) {
+  const {
+    files,
+    isUploading,
+    uploadResult,
+    setUploadResult,
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    removeFile,
+    handleUpload,
+  } = useFileUploadLogic({ onUploadSuccess });
 
   return (
     <div className="space-y-6">
@@ -91,7 +35,6 @@ export default function FileUploadZone() {
         <p className="mt-2 text-xs text-gray-400">Formatos suportados: .xlsx e .csv</p>
       </div>
       
-      {/* Lista de arquivos selecionados */}
       {files.length > 0 && (
         <div>
           <h4 className="font-semibold text-gray-800 mb-2">Arquivos Selecionados:</h4>
@@ -109,7 +52,6 @@ export default function FileUploadZone() {
               </li>
             ))}
           </ul>
-          {/* Botão de Upload */}
           <div className="mt-6 text-right">
             <button 
               onClick={handleUpload} 
