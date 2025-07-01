@@ -5,6 +5,14 @@ interface OverallProgressManagerProps {
 }
 
 export default function OverallProgressManager({ summary }: OverallProgressManagerProps) {
+  if (!summary) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-pulse mt-6">
+        <div className="h-5 bg-gray-200 rounded w-1/4 mb-4"></div>
+        <div className="h-8 bg-gray-300 rounded-full w-full"></div>
+    </div>
+    );
+  }
   const progressPercentage = Math.round(summary?.overallProgress || 0);
 
   return (

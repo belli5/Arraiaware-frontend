@@ -12,6 +12,7 @@ import Footer from '../components/Footer/Footer';
 import SignUpPanel from '../components/SignUpPanel/SignUpPanel';
 import type { RHTabId,DashboardData } from '../types/RH';
 import CreateRolePanel from '../components/CreateRolePanel/CreateRolePanel';
+import SkeletonStatCard from '../components/SkeletonStatCard/SkeletonStatCard';
 
 const rhTabOptions: Tab[] = [
   { id: 'status', label: 'Status das Avaliações', icon: <ClipboardList size={18} /> },
@@ -28,9 +29,6 @@ export default function RH() {
   const [isLoading, setIsLoading] = useState(true);
 
   const contentPanelRef = useRef<HTMLDivElement>(null);
-  const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId as RHTabId);
-  };
   
   const completedPercentage = dashboardData && dashboardData.totalEvaluations > 0
     ? Math.round((dashboardData.completedEvaluations / dashboardData.totalEvaluations) * 100)
@@ -64,23 +62,19 @@ export default function RH() {
     fetchDashboardData();
   }, []);
 
-  useEffect(() => {
-    if (contentPanelRef.current) {
-      const elementTop = contentPanelRef.current.getBoundingClientRect().top + window.scrollY;
-      const offset = 150;
-      window.scrollTo({
-        top: elementTop - offset,
-        behavior: 'smooth'
-      });
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'auto' }); 
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []); 
+  const handleTabClick = (tabId: string) => {
+      setActiveTab(tabId as RHTabId);
+      setTimeout(() => {
+        if (contentPanelRef.current) {
+          const elementTop = contentPanelRef.current.getBoundingClientRect().top + window.scrollY;
+          const offset = 150;
+          window.scrollTo({
+            top: elementTop - offset,
+            behavior: 'smooth'
+          });
+        }
+      }, 0); 
+    };
   
   return (
     <div className="min-h-screen bg-orange-50">
@@ -95,66 +89,78 @@ export default function RH() {
             </p>
         </section>
         <div className='max-w-[1600px] mx-auto px-6 lg:px-10'>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
-            <StatCard 
-                title="Total de Avaliações"
-                value={dashboardData?.totalEvaluations.toString() ?? '...'}
-                subtitle="Colaboradores ativos"
-                Icon={Users}
-                borderColor="border-black-500"
-                valueColor="text-black-500"
-                iconColor="text-black-500"
-            />
-            <StatCard 
-                title="Concluídas"
-                value={dashboardData?.completedEvaluations.toString() ?? '...'}
-                subtitle={`${completedPercentage}% do total`}
-                Icon={CheckCircle2}
-                borderColor="border-green-500"
-                valueColor="text-green-500"
-                iconColor="text-green-500"
-              />
-              <StatCard
-                title="Pendentes"
-                value={dashboardData?.pendingEvaluations.toString() ?? '...'}
-                subtitle="Aguardando conclusão"
-                Icon={Clock}
-                borderColor="border-amber-500"
-                valueColor="text-amber-500"
-                iconColor="text-amber-500"
-              />
-              <StatCard
-                title="Em Atraso"
-                value={dashboardData?.overdueEvaluations.toString() ?? '...'}
-                subtitle="Requer atenção"
-                Icon={AlertTriangle}
-                borderColor="border-red-500"
-                valueColor="text-red-500"
-                iconColor="text-red-500"
-              />
-            </div>
-            <OverallProgress data={
-              dashboardData ? {
-                completed: dashboardData.completedEvaluations,
-                pending: dashboardData.pendingEvaluations,
-                overdue: dashboardData.overdueEvaluations,
-                total: dashboardData.totalEvaluations
-              } : null }
-            />  
+            {isLoading || !dashboardData ? (
+              <>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <SkeletonStatCard />
+                  <SkeletonStatCard />
+                  <SkeletonStatCard />
+                  <SkeletonStatCard />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <StatCard 
+                      title="Total de Avaliações"
+                      value={dashboardData.totalEvaluations.toString()}
+                      subtitle="Colaboradores ativos"
+                      Icon={Users}
+                      borderColor="border-black-500"
+                      valueColor="text-black-500"
+                      iconColor="text-black-500"
+                  />
+                  <StatCard 
+                      title="Concluídas"
+                      value={dashboardData.completedEvaluations.toString()}
+                      subtitle={`${completedPercentage}% do total`}
+                      Icon={CheckCircle2}
+                      borderColor="border-green-500"
+                      valueColor="text-green-500"
+                      iconColor="text-green-500"
+                  />
+                    <StatCard
+                      title="Pendentes"
+                      value={dashboardData.pendingEvaluations.toString()}
+                      subtitle="Aguardando conclusão"
+                      Icon={Clock}
+                      borderColor="border-amber-500"
+                      valueColor="text-amber-500"
+                      iconColor="text-amber-500"
+                  />
+                    <StatCard
+                      title="Em Atraso"
+                      value={dashboardData.overdueEvaluations.toString()}
+                      subtitle="Requer atenção"
+                      Icon={AlertTriangle}
+                      borderColor="border-red-500"
+                      valueColor="text-red-500"
+                      iconColor="text-red-500"
+                  />
+                </div>
+                <OverallProgress data={{
+                  completed: dashboardData.completedEvaluations,
+                  pending: dashboardData.pendingEvaluations,
+                  overdue: dashboardData.overdueEvaluations,
+                  total: dashboardData.totalEvaluations
+                }} />
+              </>
+            )}
+            
             <Tabs 
               tabs={rhTabOptions}
               activeTab={activeTab} 
               onTabClick={handleTabClick}
-              className="mt-4 mb-4" 
+              className="mt-8 mb-4" 
             />
             <div ref={contentPanelRef} className="mt-[-1px]">
-            {activeTab === 'status' && <EvaluationsPanel />}
-            {activeTab === 'criterios' && <CriteriaPanel />}
-            {activeTab === 'cargos' && <CreateRolePanel />}
-            {activeTab === 'historico' && <HistoryPanel />}
-            {activeTab === 'Cadastrar' && <SignUpPanel />}
-          </div>
+              {activeTab === 'status' && <EvaluationsPanel />}
+              {activeTab === 'criterios' && <CriteriaPanel />}
+              {activeTab === 'cargos' && <CreateRolePanel />}
+              {activeTab === 'historico' && <HistoryPanel />}
+              {activeTab === 'Cadastrar' && <SignUpPanel />}
+            </div>
         </div>
 
         <Footer />

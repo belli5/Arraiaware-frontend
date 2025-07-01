@@ -1,18 +1,18 @@
-import { useState, useRef } from 'react';
+import { useState, useRef} from 'react';
 import Header from '../components/Header/Header_comite';
 import Footer from '../components/Footer/Footer';
 import CommitteeStatsGrid from '../components/CommitteeStatsGrid/CommitteeStatsGrid';
-import DataExportPanel from '../components/DataExportPanel/DataExportPanel'
 import CommitteeInsightsPanel from '../components/CommitteeInsightsPanel/CommitteeInsightsPanel';
 import type { CommitteeTab, ColaboradorAvaliacao } from '../types/committee';
 import Tabs from '../components/Tabs/Tabs';
 import type { Tab } from '../types/tabs';
 import { DownloadCloud, BarChart2, CheckCircle2 } from 'lucide-react';
+import CommitteeExportPanel from '../components/CommitteeExportPanel/CommitteeExportPanel'
 
 const committeeTabOptions: Tab[] = [
-  { id: 'equalizacao', label: 'Equalização por Colaborador', icon: <CheckCircle2 size={18} /> },
-  { id: 'insights', label: 'Insights Comparativos', icon: <BarChart2 size={18} /> },
   { id: 'exportacao', label: 'Exportar Dados', icon: <DownloadCloud size={18} /> },
+  { id: 'equalizacao', label: 'Equalização por Colaborador', icon: <CheckCircle2 size={18} /> },
+  { id: 'insights', label: 'Insights Comparativos', icon: <BarChart2 size={18} /> }
 ];
 
 const mockColaboradores: ColaboradorAvaliacao[] = [
@@ -24,7 +24,6 @@ const mockColaboradores: ColaboradorAvaliacao[] = [
   { id: 'emp006', nome: 'Felipe Dias', cargo: 'DevOps Eng.', status: 'Pendente', autoavaliacaoMedia: 0, paresMedia: 0, lideresMedia: 0 },
 ];
 
-// Componente para a Tabela de Equalização (simplificada)
 const EqualizationTable: React.FC = () => (
   <div className="bg-white rounded-xl shadow-lg p-6">
     <h3 className="text-xl font-semibold text-gray-700 mb-4">Status de Avaliação dos Colaboradores</h3>
@@ -97,18 +96,23 @@ const EqualizationTable: React.FC = () => (
 );
 
 export default function Comite() {
-  const [activeTab, setActiveTab] = useState<CommitteeTab>('equalizacao');
+  const [activeTab, setActiveTab] = useState<CommitteeTab>('exportacao');
   const contentPanelRef = useRef<HTMLDivElement>(null);
 
   const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId as CommitteeTab);
-    setTimeout(() => {
-      if (contentPanelRef.current) {
-        contentPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    }, 50);
-  };
-
+      setActiveTab(tabId as CommitteeTab);
+      setTimeout(() => {
+        if (contentPanelRef.current) {
+          const elementTop = contentPanelRef.current.getBoundingClientRect().top + window.scrollY;
+          const offset = 150;
+          window.scrollTo({
+            top: elementTop - offset,
+            behavior: 'smooth'
+          });
+        }
+      }, 0); 
+    };
+  
   return (
     <div className="min-h-screen bg-orange-50 flex flex-col">
       <Header />
@@ -122,10 +126,7 @@ export default function Comite() {
             </p>
         </section>
         <div className="max-w-[1600px] mx-auto px-6 lg:px-10">
-          {/* Cards de Estatísticas para o Comitê */}
           <CommitteeStatsGrid /> 
-
-          {/* Abas de Navegação do Comitê */}
           <Tabs
             tabs={committeeTabOptions}
             activeTab={activeTab}
@@ -135,9 +136,9 @@ export default function Comite() {
 
           {/* Conteúdo das Abas */}
           <div ref={contentPanelRef} className="mt-[-1px]">
+            {activeTab === 'exportacao' && <CommitteeExportPanel />}
             {activeTab === 'equalizacao' && <EqualizationTable />}
             {activeTab === 'insights' && <CommitteeInsightsPanel />}
-            {activeTab === 'exportacao' && <DataExportPanel />}
           </div>
         </div>
       </main>
