@@ -1,11 +1,11 @@
-// src/components/OverallProgress/OverallProgress.tsx
+import type { ManagerDashboardData } from "../../types/manager"; 
 
-export default function OverallProgress() {
-  const completed = 89;
-  const pending = 61;
-  const overdue = 12;
-  const total = completed + pending + overdue;
-  const progressPercentage = Math.round((completed / total) * 100);
+interface OverallProgressManagerProps {
+  summary: ManagerDashboardData['summary'];
+}
+
+export default function OverallProgressManager({ summary }: OverallProgressManagerProps) {
+  const progressPercentage = Math.round(summary?.overallProgress || 0);
 
   return (
     <div className="text-left bg-white p-6 rounded-lg shadow-sm mt-8">
@@ -21,14 +21,11 @@ export default function OverallProgress() {
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
-            className="bg-orange-500 h-2 rounded-full" 
+            className="bg-orange-500 h-2 rounded-full transition-all duration-500 ease-out" 
             style={{ width: `${progressPercentage}%` }}
           ></div>
         </div>
       </div>
-
-      
-     
     </div>
   );
 }

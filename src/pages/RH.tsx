@@ -99,7 +99,7 @@ export default function RH() {
 
             <StatCard 
                 title="Total de Avaliações"
-                value="150"
+                value={dashboardData?.totalEvaluations.toString() ?? '...'}
                 subtitle="Colaboradores ativos"
                 Icon={Users}
                 borderColor="border-black-500"

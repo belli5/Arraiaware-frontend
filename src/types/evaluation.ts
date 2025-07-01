@@ -38,6 +38,8 @@ export interface Evaluation {
     completedAt: string;
     cycleId: string;
     cycleName: string;
+    projectName: string;
+    projectId: string;
 }
 
 export interface EvaluationTableFromApi {
