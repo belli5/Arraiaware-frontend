@@ -9,3 +9,10 @@ export interface ColaboradorAvaliacao {
   paresMedia: number;
   lideresMedia: number;
 }
+
+export interface CommitteeSummary{
+  readyEvaluations: number;
+  overallAverage: number;
+  totalCollaborators: number;
+  pendingEvaluations: number;
+}
