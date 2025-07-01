@@ -1,22 +1,29 @@
 import { useState,useEffect,useRef } from 'react';
-import { Search, Filter, Download, ChevronDown,Loader2 } from "lucide-react";
+import { Search,Loader2 } from "lucide-react";
 import EvaluationsTable from "../EvaluationsTable/EvaluationsTable";
 import type { EvaluationTableFromApi,Evaluation,Cycle } from '../../types/evaluation';
 import Pagination from '../Pagination/Pagination';
 import EvaluationsTableSkeleton from '../EvaluationsTableSkeleton/EvaluationsTableSkeleton';
+import type { ManagerDashboardData } from '../../types/manager';
+import CustomSelect, { type SelectOption } from '../CustomSelect/CustomSelect';
 
-const statusOptions = [
-  { value: 'all', label: 'Progresso' },
-  { value: 'Concluída', label: 'Concluída' },
-  { value: 'Pendente', label: 'Pendente' },
-  { value: 'Em Atraso', label: 'Em Atraso' }
+const statusOptions: SelectOption[] = [
+    { id: 'all', name: 'Todos os Status' },
+    { id: 'Concluída', name: 'Concluída' },
+    { id: 'Pendente', name: 'Pendente' },
+    { id: 'Em Atraso', name: 'Em Atraso' }
 ];
 
-export default function EvaluationsPanel() {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
+interface EvaluationsPanelProps {
+    managerId?: string;
+}
 
-    const [cycleFilter, setCycleFilter] = useState('all');
+export default function EvaluationsPanel({managerId} : EvaluationsPanelProps) {
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const [statusFilter, setStatusFilter] = useState<SelectOption | null>(statusOptions[0]);
+    const [cycleFilter, setCycleFilter] = useState<SelectOption | null>({ id: 'all', name: 'Todos os Ciclos' });
+
     const [cycles, setCycles] = useState<Cycle[]>([]);
     const [isLoadingCycles, setIsLoadingCycles] = useState(true);
 
@@ -27,18 +34,13 @@ export default function EvaluationsPanel() {
     const [totalPages, setTotalPages] = useState(0);
     const panelRef = useRef<HTMLDivElement>(null);
 
-    const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-    const [isCycleDropdownOpen, setIsCycleDropdownOpen] = useState(false);
-
-    const handleStatusSelect = (status: string) => {
-        setStatusFilter(status);
-        setIsStatusDropdownOpen(false); 
+    const handleStatusSelect = (option: SelectOption) => {
+        setStatusFilter(option);
         setCurrentPage(1); 
     }
 
-    const handleCycleSelect = (cycleId: string) => {
-        setCycleFilter(cycleId);
-        setIsCycleDropdownOpen(false);
+    const handleCycleSelect = (option: SelectOption) => {
+        setCycleFilter(option);
         setCurrentPage(1);
     }
 
@@ -62,24 +64,32 @@ export default function EvaluationsPanel() {
             try {
                 const params = new URLSearchParams();
                 if (searchTerm) params.append('search', searchTerm);
-                if (statusFilter !== 'all') params.append('status', statusFilter);
-                if (cycleFilter !== 'all') params.append('cycleId', cycleFilter); 
+                if (statusFilter && statusFilter.id !== 'all') params.append('status', statusFilter.id);
+                if (cycleFilter && cycleFilter.id !== 'all') params.append('cycleId', cycleFilter.id); 
                 params.append('page', currentPage.toString());
                 params.append('limit', '10'); 
 
-                const response = await fetch(`http://localhost:3000/api/rh/evaluations?${params.toString()}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                const endpoint = managerId 
+                    ? `http://localhost:3000/api/dashboard/manager/${managerId}` 
+                    : 'http://localhost:3000/api/rh/evaluations'; 
+
+                const response = await fetch(`${endpoint}?${params.toString()}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (!response.ok) {
                     throw new Error(`Erro ao buscar dados: ${response.statusText}`);
                 }
 
-                const result: EvaluationTableFromApi = await response.json();
-                setEvaluations(result.data);
-                setTotalPages(result.pagination.totalPages);
+                if (managerId) {
+                    const result: ManagerDashboardData = await response.json();
+                    setEvaluations(result.evaluations); 
+                    setTotalPages(result.pagination.totalPages);
+                } else {
+                    const result: EvaluationTableFromApi = await response.json();
+                    setEvaluations(result.data); 
+                    setTotalPages(result.pagination.totalPages);
+                }
 
             } catch (err) {
                 setError((err as Error).message);
@@ -89,7 +99,7 @@ export default function EvaluationsPanel() {
         };
 
         fetchEvaluations();
-    }, [searchTerm, statusFilter, cycleFilter, currentPage]);
+    }, [searchTerm, statusFilter, cycleFilter, currentPage,managerId]);
 
     useEffect(() => {
     if (currentPage > 1 && panelRef.current) {
@@ -124,18 +134,23 @@ export default function EvaluationsPanel() {
         fetchCycles();
     }, []);
 
-    const selectedStatusLabel = statusOptions.find(opt => opt.value === statusFilter)?.label || 'Progresso';
-    const selectedCycleName = cycleFilter === 'all' 
-        ? 'Ciclo' 
-        : cycles.find(c => c.id === cycleFilter)?.name || 'Ciclo';
+    const cycleOptions: SelectOption[] = [
+        { id: 'all', name: 'Todos os Ciclos' },
+        ...cycles.map(c => ({ id: c.id, name: c.name }))
+    ];
 
     return (
         <div className="bg-white p-6 md:p-8 rounded-b-lg rounded-r-lg shadow-md">
-            
             {/* Cabeçalho do Painel */}
-            <div ref={panelRef} >
-                <h2 className="text-xl font-bold text-gray-800">Painel de Avaliações - Arraiware</h2>
-                <p className="text-base text-gray-500 mt-1">Acompanhe o progresso de todas as avaliações em andamento</p>
+            <div ref={panelRef}>
+                <h2 className="text-xl font-bold text-gray-800">
+                    {managerId ? 'Avaliações das Equipes' : 'Avaliações - Arraiware'}
+                </h2>
+                <p className="text-base text-gray-500 mt-1">
+                    {managerId
+                    ? 'Acompanhe o progresso das avaliações de todos seus liderados'
+                    : 'Acompanhe o progresso de todas as avaliações em andamento'}
+                </p>
             </div>
 
             {/* Barra de Ações (Busca e Filtros) */}
@@ -155,59 +170,28 @@ export default function EvaluationsPanel() {
                 
                 {/* Filtros e Exportação*/}
                 <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-                    {/* Container do Dropdown de Status */}
-                    <div className="relative">
-                        <button 
-                            onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                            className="flex items-center justify-between gap-2 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 text-sm w-40" 
-                        >
-                            <Filter className="h-4 w-4 text-gray-500" />
-                            <span className="flex-grow text-left">{selectedStatusLabel}</span> 
-                            <ChevronDown className="h-4 w-4 text-gray-500" />
-                        </button>
-                        {isStatusDropdownOpen && (
-                            <div className="absolute top-full mt-2 w-40 bg-white border rounded-lg shadow-lg z-10">
-                            <ul>
-                                {statusOptions.map(option => (
-                                <li 
-                                    key={option.value} 
-                                    onClick={() => handleStatusSelect(option.value)} 
-                                    className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
-                                >
-                                    {option.label}
-                                </li>
-                                ))}
-                            </ul>
+                    <div className="w-48">
+                         <CustomSelect
+                            options={statusOptions}
+                            selected={statusFilter}
+                            onChange={handleStatusSelect}
+                            placeholder="Filtrar por Status"
+                        />
+                    </div>
+                    <div className="w-48">
+                        {isLoadingCycles ? (
+                             <div className="flex items-center justify-center text-gray-500 border border-gray-300 px-4 py-2 rounded-lg text-sm">
+                                <Loader2 className="animate-spin h-4 w-4 mr-2" /> Carregando...
                             </div>
+                        ) : (
+                            <CustomSelect
+                                options={cycleOptions}
+                                selected={cycleFilter}
+                                onChange={handleCycleSelect}
+                                placeholder="Filtrar por Ciclo"
+                            />
                         )}
                     </div>
-                    {/* Container do Dropdown de ciclo */}
-                    <div className="relative">
-                        <button onClick={() => setIsCycleDropdownOpen(!isCycleDropdownOpen)} className="flex items-center justify-between gap-2 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 text-sm w-48">
-                        <span className="flex-grow text-left">{selectedCycleName}</span>
-                        <ChevronDown className="h-4 w-4 text-gray-500" />
-                        </button>
-                        {isCycleDropdownOpen && (
-                        <div className="absolute top-full right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-10">
-                            {isLoadingCycles ? (
-                            <p className="px-4 py-2 text-sm text-gray-500 flex items-center gap-2"><Loader2 className="animate-spin h-4 w-4" /> Carregando...</p>
-                            ) : (
-                            <ul>
-                                <li onClick={() => handleCycleSelect('all')} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">Todos os Ciclos</li>
-                                {cycles.map(cycle => (
-                                <li key={cycle.id} onClick={() => handleCycleSelect(cycle.id)} className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">{cycle.name}</li>
-                                ))}
-                            </ul>
-                            )}
-                        </div>
-                        )}
-                    </div>
-
-                    {/* Botão de Exportar */}
-                    <button className="flex items-center justify-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm font-semibold">
-                        <Download className="h-4 w-4" />
-                        <span>Exportar</span>
-                    </button>
                 </div>
             </div>
 
