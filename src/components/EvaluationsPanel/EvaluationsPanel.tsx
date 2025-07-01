@@ -1,143 +1,34 @@
-import { useState,useEffect,useRef } from 'react';
-import { Search,Loader2 } from "lucide-react";
+import { useRef, useEffect } from 'react';
+import { Search, Loader2 } from "lucide-react";
 import EvaluationsTable from "../EvaluationsTable/EvaluationsTable";
-import type { EvaluationTableFromApi,Evaluation,Cycle } from '../../types/evaluation';
 import Pagination from '../Pagination/Pagination';
 import EvaluationsTableSkeleton from '../EvaluationsTableSkeleton/EvaluationsTableSkeleton';
-import type { ManagerDashboardData } from '../../types/manager';
-import CustomSelect, { type SelectOption } from '../CustomSelect/CustomSelect';
-
-const statusOptions: SelectOption[] = [
-    { id: 'all', name: 'Todos os Status' },
-    { id: 'Concluída', name: 'Concluída' },
-    { id: 'Pendente', name: 'Pendente' },
-    { id: 'Em Atraso', name: 'Em Atraso' }
-];
+import CustomSelect from '../CustomSelect/CustomSelect';
+import { useEvaluationsPanelLogic } from '../../hooks/useEvaluationsPanelLogic'; 
 
 interface EvaluationsPanelProps {
     managerId?: string;
 }
 
-export default function EvaluationsPanel({managerId} : EvaluationsPanelProps) {
-    const [searchTerm, setSearchTerm] = useState('');
+export default function EvaluationsPanel({ managerId }: EvaluationsPanelProps) {
+    const {
+        searchTerm, statusFilter, cycleFilter, evaluations, isLoading, error,
+        currentPage, totalPages, isLoadingCycles, cycleOptions, statusOptions,
+        handleSearchChange, handleStatusSelect, handleCycleSelect, setCurrentPage
+    } = useEvaluationsPanelLogic({ managerId });
 
-    const [statusFilter, setStatusFilter] = useState<SelectOption | null>(statusOptions[0]);
-    const [cycleFilter, setCycleFilter] = useState<SelectOption | null>({ id: 'all', name: 'Todos os Ciclos' });
-
-    const [cycles, setCycles] = useState<Cycle[]>([]);
-    const [isLoadingCycles, setIsLoadingCycles] = useState(true);
-
-    const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(0);
     const panelRef = useRef<HTMLDivElement>(null);
 
-    const handleStatusSelect = (option: SelectOption) => {
-        setStatusFilter(option);
-        setCurrentPage(1); 
-    }
-
-    const handleCycleSelect = (option: SelectOption) => {
-        setCycleFilter(option);
-        setCurrentPage(1);
-    }
-
-    const handleSearchChange = (term: string) => {
-        setSearchTerm(term);
-        setCurrentPage(1); 
-    }
-
     useEffect(() => {
-        const fetchEvaluations = async () => {
-            setIsLoading(true);
-            setError(null);
-            
-            const token = localStorage.getItem('token');
-            if (!token) {
-                setError("Você não está autenticado.");
-                setIsLoading(false);
-                return;
-            }
-
-            try {
-                const params = new URLSearchParams();
-                if (searchTerm) params.append('search', searchTerm);
-                if (statusFilter && statusFilter.id !== 'all') params.append('status', statusFilter.id);
-                if (cycleFilter && cycleFilter.id !== 'all') params.append('cycleId', cycleFilter.id); 
-                params.append('page', currentPage.toString());
-                params.append('limit', '10'); 
-
-                const endpoint = managerId 
-                    ? `http://localhost:3000/api/dashboard/manager/${managerId}` 
-                    : 'http://localhost:3000/api/rh/evaluations'; 
-
-                const response = await fetch(`${endpoint}?${params.toString()}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Erro ao buscar dados: ${response.statusText}`);
-                }
-
-                if (managerId) {
-                    const result: ManagerDashboardData = await response.json();
-                    setEvaluations(result.evaluations); 
-                    setTotalPages(result.pagination.totalPages);
-                } else {
-                    const result: EvaluationTableFromApi = await response.json();
-                    setEvaluations(result.data); 
-                    setTotalPages(result.pagination.totalPages);
-                }
-
-            } catch (err) {
-                setError((err as Error).message);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchEvaluations();
-    }, [searchTerm, statusFilter, cycleFilter, currentPage,managerId]);
-
-    useEffect(() => {
-    if (currentPage > 1 && panelRef.current) {
-        const elementTop = panelRef.current.getBoundingClientRect().top + window.scrollY;
-        const offset = 150; 
-        window.scrollTo({
-        top: elementTop - offset,
-        behavior: 'smooth'
-        });
-    }
-    }, [currentPage]); 
-
-    useEffect(() => {
-        const fetchCycles = async () => {
-            setIsLoadingCycles(true);
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            try {
-                const response = await fetch('http://localhost:3000/api/cycles', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (!response.ok) throw new Error('Falha ao buscar ciclos de avaliação.');
-                const data: Cycle[] = await response.json();
-                setCycles(data);
-            } catch (err) {
-                console.error("Erro ao buscar ciclos:", err);
-            } finally {
-                setIsLoadingCycles(false);
-            }
-        };
-        fetchCycles();
-    }, []);
-
-    const cycleOptions: SelectOption[] = [
-        { id: 'all', name: 'Todos os Ciclos' },
-        ...cycles.map(c => ({ id: c.id, name: c.name }))
-    ];
+        if (currentPage > 1 && panelRef.current) {
+            const elementTop = panelRef.current.getBoundingClientRect().top + window.scrollY;
+            const offset = 150;
+            window.scrollTo({
+                top: elementTop - offset,
+                behavior: 'smooth'
+            });
+        }
+    }, [currentPage]);
 
     return (
         <div className="bg-white p-6 md:p-8 rounded-b-lg rounded-r-lg shadow-md">
