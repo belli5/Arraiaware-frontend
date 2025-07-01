@@ -29,9 +29,6 @@ export default function RH() {
   const [isLoading, setIsLoading] = useState(true);
 
   const contentPanelRef = useRef<HTMLDivElement>(null);
-  const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId as RHTabId);
-  };
   
   const completedPercentage = dashboardData && dashboardData.totalEvaluations > 0
     ? Math.round((dashboardData.completedEvaluations / dashboardData.totalEvaluations) * 100)
@@ -65,23 +62,19 @@ export default function RH() {
     fetchDashboardData();
   }, []);
 
-  useEffect(() => {
-    if (contentPanelRef.current) {
-      const elementTop = contentPanelRef.current.getBoundingClientRect().top + window.scrollY;
-      const offset = 150;
-      window.scrollTo({
-        top: elementTop - offset,
-        behavior: 'smooth'
-      });
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'auto' }); 
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []); 
+  const handleTabClick = (tabId: string) => {
+      setActiveTab(tabId as RHTabId);
+      setTimeout(() => {
+        if (contentPanelRef.current) {
+          const elementTop = contentPanelRef.current.getBoundingClientRect().top + window.scrollY;
+          const offset = 150;
+          window.scrollTo({
+            top: elementTop - offset,
+            behavior: 'smooth'
+          });
+        }
+      }, 0); 
+    };
   
   return (
     <div className="min-h-screen bg-orange-50">

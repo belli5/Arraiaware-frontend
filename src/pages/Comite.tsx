@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef} from 'react';
 import Header from '../components/Header/Header_comite';
 import Footer from '../components/Footer/Footer';
 import CommitteeStatsGrid from '../components/CommitteeStatsGrid/CommitteeStatsGrid';
@@ -100,14 +100,19 @@ export default function Comite() {
   const contentPanelRef = useRef<HTMLDivElement>(null);
 
   const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId as CommitteeTab);
-    setTimeout(() => {
-      if (contentPanelRef.current) {
-        contentPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    }, 50);
-  };
-
+      setActiveTab(tabId as CommitteeTab);
+      setTimeout(() => {
+        if (contentPanelRef.current) {
+          const elementTop = contentPanelRef.current.getBoundingClientRect().top + window.scrollY;
+          const offset = 150;
+          window.scrollTo({
+            top: elementTop - offset,
+            behavior: 'smooth'
+          });
+        }
+      }, 0); 
+    };
+  
   return (
     <div className="min-h-screen bg-orange-50 flex flex-col">
       <Header />
