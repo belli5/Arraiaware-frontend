@@ -72,14 +72,14 @@ export default function Manager() {
     };
 
     fetchManagerData(); 
-  }, [userObject]); // A dependência garante que a busca rode se o usuário mudar.
+  }, [userObject]); 
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId as managerTabId);
   };
 
   useEffect(() => {
-    if (!isLoading && contentPanelRef.current) {
+    if (contentPanelRef.current) {
       const elementTop = contentPanelRef.current.getBoundingClientRect().top + window.scrollY;
       const offset = 150;
       window.scrollTo({
@@ -87,7 +87,7 @@ export default function Manager() {
         behavior: 'smooth'
       });
     }
-  }, [activeTab, isLoading]);
+  }, [activeTab]);
   
 
   if (isLoading) {
