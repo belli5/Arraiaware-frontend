@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import Header from '../components/Header/Header_Gestor';
 import StatCard from '../components/StatCard/StatCard'; 
-import { Users, CheckCircle2, Clock, AlertTriangle, BarChart2} from 'lucide-react'; 
+import { Users, CheckCircle2, Clock, AlertTriangle, BarChart2, ClipboardList} from 'lucide-react'; 
 import OverallProgressManager from '../components/OverallProgressRH/OverallProgressManager';
 import Tabs from '../components/Tabs/Tabs';
 import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
@@ -13,7 +13,8 @@ import SkeletonStatCard from '../components/SkeletonStatCard/SkeletonStatCard';
 
 const managerTabOptions: Tab[] = [
   { id: 'status', label: 'Status dos liderados', icon: <CheckCircle2 size={18} /> },
-  { id: 'insights', label: 'Insights Comparativos', icon: <BarChart2 size={18} /> }
+  { id: 'insights', label: 'Insights Comparativos', icon: <BarChart2 size={18} /> },
+  { id: 'evaluation', label: 'Avaliação de liderados', icon: <ClipboardList size={18} /> }
 ];
 
 export default function Manager() {
@@ -172,6 +173,21 @@ export default function Manager() {
             {activeTab === 'insights' && (
               <div className="bg-white p-8 rounded-lg shadow-md text-center text-gray-500">
                 <p>Painel de Insights em construção.</p>
+              </div>
+            )}
+
+            {activeTab === 'evaluation' && (            
+              <div className="bg-white p-8 rounded-lg shadow-md">
+                <section className="mb-10 px-6 md:px-12 text-left">
+                  <h3 className="text-3xl md:text-4xl font-bold flex items-center space-x-2">
+                    <span>📝</span>
+                    <span>Avaliação de {userObject?.name || 'seus Liderados'}</span>
+                  </h3>
+                  <p className="uppercase text-sm text-amber-600 font-medium mt-1">
+                    Andamento • Desempenho • Insights
+                  </p>
+                </section>
+                <h2>Conteúdo da minha nova aba</h2>
               </div>
             )}
           </div>

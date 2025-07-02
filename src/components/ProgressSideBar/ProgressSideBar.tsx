@@ -20,15 +20,30 @@ export default function ProgressSidebar({
 }: ProgressSidebarProps) {
 
   const isPersonEvaluationComplete = (
-    personId: string, 
-    questions: Question[], 
-    answersMap: Record<string, Record<string, Answer>>
+    personId: string,
+    questions: Question[],
+    answersMap: Record<string, Record<string, Answer>>,
+    sectionKey: string
   ) => {
     const personAnswers = answersMap[personId] || {};
-    const answeredCount = questions.filter(q => 
-      personAnswers[q.id]?.scale && personAnswers[q.id]?.justification?.trim() !== ''
-    ).length;
-    return answeredCount === questions.length;
+
+    if (sectionKey === 'peer') {
+      // pq1 e pq2: só precisa de scale
+      return questions.every(q => {
+        const ans = personAnswers[q.id];
+        if (q.id === 'pq1' || q.id === 'pq2') {
+          return !!ans?.scale;
+        }
+        // pq3 e pq4: precisa de justificativa
+        return !!ans?.justification?.trim();
+      });
+    }
+
+    // líder e self continuam exigindo escala + justificativa
+    return questions.every(q => {
+      const ans = personAnswers[q.id];
+      return !!ans?.scale && !!ans?.justification?.trim();
+    });
   };
 
   return (
@@ -57,10 +72,14 @@ export default function ProgressSidebar({
             let total = 0;
             if (s.key === 'peer') {
               total = colleagues.length;
-              done = colleagues.filter(p => isPersonEvaluationComplete(p.id, s.questions, peerAnswers)).length;
+              done = colleagues.filter(p =>
+                isPersonEvaluationComplete(p.id, s.questions, peerAnswers, s.key)
+              ).length;
             } else if (s.key === 'leader') {
               total = leaders.length;
-              done = leaders.filter(l => isPersonEvaluationComplete(l.id, s.questions, leaderAnswers)).length;
+              done = leaders.filter(l =>
+                isPersonEvaluationComplete(l.id, s.questions, leaderAnswers, s.key)
+              ).length;
             } else {
               total = s.questions.length;
               done = s.questions.filter(q => {

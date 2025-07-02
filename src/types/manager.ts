@@ -1,6 +1,6 @@
 import type { Evaluation } from "./evaluation";
 
-export type managerTabId = 'status' | 'insights' | 'exportacao';
+export type managerTabId = 'status' | 'insights' | 'evaluation';
 
 export interface ManagerDashboardData {
   summary: {

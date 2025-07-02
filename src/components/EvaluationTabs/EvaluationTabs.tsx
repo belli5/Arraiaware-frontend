@@ -33,9 +33,16 @@ export default function EvaluationTabs({
           // Conta quantos colegas foram totalmente avaliados
           doneCount = peerColleagues.filter(colleague => {
             const colleagueAnswers = peerAnswers[colleague.id] || {};
-            const answeredQuestions = s.questions.filter(q => 
-              colleagueAnswers[q.id]?.scale && colleagueAnswers[q.id]?.justification?.trim() !== ''
-            ).length;
+            const answeredQuestions = s.questions.filter(q => {
+            const ans = colleagueAnswers[q.id] || {};
+
+            // pq1 e pq2: basta ter scale
+            if (q.id === 'pq1' || q.id === 'pq2') {
+              return !!ans.scale;
+            }
+            // pq3 e pq4: basta justificativa
+            return !!ans.justification?.trim();
+          }).length;
             return answeredQuestions === s.questions.length;
           }).length;
 

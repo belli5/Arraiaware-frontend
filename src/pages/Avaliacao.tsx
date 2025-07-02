@@ -14,6 +14,7 @@ import QuestionList from '../components/QuestionList/QuestionList';
 import PeerEvaluationPanel from '../components/PeerEvaluationPanel/PeerEvaluationPanel';
 import ProgressSidebar from '../components/ProgressSideBar/ProgressSideBar';
 import type { Section, Colleague, Answer, Question } from '../types/evaluation';
+import PeerQuestionList from '../components/PeerQuestionList/PeerQuestionList';
 type Cycle = { id: string; name: string; status: string };
 
 
@@ -49,12 +50,6 @@ const predefinedSections: Record<string, { key: string; title: string; icon: JSX
   },
 };
 
-const peerColleagues: Colleague[] = [
-  { id: '1', nome: 'João Santos', cargo: 'Desenvolvedor Pleno', area: 'Tecnologia', tempo: '3 meses' },
-  { id: '2', nome: 'Ana Rodrigues', cargo: 'Analista de Sistemas', area: 'Tecnologia', tempo: '6 meses' },
-  { id: '3', nome: 'Pedro Oliveira', cargo: 'UX Designer', area: 'Design', tempo: '2 meses' },
-  { id: '4', nome: 'Carla Lima', cargo: 'Product Manager', area: 'Produto', tempo: '5 meses' },
-];
 
 const leaderColleagues: Colleague[] = [
   { id: '5', nome: 'Marcos Ferreira', cargo: 'Tech Lead', area: 'Tecnologia', tempo: '12 meses' },
@@ -67,6 +62,9 @@ const leaderColleagues: Colleague[] = [
 export default function Avaliacao() {
   const navigate = useNavigate();
   const { section } = useParams();
+  const [teamMates, setTeamMates] = useState<Colleague[]>([]);
+  const [loadingTeam, setLoadingTeam] = useState<boolean>(true);
+  const [teamError, setTeamError] = useState<string | null>(null);
 
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,6 +94,101 @@ export default function Avaliacao() {
       console.error('Não conseguiu decodificar token:', e);
     }
   }, []);
+
+  // 1) Busca colegas de equipe dinâmicos assim que souber o userId
+  useEffect(() => {
+    if (!userId) return;
+    setLoadingTeam(true);
+    const token = localStorage.getItem('token');
+    fetch(`http://localhost:3000/api/teams/user/${userId}`, {
+      headers: { 
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+    })
+      .then(async res => {
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+      })
+      .then((teamInfo: { collaborators: { id: string; name: string; email: string }[] }) => {
+        // 2) Mapeia cada collaborator para o seu tipo Colleague
+        const cols: Colleague[] = teamInfo.collaborators.map(c => ({
+          id: c.id,
+          nome: c.name,
+          cargo: 'Colaborador',        // ou venha do back, se tiver
+          area: c.email.split('@')[1] || '—', // exemplo genérico
+          tempo: '—',                 // você pode calcular meses juntos se tiver createdAt
+        }));
+        setTeamMates(cols);
+      })
+      .catch(err => {
+        console.error('Erro ao carregar equipe:', err);
+        setTeamError(err.message);
+      })
+      .finally(() => setLoadingTeam(false));
+  }, [userId]);
+
+  async function handleSubmitPeer() {
+  if (!userId || !cycleId) {
+    alert('Usuário ou ciclo não carregados ainda.');
+    return;
+  }
+
+  const entries = Object.entries(peerAnswers);
+  if (entries.length === 0) {
+    alert('Não há avaliações de pares preenchidas.');
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('token');
+    for (const [evaluatedUserId, answersMap] of entries) {
+    // 1) extrai a resposta bruta
+    const raw = answersMap['pq2']?.scale;
+
+    // 2) converte em inteiro e valida intervalo [1,5]
+    const generalScore = raw ? parseInt(raw, 10) : NaN;
+    if (isNaN(generalScore) || generalScore < 1 || generalScore > 5) {
+      alert('Por favor, dê uma nota geral entre 1 e 5.');
+      return;
+    }
+
+    // 3) extrai os outros campos
+    const pointsToImprove = answersMap['pq3']?.justification?.trim();
+    const pointsToExplore = answersMap['pq4']?.justification?.trim();
+
+    // 4) agora monta o payload sabendo que generalScore está válido
+    const payload = {
+      evaluatorUserId: userId,
+      evaluatedUserId,
+      cycleId,
+      generalScore,
+      pointsToImprove,
+      pointsToExplore,
+    };
+
+      const res = await fetch('http://localhost:3000/api/evaluations/peer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Erro ao enviar avaliação de ${evaluatedUserId}: ${await res.text()}`);
+      }
+    }
+
+    alert('Todas as avaliações de pares foram enviadas com sucesso!');
+    navigate(`/avaliacao/${sections[currentSectionIndex + 1]?.key}`);
+  } catch (err: any) {
+    console.error(err);
+    alert('Falha ao enviar avaliações: ' + err.message);
+  }
+}
+
 
   useEffect(() => {
     async function fetchCycles() {
@@ -285,12 +378,28 @@ export default function Avaliacao() {
     window.scrollTo(0, 0);
   };
   
-  const isAnswerComplete = (answer?: Answer) => 
-    !!answer && !!answer.scale && !!answer.justification && answer.justification.trim() !== '';
+  const isAnswerComplete = (answer?: Answer, questionId?: string) => {
+  if (currentSectionData.key === 'peer') {
+    // pq1 e pq2: basta ter scale
+    if (questionId === 'pq1' || questionId === 'pq2') {
+      return !!answer?.scale;
+    }
+    // pq3 e pq4: precisa só de justificativa
+    return !!answer?.justification?.trim();
+  }
+  // auto e líderes continuam pedindo scale + justificativa
+  return !!answer?.scale && !!answer?.justification?.trim();
+  };
 
-  const getSectionProgress = (answersMap: Record<string, Record<string, Answer>>, questions: Question[]) => (id: string) => {
+  const getSectionProgress = (
+    answersMap: Record<string, Record<string, Answer>>,
+    questions: Question[]
+    ) => (id: string) => {
     const personAnswers = answersMap[id] || {};
-    const doneCount = questions.filter(q => isAnswerComplete(personAnswers[q.id])).length;
+    const doneCount = questions.filter(q =>
+    // passa também o q.id
+    isAnswerComplete(personAnswers[q.id], q.id)
+    ).length;
     if (questions.length === 0) return 0;
     return Math.round((doneCount / questions.length) * 100);
   };
@@ -300,22 +409,26 @@ export default function Avaliacao() {
   const is360Section = currentSectionData.key === 'peer' || currentSectionData.key === 'leader';
 
   if (is360Section) {
-    const colleaguesList = currentSectionData.key === 'peer' ? peerColleagues : leaderColleagues;
+    const colleaguesList = currentSectionData.key === 'peer' ? teamMates : leaderColleagues;
     const answersSource = currentSectionData.key === 'peer' ? peerAnswers : leaderAnswers;
 
     if (avaliandoId) {
       //  UMA pessoa
       totalProgressItems = currentSectionData.questions.length;
       const personAnswers = answersSource[avaliandoId] || {};
-      completedProgressItems = currentSectionData.questions.filter(q => isAnswerComplete(personAnswers[q.id])).length;
+      completedProgressItems = currentSectionData.questions.filter(q =>
+        isAnswerComplete(personAnswers[q.id], q.id)
+        ).length;
     } else {
       //LISTA de pessoas
       totalProgressItems = colleaguesList.length;
       completedProgressItems = colleaguesList.filter(person => {
-        const personAnswers = answersSource[person.id] || {};
-        const answeredCount = currentSectionData.questions.filter(q => isAnswerComplete(personAnswers[q.id])).length;
-        return answeredCount === currentSectionData.questions.length;
-      }).length;
+      const personAnswers = answersSource[person.id] || {};
+      const answeredCount = currentSectionData.questions.filter(q =>
+      isAnswerComplete(personAnswers[q.id], q.id)
+      ).length;
+      return answeredCount === currentSectionData.questions.length;
+     }).length;
     }
   } else {
     // AUTOAVALIAÇÃO
@@ -327,9 +440,11 @@ export default function Avaliacao() {
     ? (completedProgressItems / totalProgressItems) * 100 
     : 0;
 
-  const currentColleagues = currentSectionData.key === 'peer' ? peerColleagues : currentSectionData.key === 'leader' ? leaderColleagues : [];
+  const currentColleagues = currentSectionData.key === 'peer' ? teamMates : currentSectionData.key === 'leader' ? leaderColleagues : [];
   const colegaSelecionado = currentColleagues.find(c => c.id === avaliandoId);
   if (loading) return <div className="p-6">Carregando critérios...</div>;
+  if (loadingTeam) return <div className="p-6">Carregando equipe...</div>;
+  if (teamError) return <div className="p-6 text-red-600">Erro: {teamError}</div>;
   if (error) return <div className="p-6 text-red-600">{error}</div>;
   if (sections.length === 0) return <div className="p-6">Nenhum critério encontrado.</div>;
 
@@ -360,7 +475,7 @@ export default function Avaliacao() {
             answers={answers}
             peerAnswers={peerAnswers}
             leaderAnswers={leaderAnswers}
-            peerColleagues={peerColleagues}
+            peerColleagues={teamMates}
             leaderColleagues={leaderColleagues}
           />
 
@@ -397,7 +512,7 @@ export default function Avaliacao() {
                           <ArrowLeft size={16} /> Voltar
                         </button>
                       </div>
-                      <QuestionList
+                      <PeerQuestionList
                         questions={currentSectionData.questions}
                         answers={currentSectionData.key === 'peer' ? peerAnswers[avaliandoId] || {} : leaderAnswers[avaliandoId] || {}}
                         onAnswerChange={handleAnswerChange}
@@ -425,6 +540,7 @@ export default function Avaliacao() {
                       })()}
                     </>
                   ) : (
+                    <>
                     <PeerEvaluationPanel
                         colleagues={currentColleagues.map(col => ({
                             ...col,
@@ -436,6 +552,16 @@ export default function Avaliacao() {
                         onEvaluate={handleEvaluate}
                         sectionKey={currentSectionData.key}
                     />
+                     
+                      <div className="mt-6 flex justify-end">
+                        <button
+                          onClick={handleSubmitPeer}
+                          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        >
+                          Enviar Avaliações de Pares
+                        </button>
+                      </div>
+                    </>
                   )
                 ) : (
                   // AUTOAVALIAÇÃO: QuestionList + botão de envio
@@ -485,7 +611,7 @@ export default function Avaliacao() {
               answers={answers}
               peerAnswers={peerAnswers}
               leaderAnswers={leaderAnswers}
-              colleagues={peerColleagues}
+              colleagues={teamMates}
               leaders={leaderColleagues}
             />
           </div>
