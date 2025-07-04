@@ -1,8 +1,10 @@
-import type { Evaluation } from "./evaluation";
+import type { Evaluation, Section } from "./evaluation";
 
 export type managerTabId = 'status' | 'insights' | 'evaluation';
 
 export interface ManagerDashboardData {
+  sections: Section[];
+  cycleId: string;
   summary: {
     totalCollaborators: number;
     completed: number;

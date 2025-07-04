@@ -4,6 +4,7 @@ export interface Colleague {
   cargo: string;
   area: string;
   tempo: string;
+  projectName: string; 
 }
 
 export type Question = {

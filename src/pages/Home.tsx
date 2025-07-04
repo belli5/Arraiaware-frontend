@@ -85,13 +85,13 @@ export default function Home() {
               <div className="bg-orange-500 h-2 rounded-full" style={{ width: '60%' }} />
             </div>
             <div className="flex gap-2 mb-4 flex-wrap">
-              <Badge text="Competências" checked onClick={() => navigate('/avaliacao/tech')} />
+              <Badge text="Competências" checked onClick={() => navigate('/avaliacao/comportamento')} />
               <Badge text="Objetivos" checked onClick={() => navigate('/avaliacao/goals')} />
               <Badge text="Desenvolvimento" onClick={() => navigate('/avaliacao/growth')} />
               <Badge text="Feedback" onClick={() => navigate('/avaliacao/collab')} />
             </div>
             <button
-              onClick={() => navigate('/avaliacao/tech')}
+              onClick={() => navigate('/avaliacao/comportamento')}
               className="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition"
             >
               Continuar Avaliação

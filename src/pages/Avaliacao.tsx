@@ -15,6 +15,7 @@ import PeerEvaluationPanel from '../components/PeerEvaluationPanel/PeerEvaluatio
 import ProgressSidebar from '../components/ProgressSideBar/ProgressSideBar';
 import type { Section, Colleague, Answer, Question } from '../types/evaluation';
 import PeerQuestionList from '../components/PeerQuestionList/PeerQuestionList';
+import LeaderQuestionList from '../components/LeadQuestionList/LeadQuestionList';
 type Cycle = { id: string; name: string; status: string };
 
 
@@ -51,11 +52,20 @@ const predefinedSections: Record<string, { key: string; title: string; icon: JSX
 };
 
 
-const leaderColleagues: Colleague[] = [
-  { id: '5', nome: 'Marcos Ferreira', cargo: 'Tech Lead', area: 'Tecnologia', tempo: '12 meses' },
-  { id: '6', nome: 'Luciana Azevedo', cargo: 'Head de Produto', area: 'Produto', tempo: '18 meses' },
-  { id: '7', nome: 'Roberto Cunha', cargo: 'Gerente de Design', area: 'Design', tempo: '15 meses' },
-];
+
+
+interface ApiTeamInfo {
+  projectId:   string;
+  projectName: string;
+  managerId:   string;
+  managerName: string;
+  cycleId:     string;
+  collaborators: Array<{
+    id:    string;
+    name:  string;
+    email: string;
+  }>;
+}
 
 
 
@@ -65,6 +75,9 @@ export default function Avaliacao() {
   const [teamMates, setTeamMates] = useState<Colleague[]>([]);
   const [loadingTeam, setLoadingTeam] = useState<boolean>(true);
   const [teamError, setTeamError] = useState<string | null>(null);
+  const [leaderColleagues, setLeaderColleagues] = useState<Colleague[]>([]);
+  const [projectName, setProjectName] = useState<string>('—');
+  const [projectId, setProjectId] = useState<string>('');
 
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,34 +112,45 @@ export default function Avaliacao() {
   useEffect(() => {
     if (!userId) return;
     setLoadingTeam(true);
+
     const token = localStorage.getItem('token');
     fetch(`http://localhost:3000/api/teams/user/${userId}`, {
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      },
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      }
     })
-      .then(async res => {
-        if (!res.ok) throw new Error(await res.text());
-        return res.json();
+      .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
+      .then((info: ApiTeamInfo) => {
+        // guarda tudo de uma vez
+        setProjectId(info.projectId);
+        setProjectName(info.projectName);
+        setCycleId(info.cycleId);
+
+        // transforma collaborators em Colleague[]
+        setTeamMates(info.collaborators.map(c => ({
+        id:          c.id,
+        nome:        c.name,
+        cargo:       'Colaborador',
+        area:        info.projectName,        // opcional, se você quiser manter
+        tempo:       '—',
+        projectName: info.projectName,        // ← aqui!
+      })));
+
+        // mapeia o gestor
+        setLeaderColleagues([{
+        id:          info.managerId,
+        nome:        info.managerName,
+        cargo:       'Gestor',
+        area:        info.projectName,        // opcional
+        tempo:       '—',
+        projectName: info.projectName,        // ← e aqui!
+      }]);
       })
-      .then((teamInfo: { collaborators: { id: string; name: string; email: string }[] }) => {
-        // 2) Mapeia cada collaborator para o seu tipo Colleague
-        const cols: Colleague[] = teamInfo.collaborators.map(c => ({
-          id: c.id,
-          nome: c.name,
-          cargo: 'Colaborador',        // ou venha do back, se tiver
-          area: c.email.split('@')[1] || '—', // exemplo genérico
-          tempo: '—',                 // você pode calcular meses juntos se tiver createdAt
-        }));
-        setTeamMates(cols);
-      })
-      .catch(err => {
-        console.error('Erro ao carregar equipe:', err);
-        setTeamError(err.message);
-      })
+      .catch(err => setTeamError(String(err)))
       .finally(() => setLoadingTeam(false));
   }, [userId]);
+
 
   async function handleSubmitPeer() {
   if (!userId || !cycleId) {
@@ -144,6 +168,7 @@ export default function Avaliacao() {
     const token = localStorage.getItem('token');
     for (const [evaluatedUserId, answersMap] of entries) {
     // 1) extrai a resposta bruta
+    const motivatedToWorkAgain = answersMap['pq1']?.scale
     const raw = answersMap['pq2']?.scale;
 
     // 2) converte em inteiro e valida intervalo [1,5]
@@ -159,13 +184,15 @@ export default function Avaliacao() {
 
     // 4) agora monta o payload sabendo que generalScore está válido
     const payload = {
-      evaluatorUserId: userId,
-      evaluatedUserId,
-      cycleId,
-      generalScore,
-      pointsToImprove,
-      pointsToExplore,
-    };
+    evaluatorUserId: userId,
+    evaluatedUserId,
+    cycleId,
+    projectId,
+    motivatedToWorkAgain,   
+    generalScore,
+    pointsToImprove,
+    pointsToExplore,
+  }
 
       const res = await fetch('http://localhost:3000/api/evaluations/peer', {
         method: 'POST',
@@ -186,8 +213,8 @@ export default function Avaliacao() {
   } catch (err: any) {
     console.error(err);
     alert('Falha ao enviar avaliações: ' + err.message);
+    }
   }
-}
 
 
   useEffect(() => {
@@ -334,6 +361,61 @@ export default function Avaliacao() {
     }
   }
 
+  async function handleSubmitLeader() {
+  // 1) checa se já temos todo mundo
+  if (!userId || !cycleId) return
+  if (leaderColleagues.length === 0) return
+
+  // 2) pega o ID do gestor a partir do array que veio da API
+  const leaderId = leaderColleagues[0].id
+
+  // 3) busca as respostas daquele gestor
+  const answersMap = leaderAnswers[leaderId] || {}
+
+  // 4) converte cada escala em número (1–5)
+  const deliveryScore    = parseInt(answersMap['lq1']?.scale  || '0', 10)
+  const proactivityScore = parseInt(answersMap['lq2']?.scale  || '0', 10)
+  const collaborationScore = parseInt(answersMap['lq3']?.scale || '0', 10)
+  const skillScore       = parseInt(answersMap['lq4']?.scale  || '0', 10)
+
+  // 5) valida que todas as notas estão no intervalo válido
+  if ([deliveryScore, proactivityScore, collaborationScore, skillScore]
+      .some(n => isNaN(n) || n < 1 || n > 5)) {
+    alert('Por favor, dê uma nota inteira de 1 a 5 para todas as perguntas.')
+    return
+  }
+
+  // 6) monta o payload exatamente com os nomes que o DTO espera
+  const payload = {
+    collaboratorId:  userId,
+    leaderId,
+    cycleId,
+    deliveryScore,
+    proactivityScore,
+    collaborationScore,
+    skillScore,
+  }
+
+  // 7) envia
+  const token = localStorage.getItem('token')
+  const res = await fetch('http://localhost:3000/api/evaluations/leader', {
+    method:  'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!res.ok) {
+    throw new Error(await res.text())
+  }
+
+  alert('Avaliação de líder enviada com sucesso!')
+  navigate(`/avaliacao/${sections[currentSectionIndex + 1]?.key}`)
+  }
+
+
 
   const handleAnswerChange = (
     questionId: string,
@@ -440,7 +522,12 @@ export default function Avaliacao() {
     ? (completedProgressItems / totalProgressItems) * 100 
     : 0;
 
-  const currentColleagues = currentSectionData.key === 'peer' ? teamMates : currentSectionData.key === 'leader' ? leaderColleagues : [];
+  const currentColleagues = 
+  currentSectionData.key === 'peer'
+    ? teamMates
+    : currentSectionData.key === 'leader'
+    ? leaderColleagues
+    : [];
   const colegaSelecionado = currentColleagues.find(c => c.id === avaliandoId);
   if (loading) return <div className="p-6">Carregando critérios...</div>;
   if (loadingTeam) return <div className="p-6">Carregando equipe...</div>;
@@ -512,11 +599,19 @@ export default function Avaliacao() {
                           <ArrowLeft size={16} /> Voltar
                         </button>
                       </div>
-                      <PeerQuestionList
-                        questions={currentSectionData.questions}
-                        answers={currentSectionData.key === 'peer' ? peerAnswers[avaliandoId] || {} : leaderAnswers[avaliandoId] || {}}
-                        onAnswerChange={handleAnswerChange}
-                      />
+                      {currentSectionData.key === 'peer' ? (
+                     <PeerQuestionList
+                       questions={currentSectionData.questions}
+                       answers={peerAnswers[avaliandoId] || {}}
+                       onAnswerChange={handleAnswerChange}
+                     />
+                   ) : (
+                   <LeaderQuestionList
+                       questions={currentSectionData.questions}
+                       answers={leaderAnswers[avaliandoId] || {}}
+                       onAnswerChange={handleAnswerChange}
+                     />
+                   )}
                       {(() => {
                         const pct = getSectionProgress(
                           currentSectionData.key === 'peer' ? peerAnswers : leaderAnswers,
@@ -541,27 +636,42 @@ export default function Avaliacao() {
                     </>
                   ) : (
                     <>
-                    <PeerEvaluationPanel
-                        colleagues={currentColleagues.map(col => ({
+                    {currentSectionData.key === 'peer' && (
+                      <>
+                        <PeerEvaluationPanel
+                          colleagues={teamMates.map(col => ({
                             ...col,
-                            progresso: getSectionProgress(
-                                currentSectionData.key === 'peer' ? peerAnswers : leaderAnswers,
-                                currentSectionData.questions
-                            )(col.id),
-                        }))}
-                        onEvaluate={handleEvaluate}
-                        sectionKey={currentSectionData.key}
-                    />
-                     
-                      <div className="mt-6 flex justify-end">
-                        <button
-                          onClick={handleSubmitPeer}
-                          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                        >
-                          Enviar Avaliações de Pares
-                        </button>
-                      </div>
-                    </>
+                            progresso: getSectionProgress(peerAnswers, currentSectionData.questions)(col.id),
+                          }))}
+                          onEvaluate={handleEvaluate}
+                          sectionKey="peer"
+                        />
+                        <div className="mt-6 flex justify-end">
+                          <button onClick={handleSubmitPeer} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Enviar Avaliações de Pares
+                          </button>
+                        </div>
+                      </>
+                    )}
+                    {currentSectionData.key === 'leader' && (
+                      <>
+                        <PeerEvaluationPanel
+                          colleagues={leaderColleagues.map(col => ({
+                            ...col,
+                            progresso: getSectionProgress(leaderAnswers, currentSectionData.questions)(col.id),
+                          }))}
+                          onEvaluate={handleEvaluate}
+                          sectionKey="leader"
+                        />
+                        <div className="mt-6 flex justify-end">
+                          <button onClick={handleSubmitLeader} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Enviar Avaliação de Líder
+                          </button>
+                        </div>
+                      </>
+                    )}
+                      </>
+                    
                   )
                 ) : (
                   // AUTOAVALIAÇÃO: QuestionList + botão de envio

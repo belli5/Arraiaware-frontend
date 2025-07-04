@@ -52,38 +52,32 @@ export default function PeerQuestionList({
                   <div className="space-y-2">
                     <div className="grid grid-cols-4 justify-items-center gap-6">
                       {[
-                        'Discordo totalmente',
-                        'Discordo parcialmente',
-                        'Concordo parcialmente',
-                        'Concordo totalmente',
-                      ].map((label, i) => {
-                        const val = (i + 1).toString()
-                        const checked = current.scale === val
-                        return (
-                          <label
-                            key={val}
-                            className="flex flex-col items-center text-sm text-gray-800"
-                          >
-                            <input
-                              type="radio"
-                              name={q.id}
-                              value={val}
-                              checked={checked}
-                              onChange={() =>
-                                onAnswerChange(q.id, 'scale', val)
-                              }
-                              className={`appearance-none w-6 h-6 rounded-full border-2 border-orange-500 relative cursor-pointer before:content-[''] before:absolute before:rounded-full before:bg-orange-500 before:left-1/2 before:top-1/2 before:-translate-x-1/2 before:-translate-y-1/2 transition-all duration-200 ${
-                                checked
-                                  ? 'before:w-3 before:h-3'
-                                  : 'before:w-0 before:h-0'
-                              }`}
-                            />
-                            <span className="mt-1 text-xs text-center">
-                              {label}
-                            </span>
-                          </label>
-                        )
-                      })}
+                           'Discordo totalmente',
+                           'Discordo parcialmente',
+                           'Concordo parcialmente',
+                           'Concordo totalmente',
+                         ].map(label => {
+                           const checked = current.scale === label
+                           return (
+                             <label key={label} className="flex flex-col items-center text-sm text-gray-800">
+                               <input
+                                 type="radio"
+                                 name={q.id}
+                                 value={label}
+                                 checked={checked}
+                                 onChange={() =>
+                                   // envia o texto inteiro como 'scale'
+                                   onAnswerChange(q.id, 'scale', label)
+                                 }
+                                 className={`appearance-none w-6 h-6 rounded-full border-2 border-orange-500 relative cursor-pointer
+                                   before:content-[''] before:absolute before:rounded-full before:bg-orange-500
+                                   before:left-1/2 before:top-1/2 before:-translate-x-1/2 before:-translate-y-1/2
+                                   transition-all duration-200 ${checked ? 'before:w-3 before:h-3' : 'before:w-0 before:h-0'}`}
+                               />
+                               <span className="mt-1 text-xs text-center">{label}</span>
+                             </label>
+                           )
+                         })}
                     </div>
                   </div>
                 )}
@@ -104,9 +98,11 @@ export default function PeerQuestionList({
                       max={5}
                       step={0.1}
                       value={current.scale ?? ''}
-                      onChange={e =>
-                        onAnswerChange(q.id, 'scale', e.target.value)
-                      }
+                      onChange={e => {
+                         // substitui vírgula por ponto antes de enviar
+                         const withDot = e.target.value.replace(',', '.')
+                         onAnswerChange(q.id, 'scale', withDot)
+                       }}
                       className="w-24 border border-gray-300 rounded p-2 focus:ring-orange-300 focus:border-orange-300"
                       placeholder="ex: 3.5"
                     />

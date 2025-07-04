@@ -9,12 +9,21 @@ import Footer from '../components/Footer/Footer';
 import type { Tab } from '../types/tabs';
 import type { managerTabId, ManagerDashboardData } from '../types/manager';
 import SkeletonStatCard from '../components/SkeletonStatCard/SkeletonStatCard';
+import ManagerEvaluation from '../components/ManagerEvaluation/ManagerEvaluation';
+import type { Question } from '../types/evaluation';
 
 
 const managerTabOptions: Tab[] = [
   { id: 'status', label: 'Status dos liderados', icon: <CheckCircle2 size={18} /> },
   { id: 'insights', label: 'Insights Comparativos', icon: <BarChart2 size={18} /> },
   { id: 'evaluation', label: 'Avaliação de liderados', icon: <ClipboardList size={18} /> }
+];
+
+const managerQuestions: Question[] = [
+  { id: 'mq1', type: 'scale', text: 'Como você avalia a clareza de comunicação deste colaborador?' },
+  { id: 'mq2', type: 'scale', text: 'Quão proativo ele(a) foi durante o ciclo?' },
+  { id: 'mq3', type: 'text',  text: 'Quais pontos de melhoria você identifica?' },
+  { id: 'mq4', type: 'text',  text: 'Dê um exemplo de um bom resultado entregue.' },
 ];
 
 export default function Manager() {
@@ -187,7 +196,11 @@ export default function Manager() {
                     Andamento • Desempenho • Insights
                   </p>
                 </section>
-                <h2>Conteúdo da minha nova aba</h2>
+                <ManagerEvaluation
+                  managerId={userObject!.sub}
+                  cycleId={dashboardData!.cycleId}
+                  questions={managerQuestions}   
+                />
               </div>
             )}
           </div>
