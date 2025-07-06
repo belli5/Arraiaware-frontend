@@ -57,7 +57,7 @@ export default function Login() {
           <h1 className="text-4xl font-bold text-gray-800 mb-4">
             Autoavaliação <span className="text-orange-500">Inteligente</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-6">
+          <p className=" mx-5 text-xl text-gray-600 mb-6">
             Desenvolva seu potencial profissional com nossa plataforma moderna de autoavaliação. Acompanhe seu crescimento e identifique oportunidades de melhoria.
           </p>
 

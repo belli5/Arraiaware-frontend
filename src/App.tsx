@@ -1,5 +1,5 @@
 import './App.css';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Avaliacao from './pages/Avaliacao'
@@ -11,13 +11,17 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/home" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/avaliacao/:section" element={<Avaliacao />} />
-        <Route path="/RH" element= {<RH />} />
-        <Route path="/Comite" element={<Comite />} />
-        <Route path="/Gestor" element={<Gestor />} />
-      </Routes>
+          {/* redireciona raiz pra login */}
+          <Route index element={<Navigate to="/login" replace />} />
+         <Route path="/home" element={<Home />} />
+         <Route path="/login" element={<Login />} />
+         <Route path="/avaliacao/:section" element={<Avaliacao />} />
+         <Route path="/RH" element= {<RH />} />
+         <Route path="/Comite" element={<Comite />} />
+         <Route path="/Gestor" element={<Gestor />} />
+          {/* qualquer outra URL também cai no login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
+       </Routes>
     </BrowserRouter>
   );
 }

@@ -29,18 +29,17 @@ export interface Answer {
 }
 
 export interface Evaluation {
-    id: number;
-    collaborator: string;
-    department: string;
-    track: string;
-    status: string;
-    progress: number;
-    deadline: string;
-    completedAt: string;
-    cycleId: string;
-    cycleName: string;
-    projectName: string;
-    projectId: string;
+  id: string               // ← é esse campo que vamos usar
+  collaboratorId: string;   // ← É esse que você precisa
+  collaborator: string;     // <-- só o nome de exibição
+  cycleId: string;
+  cycleName: string
+  track: string
+  status: string
+  progress: number
+  projectName: string
+  deadline: string
+  completedAt: string
 }
 
 export interface EvaluationTableFromApi {
@@ -56,4 +55,29 @@ export interface Cycle {
   id: string;
   name: string;
   status: string;
+}
+
+export interface SelfEvaluationRecord {
+  userId: string;
+  cycleId: string;
+  criterionId: string;
+  score: number;
+  scoreDescription: string;
+  justification: string | null;
+  criterion: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface PeerEvaluationRecord {
+  id: string;
+  score: number;
+  comment?: string;
+  evaluatorUser: {
+    id: string;
+    name: string;
+  };
+  evaluatedUserId: string;    // ou collaboratorId, como você escolher
+  cycleId: string;
 }
