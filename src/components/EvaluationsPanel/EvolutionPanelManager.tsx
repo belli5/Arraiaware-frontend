@@ -5,7 +5,7 @@ import Pagination from '../Pagination/Pagination';
 import EvaluationsTableSkeleton from '../EvaluationsTableSkeleton/EvaluationsTableSkeleton';
 import CustomSelect from '../CustomSelect/CustomSelect';
 import { useEvaluationsPanelLogic } from '../../hooks/useEvaluationsPanelLogic';
-import type { Evaluation, SelfEvaluationRecord } from '../../types/evaluation';
+import type { Evaluation, SelfEvaluationRecord, PeerEvaluationRecord } from '../../types/evaluation';
 import EvaluationsTableManager from '../EvaluationsTable/EvolutionTableManager';
 
 interface EvaluationsPanelManagerProps {
@@ -13,7 +13,10 @@ interface EvaluationsPanelManagerProps {
   cycleId: string;
 }
 
-export default function EvaluationsPanelManager({ managerId, cycleId }: EvaluationsPanelManagerProps) {
+export default function EvaluationsPanelManager({
+  managerId,
+  cycleId,
+}: EvaluationsPanelManagerProps) {
   const {
     searchTerm,
     statusFilter,
@@ -34,36 +37,68 @@ export default function EvaluationsPanelManager({ managerId, cycleId }: Evaluati
 
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Detalhe de avaliação
+  // Estados de detalhe
   const [selectedEvalItem, setSelectedEvalItem] = useState<Evaluation | null>(null);
+
+  // Autoavaliação
   const [selfRecords, setSelfRecords] = useState<SelfEvaluationRecord[]>([]);
   const [loadingSelf, setLoadingSelf] = useState(false);
   const [errorSelf, setErrorSelf] = useState<string | null>(null);
+
+  // Avaliações de pares recebidas
+  const [peerRecords, setPeerRecords] = useState<PeerEvaluationRecord[]>([]);
+  const [loadingPeer, setLoadingPeer] = useState(false);
+  const [errorPeer, setErrorPeer] = useState<string | null>(null);
 
   // Aba ativa no detalhe
   const [activeSubTab, setActiveSubTab] = useState<'self' | 'peer' | 'leader'>('self');
 
   const API_BASE = 'http://localhost:3000';
 
-  // Fetch da autoavaliação quando um item é selecionado e aba for 'self'
+  // Fetch da autoavaliação
   useEffect(() => {
     if (!selectedEvalItem || activeSubTab !== 'self') return;
     setLoadingSelf(true);
     setErrorSelf(null);
-    const { collaboratorId: userId, cycleId: selCycleId } = selectedEvalItem;
-    const token = localStorage.getItem('token');
 
-    fetch(
-      `${API_BASE}/api/evaluations/self/${userId}?cycleId=${selCycleId}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
+    const { collaboratorId: userId, cycleId: selCycleId } = selectedEvalItem;
+    const token = localStorage.getItem('token') || '';
+
+    fetch(`${API_BASE}/api/evaluations/self/${userId}?cycleId=${selCycleId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then(res => {
-        if (!res.ok) throw new Error(`Erro ${res.status}: não foi possível carregar a autoavaliação`);
+        if (!res.ok) {
+          throw new Error(`Erro ${res.status}: não foi possível carregar a autoavaliação`);
+        }
         return res.json() as Promise<SelfEvaluationRecord[]>;
       })
       .then(setSelfRecords)
       .catch(err => setErrorSelf(err.message))
       .finally(() => setLoadingSelf(false));
+  }, [selectedEvalItem, activeSubTab]);
+
+  // Fetch das avaliações de pares recebidas
+  useEffect(() => {
+    if (!selectedEvalItem || activeSubTab !== 'peer') return;
+    setLoadingPeer(true);
+    setErrorPeer(null);
+
+    const { collaboratorId: evaluatedUserId, cycleId: selCycleId } = selectedEvalItem;
+    const token = localStorage.getItem('token') || '';
+
+    fetch(`${API_BASE}/api/evaluations/peer/for/${evaluatedUserId}?cycleId=${selCycleId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Erro ${res.status}: não foi possível carregar avaliações de pares`);
+        }
+        return res.json() as Promise<PeerEvaluationRecord[]>;
+      })
+      .then(setPeerRecords)
+      .catch(err => setErrorPeer(err.message))
+      .finally(() => setLoadingPeer(false));
   }, [selectedEvalItem, activeSubTab]);
 
   // Scroll ao mudar página
@@ -76,7 +111,7 @@ export default function EvaluationsPanelManager({ managerId, cycleId }: Evaluati
 
   return (
     <div className="bg-white p-6 md:p-8 rounded-b-lg rounded-r-lg shadow-md">
-      {/* Cabeçalho de lista, oculto no detalhe */}
+      {/* Cabeçalho de lista */}
       {!selectedEvalItem && (
         <div ref={panelRef} className="flex items-center justify-between">
           <div>
@@ -98,9 +133,11 @@ export default function EvaluationsPanelManager({ managerId, cycleId }: Evaluati
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-2xl font-bold">
-                {activeSubTab === 'self'    ? 'Autoavaliação de'
-                 : activeSubTab === 'peer'    ? 'Avaliação de Pares de'
-                 /* else */                 : 'Avaliação do Líder de'}{' '}
+                {activeSubTab === 'self'
+                  ? 'Autoavaliação de'
+                  : activeSubTab === 'peer'
+                  ? 'Avaliação de Pares de'
+                  : 'Avaliação do Líder de'}{' '}
                 <span className="text-orange-600">{selectedEvalItem.collaborator}</span>
               </h3>
               <p className="text-sm text-gray-500">
@@ -115,46 +152,72 @@ export default function EvaluationsPanelManager({ managerId, cycleId }: Evaluati
             </button>
           </div>
 
-          {/* Abas retangulares full-width */}
           <div className="grid grid-cols-3 gap-2 mb-4">
-            {(['self','peer','leader'] as const).map(tab => (
+            {(['self', 'peer', 'leader'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveSubTab(tab)}
-                className={`py-2 text-center font-medium rounded-t-lg
-                  ${activeSubTab === tab
+                className={`py-2 text-center font-medium rounded-t-lg ${
+                  activeSubTab === tab
                     ? 'bg-orange-500 text-white'
-                    : 'bg-gray-100 text-gray-600'}`}
+                    : 'bg-gray-100 text-gray-600'
+                }`}
               >
-                {tab === 'self'  ? 'Autoavaliação'
-                 : tab === 'peer'  ? 'Pares'
-                 /* else */       : 'Líder'}
+                {tab === 'self' ? 'Autoavaliação' : tab === 'peer' ? 'Pares' : 'Líder'}
               </button>
             ))}
           </div>
         </>
       )}
 
-      {/* Conteúdo: lista ou detalhe de acordo com a aba */}
+      {/* Conteúdo: detalhe ou lista */}
       {selectedEvalItem ? (
         activeSubTab === 'self' ? (
           <div className="space-y-4">
             {loadingSelf && <p>Carregando autoavaliação...</p>}
             {errorSelf && <p className="text-red-500">{errorSelf}</p>}
-            {!loadingSelf && !errorSelf && selfRecords.map(rec => (
-              <div key={rec.criterionId} className="bg-gray-50 p-4 rounded shadow-sm">
-                <h4 className="font-semibold mb-1">{rec.criterion.name}</h4>
-                <p>Nota: {rec.score} ({rec.scoreDescription})</p>
-                {rec.justification && (
-                  <p className="mt-2 text-gray-700">Justificativa: {rec.justification}</p>
-                )}
-              </div>
-            ))}
+            {!loadingSelf &&
+              !errorSelf &&
+              selfRecords.map(rec => (
+                <div key={rec.id} className="bg-gray-50 p-4 rounded shadow-sm">
+                  <h4 className="font-semibold mb-1">{rec.criterion.criterionName}</h4>
+                  <p className="text-sm text-gray-600 mb-2">
+                    Pilar: {rec.criterion.pillar}
+                  </p>
+                  <p className="font-medium">
+                    Nota: {rec.score} ({rec.scoreDescription})
+                  </p>
+                  {rec.justification && (
+                    <p className="mt-2 text-gray-700">Justificativa: {rec.justification}</p>
+                  )}
+                </div>
+              ))}
+          </div>
+        ) : activeSubTab === 'peer' ? (
+          <div className="space-y-4">
+            {loadingPeer && <p>Carregando avaliações de pares…</p>}
+            {errorPeer && <p className="text-red-500">{errorPeer}</p>}
+            {!loadingPeer &&
+              !errorPeer &&
+              peerRecords.map(rec => (
+                <div key={rec.id} className="bg-gray-50 p-4 rounded shadow-sm">
+                  <h4 className="font-semibold mb-1">Projeto: {rec.project}</h4>
+                  <p>Nota geral: {rec.generalScore}</p>
+                  <p>
+                    Motivado a trabalhar de novo?{' '}
+                    <strong>{rec.motivatedToWorkAgain}</strong>
+                  </p>
+                  <p>Pontos a melhorar: {rec.pointsToImprove}</p>
+                  <p>Pontos a explorar: {rec.pointsToExplore}</p>
+                  <p>
+                    Avaliado por:{' '}
+                    <span className="font-medium">{rec.evaluatorUser.name}</span>
+                  </p>
+                </div>
+              ))}
           </div>
         ) : (
-          <p className="text-gray-500">
-            Conteúdo da aba {activeSubTab === 'peer' ? 'Pares' : 'Líder'} em breve...
-          </p>
+          <p className="text-gray-500">Conteúdo da aba Líder em breve...</p>
         )
       ) : (
         <>

@@ -20,10 +20,31 @@ const managerTabOptions: Tab[] = [
 ];
 
 const managerQuestions: Question[] = [
-  { id: 'mq1', type: 'scale', text: 'Como você avalia a clareza de comunicação deste colaborador?' },
-  { id: 'mq2', type: 'scale', text: 'Quão proativo ele(a) foi durante o ciclo?' },
-  { id: 'mq3', type: 'text',  text: 'Quais pontos de melhoria você identifica?' },
-  { id: 'mq4', type: 'text',  text: 'Dê um exemplo de um bom resultado entregue.' },
+  {
+    id: 'deliveryScore',
+    type: 'scale',
+    text: 'Qualidade e pontualidade das entregas'
+  },
+  {
+    id: 'proactivityScore',
+    type: 'scale',
+    text: 'Proatividade e iniciativa na resolução de problemas'
+  },
+  {
+    id: 'collaborationScore',
+    type: 'scale',
+    text: 'Colaboração e trabalho em equipe'
+  },
+  {
+    id: 'skillScore',
+    type: 'scale',
+    text: 'Habilidades técnicas e de negócio'
+  },
+  {
+    id: 'justification',
+    type: 'text',
+    text: 'Justificativa ou observações gerais sobre o desempenho'
+  }
 ];
 
 export default function Manager() {
@@ -192,7 +213,6 @@ export default function Manager() {
               <div className="bg-white p-8 rounded-lg shadow-md">
                 <section className="mb-10 px-6 md:px-12 text-left">
                   <h3 className="text-3xl md:text-4xl font-bold flex items-center space-x-2">
-                    <span>📝</span>
                     <span>Avaliação de {userObject?.name || 'seus Liderados'}</span>
                   </h3>
                   <p className="uppercase text-sm text-amber-600 font-medium mt-1">
