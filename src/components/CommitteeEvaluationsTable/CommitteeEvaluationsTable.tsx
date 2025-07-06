@@ -65,7 +65,10 @@ export default function CommitteeEvaluationsTable({ evaluations, handleOpenSumma
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center gap-2">
                                         <span className="text-sm font-medium text-gray-900">{evaluation.collaboratorName}</span>
-                                        <button onClick={() => handleOpenObservationModal(evaluation)} className="p-1 text-gray-400 hover:text-blue-600" data-tooltip-id="actions-tooltip" data-tooltip-content="Ver/Editar Observação">
+                                        <button onClick={() => handleOpenObservationModal(evaluation)} 
+                                            className={`p-1 transition-colors ${evaluation.observation ? 'text-blue-600 hover:text-blue-800' : 'text-gray-400 hover:text-blue-600'}`} 
+                                            data-tooltip-id="actions-tooltip" 
+                                            data-tooltip-content="Ver/Editar Observação">
                                             <MessageSquare size={16} />
                                         </button>
                                     </div>

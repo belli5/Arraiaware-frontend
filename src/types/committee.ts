@@ -28,6 +28,46 @@ export interface SummaryApiResponse {
   summary: string;
 }
 
+export interface EvaluationConsolidatedView {
+  collaboratorId: string,
+  collaboratorName: string,
+  cycleId: string,
+  cycleName: string,
+  consolidatedCriteria: [
+    {
+      criterionId: string,
+      criterionName: string,
+      selfEvaluation: {
+        score: number | null,
+        justification: string;
+      },
+      leaderEvaluation: {
+        score: number | null,
+        justification: string
+      },
+      peerEvaluation: {
+        score: number | null,
+        justification: string
+      },
+      hasDiscrepancy: true
+    }
+  ],
+  peerFeedbacks: [
+    {
+      evaluatorName: string,
+      pointsToImprove: string,
+      pointsToExplore: string
+    }
+  ],
+  referenceFeedbacks: [
+    {
+      indicatedName: string,
+      justification: string
+    }
+  ],
+  aiSummary: string
+}
+
 export interface CommitteeSummary{
   readyEvaluations: number;
   overallAverage: number;

@@ -6,10 +6,12 @@ import CommitteeEvaluationsTableSkeleton from '../CommitteeTableSkeleton/Committ
 import { useRef,useEffect } from 'react';
 import CommitteeEvaluationsTable from '../CommitteeEvaluationsTable/CommitteeEvaluationsTable';
 import ReactMarkdown from 'react-markdown';
+import EqualizationPanel from '../EqualizationPanel/EqualizationPanel';
+import NotificationMessages from '../NotificationMessages/NotificationMessages';
 
 export default function CommitteeEvaluationsPanel() {
   const {
-    evaluations, isLoading, error, searchTerm, currentPage, totalPages,
+    evaluations, isLoading, notification,setNotification, searchTerm, currentPage, totalPages,
         handleSearchChange, setCurrentPage, isUpdating, selectedEvaluation,
         
     //edicao de linha:
@@ -24,8 +26,8 @@ export default function CommitteeEvaluationsPanel() {
     handleOpenObservationModal, handleCloseObservationModal, handleSaveObservation,
 
     //Modal de Equalizacao
-    isEqualizeModalOpen, handleOpenEqualizeModal,handleCloseEqualizeModal,
-    handleConfirmEqualization,
+    isEqualizeModalOpen,equalizationData,isEqualizationLoading,equalizationError,
+    handleOpenEqualizeModal, handleCloseEqualizeModal,handleSaveFromPanel
 
 } = useCommitteeEvaluationsLogic();
 
@@ -42,15 +44,16 @@ export default function CommitteeEvaluationsPanel() {
         }
     }, [currentPage]);
 
-    if (isLoading){
-        return <CommitteeEvaluationsTableSkeleton />;
-    }
-
-    if (error){
-        return <div className="text-center p-10 text-red-600">Erro: {error}</div>;
-    }
   return (
         <div ref={panelRef} className="bg-white rounded-xl shadow-lg p-6">
+            {notification && (
+                <NotificationMessages
+                    status={notification.status}
+                    title={notification.title}
+                    message={notification.message}
+                    onClose={() => setNotification(null)}
+                />
+            )}
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Painel de Avaliações do Comitê</h3>
             {/* Seção de Busca */}
             <div className="relative mb-6" style={{ maxWidth: '400px' }}>
@@ -65,29 +68,34 @@ export default function CommitteeEvaluationsPanel() {
             </div>
 
             {/* Tabela de Dados */}
-            <CommitteeEvaluationsTable
+            {isLoading ? (
+                <CommitteeEvaluationsTableSkeleton />
+            ) : (
+                <CommitteeEvaluationsTable
                 evaluations={evaluations}
                 handleOpenObservationModal={handleOpenObservationModal}
                 handleOpenSummaryModal={handleOpenSummaryModal}
                 handleOpenEqualizeModal={handleOpenEqualizeModal}
-
                 editingEvaluationId={editingEvaluationId}
                 editableScore={editableScore}
                 setEditableScore={setEditableScore}
                 handleStartEditScore={handleStartEditScore}
                 handleCancelEditScore={handleCancelEditScore}
                 handleSaveScore={handleSaveScore}
-            />
+                />
+            )}
 
             <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
             />
+            
             <Modal
               isOpen={isSummaryModalOpen}
               onClose={handleCloseSummaryModal}
               title={`Resumo de ${selectedEvaluation?.collaboratorName || ''}`}
+              maxWidth="max-w-7xl" 
             >
               {isSummaryLoading ? (
                 <div className="flex flex-col items-center justify-center p-8">
@@ -119,7 +127,7 @@ export default function CommitteeEvaluationsPanel() {
                             rows={8}
                             className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-orange-500 focus:ring-orange-500"
                             placeholder="Insira uma observação para registro histórico..."
-                            value={editableObservation}
+                            value={editableObservation || ''}
                             onChange={(e) => setEditableObservation(e.target.value)}
                         />
                     </div>
@@ -132,6 +140,23 @@ export default function CommitteeEvaluationsPanel() {
                         </button>
                     </div>
                 </div>
+            </Modal>
+
+            <Modal
+              isOpen={isEqualizeModalOpen}
+              onClose={handleCloseEqualizeModal}
+              title={`Visão Consolidada de ${selectedEvaluation?.collaboratorName || ''}`}
+              maxWidth="max-w-7xl" 
+            >
+              <EqualizationPanel
+                data={equalizationData}
+                isLoading={isEqualizationLoading}
+                error={equalizationError}
+                onClose={handleCloseEqualizeModal}
+                initialScore={selectedEvaluation?.finalScore?.toString() || ''}
+                initialObservation={selectedEvaluation?.observation || ''}
+                onSave={handleSaveFromPanel}
+              />
             </Modal>
         </div>
     );
