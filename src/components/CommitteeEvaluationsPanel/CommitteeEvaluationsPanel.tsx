@@ -1,5 +1,5 @@
 import { useCommitteeEvaluationsLogic } from '../../hooks/useCommitteeEvaluationsLogic';
-import { Search,Loader2 } from 'lucide-react';
+import { Search,Loader2} from 'lucide-react';
 import Pagination from '../Pagination/Pagination';
 import Modal from '../Modal/Modal';
 import CommitteeEvaluationsTableSkeleton from '../CommitteeTableSkeleton/CommitteeTableSkeleton';
@@ -8,11 +8,14 @@ import CommitteeEvaluationsTable from '../CommitteeEvaluationsTable/CommitteeEva
 import ReactMarkdown from 'react-markdown';
 import EqualizationPanel from '../EqualizationPanel/EqualizationPanel';
 import NotificationMessages from '../NotificationMessages/NotificationMessages';
+import CustomSelect from '../CustomSelect/CustomSelect';
 
 export default function CommitteeEvaluationsPanel() {
   const {
-    evaluations, isLoading, notification,setNotification, searchTerm, currentPage, totalPages,
-        handleSearchChange, setCurrentPage, isUpdating, selectedEvaluation,
+    evaluations, isLoading, searchTerm, currentPage, totalPages,
+    handleSearchChange, setCurrentPage, isUpdating, selectedEvaluation,notification,
+    setNotification,cycleOptions, cycleFilter,setCycleFilter,
+    isLoadingCycles,
         
     //edicao de linha:
     editingEvaluationId,editableScore,setEditableScore,handleStartEditScore,
@@ -56,17 +59,29 @@ export default function CommitteeEvaluationsPanel() {
             )}
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Painel de Avaliações do Comitê</h3>
             {/* Seção de Busca */}
-            <div className="relative mb-6" style={{ maxWidth: '400px' }}>
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input 
-                    type="text"
-                    placeholder="Buscar por colaborador..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    value={searchTerm}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                />
+            <div className="grid grid-cols-3 gap-4 mb-6">
+                {/* Filtro de Busca por Colaborador*/}
+                <div className="relative col-span-2 mt-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <input 
+                        type="text"
+                        placeholder="Buscar por colaborador..."
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        value={searchTerm}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                    />
+                </div>
+                {/* Filtro de Ciclo  */}
+                <div className="relative col-span-1">
+                    <CustomSelect
+                        placeholder="Filtrar por ciclo..."
+                        options={cycleOptions}
+                        selected={cycleFilter}
+                        onChange={setCycleFilter}
+                        disabled={isLoadingCycles}
+                    />
+                </div>
             </div>
-
             {/* Tabela de Dados */}
             {isLoading ? (
                 <CommitteeEvaluationsTableSkeleton />

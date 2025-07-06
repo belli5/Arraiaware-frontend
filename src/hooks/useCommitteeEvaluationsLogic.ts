@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback ,useMemo} from 'react';
 import type { CommitteeCollaboratorsEvaluations, CommitteePanelTable,SummaryApiResponse,EvaluationConsolidatedView } from '../types/committee';
+import type { Cycle } from '../types/evaluation';
+import type { SelectOption } from '../components/CustomSelect/CustomSelect';
 
 interface NotificationProps {
   status: 'success' | 'error';
@@ -18,7 +20,10 @@ export const useCommitteeEvaluationsLogic = () => {
     const [isUpdating, setIsUpdating] = useState<boolean>(false);
     const [selectedEvaluation, setSelectedEvaluation] = useState<CommitteeCollaboratorsEvaluations | null>(null);
     const [notification, setNotification] = useState<NotificationProps | null>(null);
-    
+    const [cycles, setCycles] = useState<Cycle[]>([]);
+    const [isLoadingCycles, setIsLoadingCycles] = useState(false);
+    const [cycleFilter, setCycleFilter] = useState<SelectOption | null>(null);
+
     // Estados do Modal de Resumo (IA)
     const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
     const [summaryContent, setSummaryContent] = useState('');
@@ -59,6 +64,11 @@ export const useCommitteeEvaluationsLogic = () => {
                 if (searchTerm) {
                     params.append('search', searchTerm);
                 }
+
+                if (cycleFilter) {
+                    params.append('cycleId', cycleFilter.id);
+                }
+
                 params.append('page', currentPage.toString());
                 params.append('limit', '10'); 
 
@@ -88,9 +98,50 @@ export const useCommitteeEvaluationsLogic = () => {
             }
         };
 
-        fetchEvaluations();
-    }, [searchTerm, currentPage,isUpdating]); 
+        if (!isLoadingCycles && cycleFilter) {
+            fetchEvaluations();
+        }
+    }, [searchTerm, currentPage,isUpdating,cycleFilter, isLoadingCycles]); 
 
+    useEffect(() => {
+        const fetchCycles = async () => {
+            setIsLoadingCycles(true);
+            const token = localStorage.getItem('token');
+            if (!token){
+                setNotification({
+                    status: 'error',
+                    title: 'Erro de Autenticação',
+                    message: 'Você não está autenticado',
+                });
+                setIsLoadingCycles(false);
+                return;
+            } 
+            try {
+                const response = await fetch('http://localhost:3000/api/cycles', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('Falha ao buscar ciclos de avaliação.');
+                const data: Cycle[] = await response.json();
+                setCycles(data);
+
+                if (data.length > 0) {
+                    setCycleFilter(data[0]);
+                }
+
+            } catch (err) {
+                if (err instanceof Error) {
+                    setNotification({
+                        status: 'error',
+                        title: 'Erro de Rede',
+                        message: err.message,
+                    });
+                }
+            } finally {
+                setIsLoadingCycles(false);
+            }
+        };
+        fetchCycles();
+    }, []);
 
     const validateScore = (scoreString: string): number | null => {
         if (scoreString.trim() === '') {
@@ -136,6 +187,10 @@ export const useCommitteeEvaluationsLogic = () => {
 
         setIsUpdating(prev => !prev); 
     };
+
+    const cycleOptions = useMemo<SelectOption[]>(() => 
+        cycles.map(c => ({ id: c.id, name: c.name }))
+    , [cycles]);
 
     //Edicao de nota
     const handleStartEditScore = (evaluation: CommitteeCollaboratorsEvaluations) => {
@@ -359,7 +414,8 @@ export const useCommitteeEvaluationsLogic = () => {
         //UI
         evaluations, isLoading, searchTerm, currentPage, totalPages,
         handleSearchChange, setCurrentPage, isUpdating, selectedEvaluation,notification,
-        setNotification,
+        setNotification,cycleOptions, cycleFilter,setCycleFilter,
+        isLoadingCycles,
         
         //edicao de linha:
         editingEvaluationId,editableScore,setEditableScore,handleStartEditScore,
