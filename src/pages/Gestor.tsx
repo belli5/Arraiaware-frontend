@@ -4,13 +4,13 @@ import StatCard from '../components/StatCard/StatCard';
 import { Users, CheckCircle2, Clock, AlertTriangle, BarChart2, ClipboardList} from 'lucide-react'; 
 import OverallProgressManager from '../components/OverallProgressRH/OverallProgressManager';
 import Tabs from '../components/Tabs/Tabs';
-import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
 import Footer from '../components/Footer/Footer';
 import type { Tab } from '../types/tabs';
 import type { managerTabId, ManagerDashboardData } from '../types/manager';
 import SkeletonStatCard from '../components/SkeletonStatCard/SkeletonStatCard';
 import ManagerEvaluation from '../components/ManagerEvaluation/ManagerEvaluation';
 import type { Question } from '../types/evaluation';
+import EvaluationsPanelManager from '../components/EvaluationsPanel/EvolutionPanelManager';
 
 
 const managerTabOptions: Tab[] = [
@@ -176,8 +176,11 @@ export default function Manager() {
           />
         
           <div ref={contentPanelRef} className="mt-8">
-            {activeTab === 'status' && userObject && (
-              <EvaluationsPanel managerId={userObject.sub} />
+            {activeTab === 'status' && userObject && dashboardData && (
+              <EvaluationsPanelManager
+                managerId={userObject.sub}
+                cycleId={dashboardData.cycleId}
+              />
             )}
             {activeTab === 'insights' && (
               <div className="bg-white p-8 rounded-lg shadow-md text-center text-gray-500">
