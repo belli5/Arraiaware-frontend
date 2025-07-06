@@ -58,26 +58,35 @@ export interface Cycle {
 }
 
 export interface SelfEvaluationRecord {
+  id: string;
+  score: number;
+  scoreDescription: string;
+  justification?: string | null;
+  submissionStatus: string;
   userId: string;
   cycleId: string;
   criterionId: string;
-  score: number;
-  scoreDescription: string;
-  justification: string | null;
   criterion: {
     id: string;
-    name: string;
+    pillar: string;
+    criterionName: string;
+    description: string;
   };
 }
 
 export interface PeerEvaluationRecord {
   id: string;
-  score: number;
-  comment?: string;
+  project: string;
+  motivatedToWorkAgain: string;
+  generalScore: number;
+  pointsToImprove: string;
+  pointsToExplore: string;
+  evaluatedUserId: string;
+  evaluatorUserId: string;
+  cycleId: string;
+  projectId: string;
   evaluatorUser: {
     id: string;
     name: string;
   };
-  evaluatedUserId: string;    // ou collaboratorId, como você escolher
-  cycleId: string;
 }
