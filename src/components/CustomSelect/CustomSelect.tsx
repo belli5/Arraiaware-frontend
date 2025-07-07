@@ -12,13 +12,14 @@ interface CustomSelectProps {
   selected: SelectOption | null;
   onChange: (option: SelectOption) => void;
   placeholder?: string;
+  disabled?: boolean;
 }
 
-export default function CustomSelect({ options, selected, onChange, placeholder = "Selecione uma opção" }: CustomSelectProps) {
+export default function CustomSelect({ options, selected, onChange, placeholder = "Selecione uma opção", disabled = false}: CustomSelectProps) {
   return (
-    <Listbox value={selected} onChange={onChange}>
+    <Listbox value={selected} onChange={onChange} disabled={disabled}>
       <div className="relative mt-1">
-        <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+        <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed">
           <span className={`block truncate ${selected ? 'text-gray-900' : 'text-gray-400'}`}>
             {selected ? selected.name : placeholder}
           </span>
