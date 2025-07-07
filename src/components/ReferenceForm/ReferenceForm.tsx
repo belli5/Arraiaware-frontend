@@ -40,13 +40,13 @@ export default function ReferenceForm({ onSubmit }: ReferenceFormProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 space-y-6">
+    <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
       <h2 className="text-xl font-semibold text-gray-800">Referências Técnicas e Culturais</h2>
 
       {references.map((ref, index) => (
         <div
           key={index}
-          className="border border-gray-200 rounded-xl p-4 space-y-4 bg-gray-50"
+          className="border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 p-4 space-y-4 bg-white"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -55,7 +55,7 @@ export default function ReferenceForm({ onSubmit }: ReferenceFormProps) {
               </label>
               <input
                 type="text"
-                className="w-full border rounded-lg p-2"
+                className="w-full border border-gray-300 rounded-xl p-3 focus:ring-orange-300 focus:border-orange-300"
                 value={ref.name}
                 onChange={(e) => handleChange(index, 'name', e.target.value)}
               />
@@ -67,7 +67,7 @@ export default function ReferenceForm({ onSubmit }: ReferenceFormProps) {
               </label>
               <input
                 type="email"
-                className="w-full border rounded-lg p-2"
+                className="w-full border border-gray-300 rounded-xl p-3 focus:ring-orange-300 focus:border-orange-300"
                 value={ref.email}
                 onChange={(e) => handleChange(index, 'email', e.target.value)}
               />
@@ -78,7 +78,7 @@ export default function ReferenceForm({ onSubmit }: ReferenceFormProps) {
                 Tipo de Referência
               </label>
               <select
-                className="w-full border rounded-lg p-2"
+                className="w-full border border-gray-300 rounded-xl p-3 focus:ring-orange-300 focus:border-orange-300"
                 value={ref.type}
                 onChange={(e) => handleChange(index, 'type', e.target.value as 'TÉCNICA' | 'CULTURAL')}
               >
@@ -93,7 +93,7 @@ export default function ReferenceForm({ onSubmit }: ReferenceFormProps) {
               </label>
               <input
                 type="text"
-                className="w-full border rounded-lg p-2"
+                className="w-full border border-gray-300 rounded-xl p-3 focus:ring-orange-300 focus:border-orange-300"
                 value={ref.area}
                 onChange={(e) => handleChange(index, 'area', e.target.value)}
               />
@@ -105,9 +105,10 @@ export default function ReferenceForm({ onSubmit }: ReferenceFormProps) {
               Comentário opcional
             </label>
             <textarea
-              className="w-full border rounded-lg p-2"
+              className="w-full border border-gray-300 rounded-xl p-3 focus:ring-orange-300 focus:border-orange-300"
               rows={3}
               value={ref.comment}
+              placeholder="Comentário opcional..."
               onChange={(e) => handleChange(index, 'comment', e.target.value)}
             />
           </div>
