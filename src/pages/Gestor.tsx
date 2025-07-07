@@ -55,6 +55,10 @@ export default function Manager() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [, setError] = useState<string | null>(null);
 
+  console.log("DashboardData completo:", dashboardData)
+  console.log(" → cycleId vindo do backend:", dashboardData?.cycleId)
+  console.log(" → typeof cycleId:", typeof dashboardData?.cycleId)
+
   const userObject = useMemo(() => {
     const storedUserString = localStorage.getItem('user');
     if (storedUserString) {
@@ -97,6 +101,7 @@ export default function Manager() {
         
         const data: ManagerDashboardData = await response.json();
         setDashboardData(data);
+        console.log("cycleId vindo do backend:", data.cycleId)
       } catch (err) {
         setError((err as Error).message);
       } finally {
@@ -209,7 +214,7 @@ export default function Manager() {
               </div>
             )}
 
-            {activeTab === 'evaluation' && (            
+            {activeTab === 'evaluation' && dashboardData && (           
               <div className="bg-white p-8 rounded-lg shadow-md">
                 <section className="mb-10 px-6 md:px-12 text-left">
                   <h3 className="text-3xl md:text-4xl font-bold flex items-center space-x-2">
@@ -220,9 +225,9 @@ export default function Manager() {
                   </p>
                 </section>
                 <ManagerEvaluation
-                  managerId={userObject!.sub}
-                  cycleId={dashboardData!.cycleId}
-                  questions={managerQuestions}   
+                  managerId={userObject.sub}
+                  cycleId={dashboardData.cycleId}       // passe exatamente o UUID
+                  questions={managerQuestions}
                 />
               </div>
             )}
