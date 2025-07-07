@@ -6,7 +6,7 @@ import {
   FaChartLine,
   FaCrown,
 } from 'react-icons/fa';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, UserCheck } from 'lucide-react';
 import Header from '../components/Header/Header_geral';
 import Footer from '../components/Footer/Footer';
 import EvaluationTabs from '../components/EvaluationTabs/EvaluationTabs';
@@ -16,6 +16,16 @@ import ProgressSidebar from '../components/ProgressSideBar/ProgressSideBar';
 import type { Section, Colleague, Answer, Question } from '../types/evaluation';
 import PeerQuestionList from '../components/PeerQuestionList/PeerQuestionList';
 import LeaderQuestionList from '../components/LeadQuestionList/LeadQuestionList';
+import ReferenceForm from '../components/ReferenceForm/ReferenceForm';
+
+interface Reference {
+  id: string;
+  name: string;
+  email: string;
+  type: 'technical' | 'cultural' | 'both' | '';
+  areaOfKnowledge: string;
+}
+
 type Cycle = { id: string; name: string; status: string };
 
 
@@ -53,7 +63,6 @@ const predefinedSections: Record<string, { key: string; title: string; icon: JSX
 
 
 
-
 interface ApiTeamInfo {
   projectId:   string;
   projectName: string;
@@ -87,6 +96,10 @@ export default function Avaliacao() {
   
   const [userId, setUserId] = useState<string>('');
 
+  const [referencesData, setReferencesData] = useState<Reference[]>([]);
+  const [isReferenceSectionComplete, setIsReferenceSectionComplete] = useState<boolean>(false);
+
+
   useEffect(() => {
     const raw = localStorage.getItem('token');
     if (!raw) return;
@@ -102,7 +115,7 @@ export default function Avaliacao() {
           .join('')
       );
       const { sub } = JSON.parse(json);
-      setUserId(sub);            
+      setUserId(sub);           
     } catch (e) {
       console.error('Não conseguiu decodificar token:', e);
     }
@@ -129,23 +142,23 @@ export default function Avaliacao() {
 
         // transforma collaborators em Colleague[]
         setTeamMates(info.collaborators.map(c => ({
-        id:          c.id,
-        nome:        c.name,
-        cargo:       'Colaborador',
-        area:        info.projectName,        // opcional, se você quiser manter
-        tempo:       '—',
-        projectName: info.projectName,        // ← aqui!
-      })));
+          id:           c.id,
+          nome:         c.name,
+          cargo:        'Colaborador',
+          area:         info.projectName,        
+          tempo:        '—',
+          projectName: info.projectName,        
+        })));
 
         // mapeia o gestor
         setLeaderColleagues([{
-        id:          info.managerId,
-        nome:        info.managerName,
-        cargo:       'Gestor',
-        area:        info.projectName,        // opcional
-        tempo:       '—',
-        projectName: info.projectName,        // ← e aqui!
-      }]);
+          id:           info.managerId,
+          nome:         info.managerName,
+          cargo:        'Gestor',
+          area:         info.projectName,        
+          tempo:        '—',
+          projectName: info.projectName,        
+        }]);
       })
       .catch(err => setTeamError(String(err)))
       .finally(() => setLoadingTeam(false));
@@ -215,6 +228,48 @@ export default function Avaliacao() {
     alert('Falha ao enviar avaliações: ' + err.message);
     }
   }
+
+  const handleSubmitReferences = async (references: Reference[]) => {
+    if (!userId || !cycleId) {
+      alert('Usuário ou ciclo não carregados ainda.');
+      return;
+    }
+
+    if (references.length === 0) {
+      alert('Adicione pelo menos uma referência antes de salvar.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const payload = {
+        userId,
+        cycleId,
+        references,
+      };
+      const res = await fetch('http://localhost:3000/api/references', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Erro ao salvar referências: ${await res.text()}`);
+      }
+
+      alert('Referências salvas com sucesso!');
+      setReferencesData(references); // Atualiza o estado local com os dados salvos
+      setIsReferenceSectionComplete(true); // Marca a seção de referência como completa
+      // Navega para a próxima seção após salvar
+      navigate(`/avaliacao/${sections[currentSectionIndex + 1]?.key}`);
+    } catch (err: any) {
+      console.error(err);
+      alert('Falha ao salvar referências: ' + err.message);
+    }
+  };
 
 
   useEffect(() => {
@@ -293,10 +348,11 @@ export default function Avaliacao() {
         };
       });
 
-      // Adiciona seções de pares e líderes no fim
+      // Adiciona seções de pares, líderes e indicação de referências no fim
       mapped.push(
         { key: 'peer', title: 'Avaliação de Pares', icon: <FaUsers />, questions: peerQuestions },
-        { key: 'leader', title: 'Avaliação de Líderes', icon: <FaCrown />, questions: leaderQuestions }
+        { key: 'leader', title: 'Avaliação de Líderes', icon: <FaCrown />, questions: leaderQuestions },
+        { key: 'reference', title: 'Indicação de Referências', icon: <UserCheck />, questions: [] }
       );
 
       setSections(mapped);
@@ -355,6 +411,7 @@ export default function Avaliacao() {
       });
       if (!res.ok) throw new Error(await res.text());
       alert('Autoavaliação enviada!');
+      navigate(`/avaliacao/${sections[currentSectionIndex + 1]?.key}`);
     } catch (err: any) {
       console.error(err);
       alert('Falha ao enviar autoavaliação: ' + err.message);
@@ -486,40 +543,40 @@ export default function Avaliacao() {
     return Math.round((doneCount / questions.length) * 100);
   };
 
-  let totalProgressItems = 0;
-  let completedProgressItems = 0;
-  const is360Section = currentSectionData.key === 'peer' || currentSectionData.key === 'leader';
+  let totalOverallSectionsToCount = 0;
+  let completedOverallSectionsToCount = 0;
 
-  if (is360Section) {
-    const colleaguesList = currentSectionData.key === 'peer' ? teamMates : leaderColleagues;
-    const answersSource = currentSectionData.key === 'peer' ? peerAnswers : leaderAnswers;
-
-    if (avaliandoId) {
-      //  UMA pessoa
-      totalProgressItems = currentSectionData.questions.length;
-      const personAnswers = answersSource[avaliandoId] || {};
-      completedProgressItems = currentSectionData.questions.filter(q =>
-        isAnswerComplete(personAnswers[q.id], q.id)
-        ).length;
-    } else {
-      //LISTA de pessoas
-      totalProgressItems = colleaguesList.length;
-      completedProgressItems = colleaguesList.filter(person => {
-      const personAnswers = answersSource[person.id] || {};
-      const answeredCount = currentSectionData.questions.filter(q =>
-      isAnswerComplete(personAnswers[q.id], q.id)
-      ).length;
-      return answeredCount === currentSectionData.questions.length;
-     }).length;
+  sections.forEach(s => {
+    if (s.key === 'reference') {
+      // Para a seção de referência, contamos como 1 item total
+      totalOverallSectionsToCount += 1;
+      // E ela está completa se o estado isReferenceSectionComplete for true
+      if (isReferenceSectionComplete) {
+        completedOverallSectionsToCount += 1;
+      }
+    } else if (s.key === 'peer' || s.key === 'leader') {
+      // Para pares e líderes, cada pessoa é um item a ser avaliado
+      const colleaguesList = s.key === 'peer' ? teamMates : leaderColleagues;
+      const answersSource = s.key === 'peer' ? peerAnswers : leaderAnswers;
+      totalOverallSectionsToCount += colleaguesList.length; // Cada pessoa avaliada é um item
+      completedOverallSectionsToCount += colleaguesList.filter(person => {
+        const personAnswers = answersSource[person.id] || {};
+        const answeredCount = s.questions.filter(q => isAnswerComplete(personAnswers[q.id], q.id)).length;
+        // Considera completo se todas as perguntas para aquela pessoa foram respondidas
+        return answeredCount === s.questions.length && s.questions.length > 0;
+      }).length;
+    } else { // Autoavaliação (Comportamento, Execução, Gestão e Liderança)
+      totalOverallSectionsToCount += 1; // Cada seção de autoavaliação é 1 item
+      const answeredCount = s.questions.filter(q => isAnswerComplete(answers[q.id])).length;
+      // Considera completo se todas as perguntas da seção foram respondidas
+      if (answeredCount === s.questions.length && s.questions.length > 0) {
+        completedOverallSectionsToCount += 1;
+      }
     }
-  } else {
-    // AUTOAVALIAÇÃO
-    totalProgressItems = currentSectionData.questions.length;
-    completedProgressItems = currentSectionData.questions.filter(q => isAnswerComplete(answers[q.id])).length;
-  }
+  });
 
-  const overallProgressPercentage = totalProgressItems > 0 
-    ? (completedProgressItems / totalProgressItems) * 100 
+  const overallProgressPercentage = totalOverallSectionsToCount > 0 
+    ? (completedOverallSectionsToCount / totalOverallSectionsToCount) * 100 
     : 0;
 
   const currentColleagues = 
@@ -546,6 +603,8 @@ export default function Avaliacao() {
                 ? 'Avaliação de Pares Q4 2024'
                 : currentSectionData.key === 'leader'
                 ? 'Avaliação de Líderes Q4 2024'
+                : currentSectionData.key === 'reference'
+                ? 'Indicação de Referências'
                 : `Autoavaliação Q4 2024`}
             </h1>
             <div className="relative bg-gray-200 h-2 rounded-full">
@@ -564,6 +623,7 @@ export default function Avaliacao() {
             leaderAnswers={leaderAnswers}
             peerColleagues={teamMates}
             leaderColleagues={leaderColleagues}
+            isReferenceSectionComplete={isReferenceSectionComplete}
           />
 
           <div className="flex gap-6">
@@ -600,18 +660,18 @@ export default function Avaliacao() {
                         </button>
                       </div>
                       {currentSectionData.key === 'peer' ? (
-                     <PeerQuestionList
-                       questions={currentSectionData.questions}
-                       answers={peerAnswers[avaliandoId] || {}}
-                       onAnswerChange={handleAnswerChange}
-                     />
-                   ) : (
-                   <LeaderQuestionList
-                       questions={currentSectionData.questions}
-                       answers={leaderAnswers[avaliandoId] || {}}
-                       onAnswerChange={handleAnswerChange}
-                     />
-                   )}
+                      <PeerQuestionList
+                        questions={currentSectionData.questions}
+                        answers={peerAnswers[avaliandoId] || {}}
+                        onAnswerChange={handleAnswerChange}
+                      />
+                    ) : (
+                      <LeaderQuestionList
+                        questions={currentSectionData.questions}
+                        answers={leaderAnswers[avaliandoId] || {}}
+                        onAnswerChange={handleAnswerChange}
+                      />
+                    )}
                       {(() => {
                         const pct = getSectionProgress(
                           currentSectionData.key === 'peer' ? peerAnswers : leaderAnswers,
@@ -673,6 +733,11 @@ export default function Avaliacao() {
                       </>
                     
                   )
+                ) : currentSectionData.key === 'reference' ? (
+                  <ReferenceForm
+                    initialReferences={referencesData}
+                    onSaveReferences={handleSubmitReferences}
+                  />
                 ) : (
                   // AUTOAVALIAÇÃO: QuestionList + botão de envio
                   <>
@@ -692,6 +757,7 @@ export default function Avaliacao() {
                   </>
                 )}
 
+                {/* BOTÕES DE NAVEGAÇÃO DE SEÇÃO */}
                 <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
                   <button
                     onClick={() => {
@@ -703,15 +769,17 @@ export default function Avaliacao() {
                   >
                     ← Seção Anterior
                   </button>
-                  <button
-                    onClick={() => {
-                      const next = currentSectionIndex < sections.length - 1 ? currentSectionIndex + 1 : currentSectionIndex;
-                      if (next !== currentSectionIndex) navigate(`/avaliacao/${sections[next].key}`);
-                    }}
-                    className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-                  >
-                    {currentSectionIndex < sections.length - 1 ? 'Próxima Seção →' : 'Finalizar e Enviar'}
-                  </button>
+                  {currentSectionData.key !== 'reference' && (
+                    <button
+                      onClick={() => {
+                        const next = currentSectionIndex < sections.length - 1 ? currentSectionIndex + 1 : currentSectionIndex;
+                        if (next !== currentSectionIndex) navigate(`/avaliacao/${sections[next].key}`);
+                      }}
+                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+                    >
+                      {currentSectionIndex < sections.length - 1 ? 'Próxima Seção →' : 'Finalizar e Enviar'}
+                    </button>
+                  )}
                 </div>
               </div>
             </section>
@@ -723,6 +791,7 @@ export default function Avaliacao() {
               leaderAnswers={leaderAnswers}
               colleagues={teamMates}
               leaders={leaderColleagues}
+              isReferenceSectionComplete={isReferenceSectionComplete}
             />
           </div>
         </div>
