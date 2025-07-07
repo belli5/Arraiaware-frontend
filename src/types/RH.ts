@@ -14,7 +14,7 @@ export interface Track {
   criteria: Criterion[];
 }
 
-export type RHTabId = 'Cadastrar' |'status' | 'criterios' | 'historico' | 'cargos' ;
+export type RHTabId = 'Cadastrar' |'status' | 'criterios' | 'historico' | 'cargos' | 'Editar' ;
 
 export type Role = 'Colaborador' | 'Gestor' | 'RH';
 
@@ -65,4 +65,24 @@ export interface RoleFromApi {
   name: string;
   type: "TRILHA" | "CARGO" | "VINCULO";
   description: string;
+}
+
+export interface User{
+  id: string;
+  name: string;
+  email: string;
+  unidade: string;
+  userType: string;
+  roles: string[];
+}
+
+export interface ApiUserResponse extends User {
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  leaderId: string | null;
+  leader: {
+    id: string;
+    name: string;
+  } | null;
 }
