@@ -1,6 +1,7 @@
 import type { CommitteeCollaboratorsEvaluations } from '../../types/committee';
 import { MessageSquare, Pencil, Check, X } from 'lucide-react';
 import { Tooltip } from 'react-tooltip';
+import StatusBadge from '../StatusBadge/StatusBadge';
 
 interface CommitteeEvaluationsTableProps {
     evaluations: CommitteeCollaboratorsEvaluations[];
@@ -16,12 +17,6 @@ interface CommitteeEvaluationsTableProps {
 
     handleOpenEqualizeModal: (evaluation: CommitteeCollaboratorsEvaluations) => void;
 }
-
-const statusStyles: { [key: string]: string } = {
-    Completo: 'bg-green-100 text-green-800',
-    Parcial: 'bg-yellow-100 text-yellow-800',
-    Pendente: 'bg-red-100 text-red-800',
-};
 
 export default function CommitteeEvaluationsTable({ evaluations, handleOpenSummaryModal, handleOpenObservationModal, 
     editingEvaluationId,
@@ -77,7 +72,9 @@ export default function CommitteeEvaluationsTable({ evaluations, handleOpenSumma
 
                                 {/* Células de Ciclo a Líderes  */}
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{evaluation.cycleName}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-center"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusStyles[evaluation.status]}`}>{evaluation.status}</span></td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                    <StatusBadge status={evaluation.status} />
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">{typeof evaluation.selfEvaluationScore === 'number' ? evaluation.selfEvaluationScore.toFixed(1) : '-'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">{typeof evaluation.peerEvaluationScore === 'number' ? evaluation.peerEvaluationScore.toFixed(1) : '-'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">{typeof evaluation.managerEvaluationScore === 'number' ? evaluation.managerEvaluationScore.toFixed(1) : '-'}</td>

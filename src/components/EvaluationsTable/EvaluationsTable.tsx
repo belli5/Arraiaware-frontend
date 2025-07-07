@@ -1,21 +1,9 @@
 import type { Evaluation } from "../../types/evaluation";
 import FormattedDate from "../FormattedDate/FormattedDate"; 
+import StatusBadge from "../StatusBadge/StatusBadge";
 
 interface EvaluationsTableProps {
     evaluations: Evaluation[];
-}
-
-const StatusBadge = ({ status }: { status: string }) => {
-    const baseStyle = "px-3 py-1 text-xs font-semibold rounded-full inline-block";
-    let colorStyle = "";
-
-    switch (status) {
-        case 'Concluída': colorStyle = "bg-green-100 text-green-700"; break;
-        case 'Pendente': colorStyle = "bg-amber-100 text-amber-700"; break;
-        case 'Em Atraso': colorStyle = "bg-red-100 text-red-700"; break;
-        default: colorStyle = "bg-gray-100 text-gray-700";
-    }
-    return <span className={`${baseStyle} ${colorStyle}`}>{status}</span>;
 }
 
 const ProgressBar = ({ progress }: { progress: number }) => {
@@ -28,7 +16,6 @@ const ProgressBar = ({ progress }: { progress: number }) => {
         </div>
     )
 }
-
 
 export default function EvaluationsTable({ evaluations }: EvaluationsTableProps) {
     if (evaluations.length === 0) {
