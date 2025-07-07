@@ -1,6 +1,6 @@
 import Header from '../components/Header/Header_RH';
 import StatCard from '../components/StatCard/StatCard'; 
-import { Users, CheckCircle2, Clock, AlertTriangle,ClipboardList, SlidersHorizontal, Import,Briefcase  } from 'lucide-react'; 
+import { Users, CheckCircle2, Clock, AlertTriangle,ClipboardList, SlidersHorizontal, Import,Briefcase,Pencil} from 'lucide-react'; 
 import OverallProgress from '../components/OverallProgressRH/OverallProgress';
 import { useState,useRef,useEffect } from 'react';
 import type { Tab } from '../types/tabs';
@@ -13,12 +13,14 @@ import SignUpPanel from '../components/SignUpPanel/SignUpPanel';
 import type { RHTabId,DashboardData } from '../types/RH';
 import CreateRolePanel from '../components/CreateRolePanel/CreateRolePanel';
 import SkeletonStatCard from '../components/SkeletonStatCard/SkeletonStatCard';
+import EditUserPanel from '../components/EditUserPanel/EditUserPanel';
 
 const rhTabOptions: Tab[] = [
   { id: 'status', label: 'Status das Avaliações', icon: <ClipboardList size={18} /> },
   { id: 'criterios', label: 'Critérios por Trilha', icon: <SlidersHorizontal size={18} /> },
   { id: 'historico', label: 'Importar Históricos', icon: <Import size={18} /> },
   { id: 'Cadastrar', label: 'Cadastrar Usuário', icon: <Users size={18} /> },
+  { id: 'Editar'   , label: 'Editar Usuário'   , icon: <Pencil size={18}/>},
   { id: 'cargos', label: 'Criar Cargos', icon: <Briefcase size={18} /> }
 ];
 
@@ -159,6 +161,7 @@ export default function RH() {
               {activeTab === 'criterios' && <CriteriaPanel />}
               {activeTab === 'cargos' && <CreateRolePanel />}
               {activeTab === 'historico' && <HistoryPanel />}
+              {activeTab === 'Editar' && <EditUserPanel />}
               {activeTab === 'Cadastrar' && <SignUpPanel />}
             </div>
         </div>

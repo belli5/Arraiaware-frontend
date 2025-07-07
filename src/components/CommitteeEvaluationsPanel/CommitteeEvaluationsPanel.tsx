@@ -14,7 +14,7 @@ export default function CommitteeEvaluationsPanel() {
   const {
     evaluations, isLoading, searchTerm, currentPage, totalPages,
     handleSearchChange, setCurrentPage, isUpdating, selectedEvaluation,notification,
-    setNotification,cycleOptions, cycleFilter,setCycleFilter,
+    setNotification,cycleOptions, cycleFilter,handleCycleChange,
     isLoadingCycles,
         
     //edicao de linha:
@@ -48,7 +48,7 @@ export default function CommitteeEvaluationsPanel() {
     }, [currentPage]);
 
   return (
-        <div ref={panelRef} className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-white rounded-xl shadow-lg p-6">
             {notification && (
                 <NotificationMessages
                     status={notification.status}
@@ -57,7 +57,7 @@ export default function CommitteeEvaluationsPanel() {
                     onClose={() => setNotification(null)}
                 />
             )}
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Painel de Avaliações do Comitê</h3>
+            <h3 ref={panelRef} className="text-xl font-semibold text-gray-700 mb-4">Painel de Avaliações do Comitê</h3>
             {/* Seção de Busca */}
             <div className="grid grid-cols-3 gap-4 mb-6">
                 {/* Filtro de Busca por Colaborador*/}
@@ -77,7 +77,7 @@ export default function CommitteeEvaluationsPanel() {
                         placeholder="Filtrar por ciclo..."
                         options={cycleOptions}
                         selected={cycleFilter}
-                        onChange={setCycleFilter}
+                        onChange={handleCycleChange}
                         disabled={isLoadingCycles}
                     />
                 </div>
@@ -139,8 +139,8 @@ export default function CommitteeEvaluationsPanel() {
                         </label>
                         <textarea
                             id="observation"
-                            rows={8}
-                            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                            rows={6}
+                            className="mt-1 w-full border border-1 border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-orange-500"
                             placeholder="Insira uma observação para registro histórico..."
                             value={editableObservation || ''}
                             onChange={(e) => setEditableObservation(e.target.value)}

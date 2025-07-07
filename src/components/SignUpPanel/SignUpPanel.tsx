@@ -24,12 +24,12 @@ export default function SignUpPanel() {
               <div className="relative md:col-span-3">
                 <label htmlFor="name" className="block text-sm font-bold text-gray-700">Nome Completo</label>
                 <User className="absolute bottom-2.5 left-3 h-5 w-5 text-gray-400" />
-                <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 block w-full border rounded-md shadow-sm py-2 pl-10 pr-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500" disabled={isSubmitting} />
+                <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 pl-10 pr-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500" disabled={isSubmitting} />
               </div>
               <div className="relative md:col-span-3">
                 <label htmlFor="email" className="block text-sm font-bold text-gray-700">Email</label>
                 <Mail className="absolute bottom-2.5 left-3 h-5 w-5 text-gray-400" />
-                <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full border rounded-md shadow-sm py-2 pl-10 pr-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500" disabled={isSubmitting} />
+                <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 pl-10 pr-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500" disabled={isSubmitting} />
               </div>
                <div className="md:col-span-3 grid md:grid-cols-3 gap-6">
                 <div className="col-span-2">
