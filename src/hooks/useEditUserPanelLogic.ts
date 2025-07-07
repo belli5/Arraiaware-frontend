@@ -1,20 +1,45 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect,useCallback } from 'react';
 import type { User, ApiUserResponse } from '../types/RH'
+import type { SelectOption } from '../components/CustomSelect/CustomSelect';
 
 interface NotificationProps {
-  status: 'success' | 'error';
-  title: string;
-  message: string;
+    status: 'success' | 'error';
+    title: string;
+    message: string;
 }
+
+interface UserApiResponse {
+    data: ApiUserResponse[];
+    pagination: {
+        totalItems: number;
+        totalPages: number;
+        currentPage: number;
+    };
+}
+
+const userTypeOptions: SelectOption[] = [
+        { id: 'COLABORADOR', name: 'Colaborador' },
+        { id: 'GESTOR', name: 'Gestor' },
+        { id: 'ADMIN', name: 'Admin' },
+        { id: 'RH', name: 'RH' },
+        { id: 'COMITE', name: 'Comitê' },
+    ];
 
 export const useEditUserPanelLogic = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [notification, setNotification] = useState<NotificationProps | null>(null);
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(0);
+    
+    const [searchTerm, setSearchTerm] = useState('');
+    const [userTypeFilter, setUserTypeFilter] = useState<SelectOption | null>(null);
 
     const handleOpenEditModal = (user: User) => {
         setEditingUser(user);
@@ -26,17 +51,26 @@ export const useEditUserPanelLogic = () => {
         setIsEditModalOpen(false);
     };
 
+    const handleSearchChange = useCallback((term: string) => {
+        setSearchTerm(term);
+        setCurrentPage(1); 
+    }, []);
+
+    const handleUserTypeChange = useCallback((option: SelectOption | null) => {
+        setUserTypeFilter(option);
+        setCurrentPage(1); 
+    }, []);
 
     const handleUpdateUser = async (userData: { id: string; name: string; email: string; unidade: string; userType: string; }) => {
         setIsSubmitting(true);
         setNotification(null);
 
         const token = localStorage.getItem('token');
-            if (!token) {
-                setNotification({ status: 'error', title: 'Autenticação Falhou', message: 'Token não encontrado.' });
-                setIsLoading(false);
-                return;
-            }
+        if (!token) {
+            setNotification({ status: 'error', title: 'Autenticação Falhou', message: 'Token não encontrado.' });
+            setIsLoading(false);
+            return;
+        }
 
         try {
             const payload = {
@@ -59,12 +93,6 @@ export const useEditUserPanelLogic = () => {
             
             setNotification({ status: 'success', title: 'Sucesso!', message: 'Usuário atualizado com sucesso.' });
             handleCloseEditModal();
-            
-            setUsers(currentUsers =>
-                currentUsers.map(u => 
-                    u.id === userData.id ? { ...u, ...userData } : u
-                )
-            );
 
         } catch (err) {
             if (err instanceof Error) {
@@ -72,6 +100,7 @@ export const useEditUserPanelLogic = () => {
             }
         } finally {
             setIsSubmitting(false);
+            setIsUpdating(prev => !prev);
         }
     };
 
@@ -86,7 +115,18 @@ export const useEditUserPanelLogic = () => {
             }
 
             try {
-                const response = await fetch('http://localhost:3000/api/users', {
+                const params = new URLSearchParams();
+                params.append('page', currentPage.toString());
+                params.append('limit', '10');
+
+                if (searchTerm) {
+                    params.append('search', searchTerm);
+                }
+                if (userTypeFilter) {
+                    params.append('userType', userTypeFilter.id);
+                }
+
+                const response = await fetch(`http://localhost:3000/api/users/paginated?${params.toString()}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
@@ -94,18 +134,18 @@ export const useEditUserPanelLogic = () => {
                     throw new Error('Falha ao buscar a lista de usuários.');
                 }
 
-                const data: ApiUserResponse[] = await response.json();
-                
-                const formattedUsers: User[] = data.map(user => ({
+                const data: UserApiResponse = await response.json();
+                const formattedUsers: User[] = data.data.map(user => ({
                     id: user.id,
                     name: user.name,
                     email: user.email,
                     unidade: user.unidade,
                     userType: user.userType,
-                    roles: Array.isArray(user.roles) ? user.roles : [],
+                    roles: Array.isArray(user.roles) ? user.roles : [], 
                 }));
 
                 setUsers(formattedUsers);
+                setTotalPages(data.pagination.totalPages);
 
             } catch (err) {
                 if (err instanceof Error) {
@@ -117,8 +157,8 @@ export const useEditUserPanelLogic = () => {
         };
 
         fetchUsers();
-    }, []); 
-
+    }, [currentPage, isUpdating, searchTerm, userTypeFilter]); 
+    
     return {
         users,
         isLoading,
@@ -130,5 +170,13 @@ export const useEditUserPanelLogic = () => {
         handleOpenEditModal,
         handleCloseEditModal,
         handleUpdateUser,
+        currentPage,
+        totalPages,
+        setCurrentPage,
+        searchTerm,
+        handleSearchChange,
+        userTypeFilter,
+        handleUserTypeChange,
+        userTypeOptions,
     };
 };
