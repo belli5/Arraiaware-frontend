@@ -108,7 +108,6 @@ export default function EqualizationPanel({
                 <div>
                   <p className="font-semibold">Líder: 
                     <span className="text-purple-600 font-bold">
-                      {/* Adicionado ?. antes de .score */}
                       {typeof criterion.leaderEvaluation?.score === 'number' 
                         ? criterion.leaderEvaluation.score.toFixed(1) 
                         : '-'}
@@ -134,14 +133,6 @@ export default function EqualizationPanel({
         ))}
       </section>
 
-       {/* Resumo da IA */}
-       <section>
-        <h4 className="text-lg font-semibold text-gray-800 mb-3">Resumo da IA</h4>
-        <div className="p-4 bg-gray-100 rounded-lg text-gray-700 text-sm whitespace-pre-wrap">
-          {data.aiSummary}
-        </div>
-      </section>
-
         {/* 3. Edição final */}
       <section className="p-4 bg-white rounded-lg shadow-inner">
         <h4 className="text-lg font-semibold text-gray-800 mb-4">Ações do Comitê</h4>
@@ -150,7 +141,7 @@ export default function EqualizationPanel({
             <label htmlFor="finalScorePanel" className="block text-sm font-medium text-gray-700">Nota Final do Comitê</label>
             <input
               type="number" id="finalScorePanel" step="0.1"
-              className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-orange-500 focus:ring-orange-500"
+              className="mt-1 w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-orange-500 focus:ring-orange-500"
               value={score}
               onChange={(e) => setScore(e.target.value)}
             />
@@ -159,7 +150,7 @@ export default function EqualizationPanel({
             <label htmlFor="observationPanel" className="block text-sm font-medium text-gray-700">Observação Histórica</label>
             <textarea
               id="observationPanel" rows={3}
-              className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-orange-500 focus:ring-orange-500"
+              className="mt-1 w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-orange-500 focus:ring-orange-500"
               value={observation}
               onChange={(e) => setObservation(e.target.value)}
             />
