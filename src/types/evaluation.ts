@@ -5,6 +5,7 @@ export interface Colleague {
   area: string;
   tempo: string;
   projectName: string; 
+  
 }
 
 export type Question = {
@@ -89,4 +90,9 @@ export interface PeerEvaluationRecord {
     id: string;
     name: string;
   };
+}
+
+
+export interface Manager extends Colleague {
+  cycleId: string;
 }

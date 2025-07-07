@@ -362,57 +362,58 @@ export default function Avaliacao() {
   }
 
   async function handleSubmitLeader() {
-  // 1) checa se já temos todo mundo
-  if (!userId || !cycleId) return
-  if (leaderColleagues.length === 0) return
+    // garanta que já tenha userId, cycleId e o array leaderColleagues
+    if (!userId || !cycleId || leaderColleagues.length === 0) return;
 
-  // 2) pega o ID do gestor a partir do array que veio da API
-  const leaderId = leaderColleagues[0].id
+    const leaderId = leaderColleagues[0].id;
+    const answersMap = leaderAnswers[leaderId] || {};
 
-  // 3) busca as respostas daquele gestor
-  const answersMap = leaderAnswers[leaderId] || {}
+    // converte cada escala (lq1…lq4) para o nome do DTO
+    const visionScore      = parseInt(answersMap['lq1']?.scale  || '0', 10);
+    const inspirationScore = parseInt(answersMap['lq2']?.scale  || '0', 10);
+    const developmentScore = parseInt(answersMap['lq3']?.scale  || '0', 10);
+    const feedbackScore    = parseInt(answersMap['lq4']?.scale  || '0', 10);
 
-  // 4) converte cada escala em número (1–5)
-  const deliveryScore    = parseInt(answersMap['lq1']?.scale  || '0', 10)
-  const proactivityScore = parseInt(answersMap['lq2']?.scale  || '0', 10)
-  const collaborationScore = parseInt(answersMap['lq3']?.scale || '0', 10)
-  const skillScore       = parseInt(answersMap['lq4']?.scale  || '0', 10)
+    // valida 1–5
+    if (
+      [visionScore, inspirationScore, developmentScore, feedbackScore]
+        .some(n => isNaN(n) || n < 1 || n > 5)
+    ) {
+      alert('Por favor, dê uma nota inteira de 1 a 5 em todas as perguntas.');
+      return;
+    }
 
-  // 5) valida que todas as notas estão no intervalo válido
-  if ([deliveryScore, proactivityScore, collaborationScore, skillScore]
-      .some(n => isNaN(n) || n < 1 || n > 5)) {
-    alert('Por favor, dê uma nota inteira de 1 a 5 para todas as perguntas.')
-    return
-  }
+    const payload = {
+      collaboratorId:  userId,
+      leaderId,
+      cycleId,
+      visionScore,
+      inspirationScore,
+      developmentScore,
+      feedbackScore,
+    };
 
-  // 6) monta o payload exatamente com os nomes que o DTO espera
-  const payload = {
-    collaboratorId:  userId,
-    leaderId,
-    cycleId,
-    deliveryScore,
-    proactivityScore,
-    collaborationScore,
-    skillScore,
-  }
+    const token = localStorage.getItem('token');
+    const res = await fetch(
+      'http://localhost:3000/api/evaluations/leader-feedback',
+      {
+        method:  'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify(payload),
+      }
+    );
 
-  // 7) envia
-  const token = localStorage.getItem('token')
-  const res = await fetch('http://localhost:3000/api/evaluations/leader', {
-    method:  'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-    body: JSON.stringify(payload),
-  })
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err);
+    }
 
-  if (!res.ok) {
-    throw new Error(await res.text())
-  }
-
-  alert('Avaliação de líder enviada com sucesso!')
-  navigate(`/avaliacao/${sections[currentSectionIndex + 1]?.key}`)
+    alert('Avaliação de líder enviada com sucesso!');
+    // navega para a próxima aba
+    navigate(`/avaliacao/${sections[currentSectionIndex + 1]?.key}`);
   }
 
 
