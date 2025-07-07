@@ -4,13 +4,13 @@ import StatCard from '../components/StatCard/StatCard';
 import { Users, CheckCircle2, Clock, AlertTriangle, BarChart2, ClipboardList} from 'lucide-react'; 
 import OverallProgressManager from '../components/OverallProgressRH/OverallProgressManager';
 import Tabs from '../components/Tabs/Tabs';
-import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
 import Footer from '../components/Footer/Footer';
 import type { Tab } from '../types/tabs';
 import type { managerTabId, ManagerDashboardData } from '../types/manager';
 import SkeletonStatCard from '../components/SkeletonStatCard/SkeletonStatCard';
 import ManagerEvaluation from '../components/ManagerEvaluation/ManagerEvaluation';
 import type { Question } from '../types/evaluation';
+import EvaluationsPanelManager from '../components/EvaluationsPanel/EvolutionPanelManager';
 
 
 const managerTabOptions: Tab[] = [
@@ -20,10 +20,31 @@ const managerTabOptions: Tab[] = [
 ];
 
 const managerQuestions: Question[] = [
-  { id: 'mq1', type: 'scale', text: 'Como você avalia a clareza de comunicação deste colaborador?' },
-  { id: 'mq2', type: 'scale', text: 'Quão proativo ele(a) foi durante o ciclo?' },
-  { id: 'mq3', type: 'text',  text: 'Quais pontos de melhoria você identifica?' },
-  { id: 'mq4', type: 'text',  text: 'Dê um exemplo de um bom resultado entregue.' },
+  {
+    id: 'deliveryScore',
+    type: 'scale',
+    text: 'Qualidade e pontualidade das entregas'
+  },
+  {
+    id: 'proactivityScore',
+    type: 'scale',
+    text: 'Proatividade e iniciativa na resolução de problemas'
+  },
+  {
+    id: 'collaborationScore',
+    type: 'scale',
+    text: 'Colaboração e trabalho em equipe'
+  },
+  {
+    id: 'skillScore',
+    type: 'scale',
+    text: 'Habilidades técnicas e de negócio'
+  },
+  {
+    id: 'justification',
+    type: 'text',
+    text: 'Justificativa ou observações gerais sobre o desempenho'
+  }
 ];
 
 export default function Manager() {
@@ -33,6 +54,10 @@ export default function Manager() {
   const [dashboardData, setDashboardData] = useState<ManagerDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [, setError] = useState<string | null>(null);
+
+  console.log("DashboardData completo:", dashboardData)
+  console.log(" → cycleId vindo do backend:", dashboardData?.cycleId)
+  console.log(" → typeof cycleId:", typeof dashboardData?.cycleId)
 
   const userObject = useMemo(() => {
     const storedUserString = localStorage.getItem('user');
@@ -76,6 +101,7 @@ export default function Manager() {
         
         const data: ManagerDashboardData = await response.json();
         setDashboardData(data);
+        console.log("cycleId vindo do backend:", data.cycleId)
       } catch (err) {
         setError((err as Error).message);
       } finally {
@@ -176,8 +202,11 @@ export default function Manager() {
           />
         
           <div ref={contentPanelRef} className="mt-8">
-            {activeTab === 'status' && userObject && (
-              <EvaluationsPanel managerId={userObject.sub} />
+            {activeTab === 'status' && userObject && dashboardData && (
+              <EvaluationsPanelManager
+                managerId={userObject.sub}
+                cycleId={dashboardData.cycleId}
+              />
             )}
             {activeTab === 'insights' && (
               <div className="bg-white p-8 rounded-lg shadow-md text-center text-gray-500">
@@ -185,11 +214,10 @@ export default function Manager() {
               </div>
             )}
 
-            {activeTab === 'evaluation' && (            
+            {activeTab === 'evaluation' && dashboardData && (           
               <div className="bg-white p-8 rounded-lg shadow-md">
                 <section className="mb-10 px-6 md:px-12 text-left">
                   <h3 className="text-3xl md:text-4xl font-bold flex items-center space-x-2">
-                    <span>📝</span>
                     <span>Avaliação de {userObject?.name || 'seus Liderados'}</span>
                   </h3>
                   <p className="uppercase text-sm text-amber-600 font-medium mt-1">
@@ -197,9 +225,9 @@ export default function Manager() {
                   </p>
                 </section>
                 <ManagerEvaluation
-                  managerId={userObject!.sub}
-                  cycleId={dashboardData!.cycleId}
-                  questions={managerQuestions}   
+                  managerId={userObject.sub}
+                  cycleId={dashboardData.cycleId}       // passe exatamente o UUID
+                  questions={managerQuestions}
                 />
               </div>
             )}

@@ -2,61 +2,68 @@
 import { useState, useEffect } from 'react'
 import PeerEvaluationPanel from '../PeerEvaluationPanel/PeerEvaluationPanel'
 import ManagerQuestionList from '../ManagerQuestionList/ManagerQuestionList'
-import type { Colleague, Answer, Question } from '../../types/evaluation'
+import type { Manager, Answer, Question } from '../../types/evaluation'
 import { useNavigate } from 'react-router-dom'
 
 interface ManagerEvaluationProps {
   managerId: string
   cycleId:   string
-  questions: Question[]       
+  questions: Question[]
 }
 
 export default function ManagerEvaluation({
-  managerId, cycleId, questions
+  managerId, questions
 }: ManagerEvaluationProps) {
+
+
   const navigate = useNavigate()
-  const [team, setTeam] = useState<Colleague[]>([])
+  const [team, setTeam] = useState<Manager[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [answers, setAnswers] = useState<Record<string, Record<string, Answer>>>({})
   const [evaluatingId, setEvaluatingId] = useState<string | null>(null)
 
   // busca seus liderados
   useEffect(() => {
+    setLoading(true)
     fetch(`http://localhost:3000/api/teams/manager/${managerId}`, {
-      headers: {
+        headers: {
         'Content-Type': 'application/json',
-        ...localStorage.token && { Authorization: `Bearer ${localStorage.token}` }
-      },
+        ...(localStorage.token && { Authorization: `Bearer ${localStorage.token}` })
+        }
     })
-      .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
-      .then((projects: Array<{
-        projectName: string;
-        collaborators: Array<{id:string,name:string,email?:string}>;
-        }>) => {
-        // para cada projeto, extraio os colaboradores e monto um array único
-        const flattened = projects
-        .map(proj =>
-            proj.collaborators.map(col => ({
-            id:          col.id,
-            nome:        col.name,
-            cargo:       'Colaborador',
-            projectName: proj.projectName,
-            area:        proj.projectName,
-            tempo:       '—',
-            }))
-        )
-        .flat();  // <- isto achata o Array<Array<…>> para Array<…>
-        setTeam(flattened);
+        .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
+        .then((projects: Array<{
+     projectName: string
+     collaborators: { id: string; name: string }[]
+     cycleId: string        // ← preciso deste campo no DTO
+    }>) => {
+    const all: Manager[] = projects.flatMap(proj =>
+        proj.collaborators.map(col => ({
+        id:          col.id,
+        nome:        col.name,
+        cargo:       'Colaborador',
+        projectName: proj.projectName,
+        area:        proj.projectName,
+        tempo:       '—',
+        cycleId:     proj.cycleId    // ← daqui!
+        }))
+    )
+
+        console.log(all)
+
+        // remove duplicados de id
+        const unique = Array.from(new Map(all.map(u => [u.id, u])).values())
+        setTeam(unique)
         })
-      .catch(e => setError(String(e)))
-      .finally(() => setLoading(false))
-  }, [managerId])
+        .catch(e => setError(String(e)))
+        .finally(() => setLoading(false))
+    }, [managerId])
 
   const handleAnswerChange = (
     userId: string,
     questionId: string,
-    field: 'scale'|'justification',
+    field: 'scale' | 'justification',
     value: string
   ) => {
     setAnswers(a => ({
@@ -73,31 +80,45 @@ export default function ManagerEvaluation({
 
   const handleSubmit = async () => {
     if (!evaluatingId) return
-    const items = Object.entries(answers[evaluatingId]||{}).map(
-      ([criterionId, ans]) => ({
-        criterionId,
-        score: Number(ans.scale),
-        justification: ans.justification
-      })
-    )
+
+    // 1) encontre o objeto Manager correspondente:
+    const mgr   = team.find(u => u.id === evaluatingId)!
+    const userAnswers = answers[evaluatingId] || {}
     const payload = {
-      leaderId:       managerId,
-      collaboratorId: evaluatingId,
-      cycleId,
-      evaluations:    items
+        leaderId:       managerId,
+        collaboratorId: evaluatingId,
+        cycleId:        mgr.cycleId,   // ← ciclo correto vindo do Manager
+      deliveryScore:     Number(userAnswers['deliveryScore']?.scale    || 0),
+      proactivityScore:  Number(userAnswers['proactivityScore']?.scale || 0),
+      collaborationScore:Number(userAnswers['collaborationScore']?.scale || 0),
+      skillScore:        Number(userAnswers['skillScore']?.scale       || 0),
+      justification:     userAnswers['justification']?.justification   || ''
     }
-    const res = await fetch('/api/evaluations/leader', {
-      method:  'POST',
-      headers: {
-        'Content-Type':'application/json',
-        ...localStorage.token && { Authorization: `Bearer ${localStorage.token}` }
-      },
-      body: JSON.stringify(payload)
-    })
-    if (!res.ok) throw new Error(await res.text())
-    alert('Avaliação enviada!')
-    setEvaluatingId(null)
-    navigate('/manager/evaluation')
+
+    console.log("Payload enviado pelo ManagerEvaluation:", payload)
+    console.log(" → typeof cycleId:", typeof payload.cycleId, "::", payload.cycleId)
+
+    try {
+      const res = await fetch('http://localhost:3000/api/evaluations/leader', {
+        method:  'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...localStorage.token && { Authorization: `Bearer ${localStorage.token}` }
+        },
+        body: JSON.stringify(payload)
+      })
+
+      if (!res.ok) {
+        const msg = await res.text()
+        throw new Error(msg)
+      }
+
+      alert('Avaliação enviada com sucesso!')
+      setEvaluatingId(null)
+      navigate('/manager/evaluation')
+    } catch (err: any) {
+      setError(`Falha ao enviar avaliação: ${err.message}`)
+    }
   }
 
   if (loading) return <div>Carregando sua equipe…</div>
@@ -108,19 +129,19 @@ export default function ManagerEvaluation({
       {evaluatingId ? (
         <>
           <div className="flex justify-end mb-4">
-                <button
-                onClick={() => setEvaluatingId(null)}
-                className="px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 inline-flex items-center gap-1"
-                >
-                ← Voltar à lista
-                </button>
-            </div>
+            <button
+              onClick={() => setEvaluatingId(null)}
+              className="px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 inline-flex items-center gap-1"
+            >
+              ← Voltar à lista
+            </button>
+          </div>
           <h2 className="text-xl font-bold">
             Avaliando: {team.find(u => u.id === evaluatingId)!.nome}
           </h2>
           <ManagerQuestionList
             questions={questions}
-            answers={answers[evaluatingId]||{}}
+            answers={answers[evaluatingId] || {}}
             onAnswerChange={(qid, f, v) =>
               handleAnswerChange(evaluatingId, qid, f, v)
             }
@@ -138,14 +159,11 @@ export default function ManagerEvaluation({
         <PeerEvaluationPanel
           colleagues={team.map(u => ({
             ...u,
-            // usa questions.length e questions para progresso
             progresso:
-              questions.filter(q => !!answers[u.id]?.[q.id]?.scale).length /
-              questions.length *
-              100
+              (questions.filter(q => !!answers[u.id]?.[q.id]?.scale).length / questions.length) * 100
           }))}
           onEvaluate={setEvaluatingId}
-          sectionKey="leader"  // ou "manager"
+          sectionKey="leader"
         />
       )}
     </div>
