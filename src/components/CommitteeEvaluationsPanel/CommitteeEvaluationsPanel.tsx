@@ -48,7 +48,7 @@ export default function CommitteeEvaluationsPanel() {
     }, [currentPage]);
 
   return (
-        <div ref={panelRef} className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-white rounded-xl shadow-lg p-6">
             {notification && (
                 <NotificationMessages
                     status={notification.status}
@@ -57,7 +57,7 @@ export default function CommitteeEvaluationsPanel() {
                     onClose={() => setNotification(null)}
                 />
             )}
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Painel de Avaliações do Comitê</h3>
+            <h3 ref={panelRef} className="text-xl font-semibold text-gray-700 mb-4">Painel de Avaliações do Comitê</h3>
             {/* Seção de Busca */}
             <div className="grid grid-cols-3 gap-4 mb-6">
                 {/* Filtro de Busca por Colaborador*/}
