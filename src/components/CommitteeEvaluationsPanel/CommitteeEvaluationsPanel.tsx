@@ -110,7 +110,8 @@ export default function CommitteeEvaluationsPanel() {
               isOpen={isSummaryModalOpen}
               onClose={handleCloseSummaryModal}
               title={`Resumo de ${selectedEvaluation?.collaboratorName || ''}`}
-              maxWidth="max-w-7xl" 
+              width="w-[85%]"
+              height="max-h-[85vh]"
             >
               {isSummaryLoading ? (
                 <div className="flex flex-col items-center justify-center p-8">
@@ -118,7 +119,7 @@ export default function CommitteeEvaluationsPanel() {
                   <p className="mt-4 text-gray-600">Gerando resumo, por favor aguarde...</p>
                 </div>
               ) : (
-                <div className="p-4 text-gray-700 max-h-[60vh] overflow-y-auto">
+                <div className="p-4 text-gray-700 overflow-y-auto">
                     {summaryError 
                         ? <p className="text-red-600">{summaryError}</p> 
                         : <ReactMarkdown>{summaryContent}</ReactMarkdown>
@@ -161,7 +162,8 @@ export default function CommitteeEvaluationsPanel() {
               isOpen={isEqualizeModalOpen}
               onClose={handleCloseEqualizeModal}
               title={`Visão Consolidada de ${selectedEvaluation?.collaboratorName || ''}`}
-              maxWidth="max-w-7xl" 
+              width="w-[95%]"
+              height="max-h-[95vh]"
             >
               <EqualizationPanel
                 data={equalizationData}
