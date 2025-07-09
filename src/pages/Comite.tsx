@@ -36,9 +36,9 @@ export default function Comite() {
     };
   
   return (
-    <div className="min-h-screen bg-orange-50 flex flex-col">
+    <div className="min-h-screen bg-orange-50">
       <Header />
-      <main className="flex-1 pt-24 px-6 lg:px-10">
+      <main className="pt-24">
         <section className="mb-10 pl-12 text-left">
             <h1 className="text-4xl font-bold flex items-center gap-2 mb-2">
                 Acompanhamento da equalização <span></span>
