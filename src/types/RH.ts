@@ -74,6 +74,7 @@ export interface User{
   unidade: string;
   userType: string;
   roles: string[];
+  isActive: boolean;
 }
 
 export interface ApiUserResponse extends User {
