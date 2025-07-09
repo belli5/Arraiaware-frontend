@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 import Pagination from '../Pagination/Pagination';
 import EvaluationsTableSkeleton from '../EvaluationsTableSkeleton/EvaluationsTableSkeleton';
-import CustomSelect from '../CustomSelect/CustomSelect';
+import CustomSelect, { type SelectOption } from '../CustomSelect/CustomSelect';
 import { useEvaluationsPanelLogic } from '../../hooks/useEvaluationsPanelLogic';
 import type { Evaluation, SelfEvaluationRecord, PeerEvaluationRecord } from '../../types/evaluation';
 import EvaluationsTableManager from '../EvaluationsTable/EvolutionTableManager';
@@ -15,7 +15,6 @@ interface EvaluationsPanelManagerProps {
 
 export default function EvaluationsPanelManager({
   managerId,
-  cycleId,
 }: EvaluationsPanelManagerProps) {
   const {
     searchTerm,
@@ -34,6 +33,9 @@ export default function EvaluationsPanelManager({
     handleCycleSelect,
     setCurrentPage,
   } = useEvaluationsPanelLogic({ managerId });
+
+  const [userCycles, setUserCycles] = useState<SelectOption[]>([]);
+  const [loadingUserCycles, setLoadingUserCycles] = useState(false);
 
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -54,6 +56,30 @@ export default function EvaluationsPanelManager({
   const [activeSubTab, setActiveSubTab] = useState<'self' | 'peer' | 'leader'>('self');
 
   const API_BASE = 'http://localhost:3000';
+
+  useEffect(() => {
+   if (!selectedEvalItem) return;
+   setLoadingUserCycles(true);
+   fetch(`${API_BASE}/api/users/${selectedEvalItem.collaboratorId}/cycles`, {
+     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+   })
+     .then(res => res.json())
+     .then((cycles: { id: string; name: string }[]) => {
+      // já vem no formato { id, name }, que bate com SelectOption
+      setUserCycles(cycles.map(c => ({ id: c.id, name: c.name })));
+     })
+     .finally(() => setLoadingUserCycles(false));
+ }, [selectedEvalItem]);
+
+ // 3) ainda no component, defina a função de troca de ciclo:
+ function onChangeDetailCycle(opt: SelectOption) {
+   if (!selectedEvalItem) return;
+   setSelectedEvalItem({
+     ...selectedEvalItem,
+     cycleId: opt.id,
+     cycleName: opt.name,
+   });
+ }
 
   // Fetch da autoavaliação
   useEffect(() => {
@@ -132,18 +158,43 @@ export default function EvaluationsPanelManager({
         <>
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-2xl font-bold">
-                {activeSubTab === 'self'
-                  ? 'Autoavaliação de'
-                  : activeSubTab === 'peer'
-                  ? 'Avaliação de Pares de'
-                  : 'Avaliação do Líder de'}{' '}
-                <span className="text-orange-600">{selectedEvalItem.collaborator}</span>
+              <h3 className="text-2xl font-bold flex items-center gap-3">
+                {/* prefixo do título */}
+                <span>
+                  {activeSubTab === 'self'
+                    ? 'Autoavaliação de'
+                    : activeSubTab === 'peer'
+                    ? 'Avaliação de Pares de'
+                    : 'Avaliação do Líder de'}
+                </span>
+
+                {/* nome do colaborador */}
+                <span className="text-orange-600">
+                  {selectedEvalItem.collaborator}
+                </span>
+
+                {/* dropdown de ciclos, agora DENTRO do <h3> */}
+                {loadingUserCycles ? (
+                  <Loader2 className="animate-spin h-5 w-5 text-gray-500" />
+                ) : (
+                  <div className="w-48">
+                    <CustomSelect
+                      options={userCycles}
+                      selected={userCycles.find(o => o.id === selectedEvalItem.cycleId) || null}
+                      onChange={onChangeDetailCycle}
+                      placeholder="Ciclo..."
+                    />
+                  </div>
+                )}
               </h3>
+
+              {/* subtítulo abaixo */}
               <p className="text-sm text-gray-500">
-                Ciclo: {selectedEvalItem.cycleName} • Projeto: {selectedEvalItem.projectName}
+                Ciclo: {selectedEvalItem.cycleName} • Projeto:{' '}
+                {selectedEvalItem.projectName}
               </p>
             </div>
+
             <button
               onClick={() => setSelectedEvalItem(null)}
               className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"

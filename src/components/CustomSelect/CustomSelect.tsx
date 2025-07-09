@@ -15,7 +15,7 @@ interface CustomSelectProps {
   disabled?: boolean;
 }
 
-export default function CustomSelect({ options, selected, onChange, placeholder = "Selecione uma opção", disabled = false}: CustomSelectProps) {
+export default function CustomSelect({ options, selected, onChange, placeholder = "Selecione uma opção", disabled = false,}: CustomSelectProps) {
   return (
     <Listbox value={selected} onChange={onChange} disabled={disabled}>
       <div className="relative mt-1">

@@ -55,10 +55,6 @@ export default function Manager() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [, setError] = useState<string | null>(null);
 
-  console.log("DashboardData completo:", dashboardData)
-  console.log(" → cycleId vindo do backend:", dashboardData?.cycleId)
-  console.log(" → typeof cycleId:", typeof dashboardData?.cycleId)
-
   const userObject = useMemo(() => {
     const storedUserString = localStorage.getItem('user');
     if (storedUserString) {
@@ -217,12 +213,12 @@ export default function Manager() {
             {activeTab === 'evaluation' && dashboardData && (           
               <div className="bg-white p-8 rounded-lg shadow-md">
                 <section className="mb-10 px-6 md:px-12 text-left">
-                  <h3 className="text-3xl md:text-4xl font-bold flex items-center space-x-2">
+                  <h2 className="text-xl font-bold text-gray-800">
                     <span>Avaliação de {userObject?.name || 'seus Liderados'}</span>
-                  </h3>
-                  <p className="uppercase text-sm text-amber-600 font-medium mt-1">
-                    Andamento • Desempenho • Insights
-                  </p>
+                  </h2>
+                  <p className="text-base text-gray-500 mt-1">
+                    Avalie os seus liderados conforme seu progresso no ciclo
+                </p>
                 </section>
                 <ManagerEvaluation
                   managerId={userObject.sub}

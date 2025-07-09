@@ -60,11 +60,8 @@ export default function Header() {
                 </NavLink>
               </li>
               <li>
-                <NavLink
-                  to="/avaliacao/goals"
-                  className={({ isActive }) => linkClass(isActive)}
-                >
-                  Resultados
+                <NavLink to="/Dashboard" className={({ isActive }) => linkClass(isActive)}>
+                  Dashboard
                 </NavLink>
               </li>
               <li>

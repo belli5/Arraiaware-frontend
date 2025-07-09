@@ -6,6 +6,7 @@ import Avaliacao from './pages/Avaliacao'
 import RH from './pages/RH';
 import Comite from './pages/Comite';
 import Gestor from './pages/Gestor'
+import Dashboard from './pages/Dashboard'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
          <Route path="/RH" element= {<RH />} />
          <Route path="/Comite" element={<Comite />} />
          <Route path="/Gestor" element={<Gestor />} />
+         <Route path="/Dashboard" element={<Dashboard />} />
           {/* qualquer outra URL também cai no login */}
           <Route path="*" element={<Navigate to="/login" replace />} />
        </Routes>

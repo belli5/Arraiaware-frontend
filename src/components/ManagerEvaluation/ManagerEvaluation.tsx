@@ -1,6 +1,6 @@
 // src/components/ManagerEvaluation/ManagerEvaluation.tsx
 import { useState, useEffect } from 'react'
-import PeerEvaluationPanel from '../PeerEvaluationPanel/PeerEvaluationPanel'
+import PeerEvaluationPanel from '../ManagerEvalutionPanel/ManagerEvaluyionPanel'
 import ManagerQuestionList from '../ManagerQuestionList/ManagerQuestionList'
 import type { Manager, Answer, Question } from '../../types/evaluation'
 import { useNavigate } from 'react-router-dom'

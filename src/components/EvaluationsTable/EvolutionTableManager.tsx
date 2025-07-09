@@ -43,7 +43,7 @@ export default function EvaluationsTableManager({ evaluations, onViewEvaluation 
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projeto</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prazo</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concluída em</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detalhes da Avaliação</th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
@@ -67,7 +67,7 @@ export default function EvaluationsTableManager({ evaluations, onViewEvaluation 
                     onClick={() => onViewEvaluation(item)}
                     className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
                   >
-                    Avaliações passadas
+                    Ver Avaliação
                   </button>
                 )}
               </td>
