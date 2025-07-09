@@ -20,7 +20,7 @@ export default function EvaluationsPanel({ managerId }: EvaluationsPanelProps) {
     const panelRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (currentPage > 1 && panelRef.current) {
+        if (currentPage && panelRef.current) {
             const elementTop = panelRef.current.getBoundingClientRect().top + window.scrollY;
             const offset = 150;
             window.scrollTo({

@@ -12,7 +12,8 @@ export interface CommitteeCollaboratorsEvaluations{
   peerEvaluationScore: number;
   managerEvaluationScore: number;
   finalScore?: number;      // posso adicionar/editar
-  observation?: string;     // posso adicionar/editar  
+  observation?: string;     // posso adicionar/editar
+  genAisummary: string | null;  
 }
 
 export interface CommitteePanelTable{
@@ -65,7 +66,6 @@ export interface EvaluationConsolidatedView {
       justification: string
     }
   ],
-  aiSummary: string
 }
 
 export interface CommitteeSummary{

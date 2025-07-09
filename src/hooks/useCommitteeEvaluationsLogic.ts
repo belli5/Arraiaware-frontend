@@ -252,6 +252,11 @@ export const useCommitteeEvaluationsLogic = () => {
         }
     };
 
+    const handleCycleChange = useCallback((option: SelectOption | null) => {
+        setCycleFilter(option);
+        setCurrentPage(1); 
+    }, []);
+
     const handleSaveObservation = async () => {
         if (!selectedEvaluation) return;
 
@@ -261,7 +266,7 @@ export const useCommitteeEvaluationsLogic = () => {
         try {
             const observationContent = editableObservation ? editableObservation.trim() : '';
             const payload = {
-                observation: observationContent === '' ? null : observationContent,
+                observation: observationContent,
             };
 
             const response = await fetch(`http://localhost:3000/api/committee/panel/${selectedEvaluation.id}`, {
@@ -414,8 +419,8 @@ export const useCommitteeEvaluationsLogic = () => {
         //UI
         evaluations, isLoading, searchTerm, currentPage, totalPages,
         handleSearchChange, setCurrentPage, isUpdating, selectedEvaluation,notification,
-        setNotification,cycleOptions, cycleFilter,setCycleFilter,
-        isLoadingCycles,
+        setNotification,cycleOptions, cycleFilter,
+        isLoadingCycles,handleCycleChange,
         
         //edicao de linha:
         editingEvaluationId,editableScore,setEditableScore,handleStartEditScore,

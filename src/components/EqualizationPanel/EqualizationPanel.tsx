@@ -108,7 +108,6 @@ export default function EqualizationPanel({
                 <div>
                   <p className="font-semibold">Líder: 
                     <span className="text-purple-600 font-bold">
-                      {/* Adicionado ?. antes de .score */}
                       {typeof criterion.leaderEvaluation?.score === 'number' 
                         ? criterion.leaderEvaluation.score.toFixed(1) 
                         : '-'}
@@ -134,38 +133,31 @@ export default function EqualizationPanel({
         ))}
       </section>
 
-       {/* Resumo da IA */}
-       <section>
-        <h4 className="text-lg font-semibold text-gray-800 mb-3">Resumo da IA</h4>
-        <div className="p-4 bg-gray-100 rounded-lg text-gray-700 text-sm whitespace-pre-wrap">
-          {data.aiSummary}
-        </div>
-      </section>
-
         {/* 3. Edição final */}
-      <section className="p-4 bg-white rounded-lg shadow-inner">
-        <h4 className="text-lg font-semibold text-gray-800 mb-4">Ações do Comitê</h4>
+      <section className="p-6 bg-gray-50 rounded-lg shadow-md">
+        <h4 className="text-xl font-semibold text-gray-800 mb-6">Ações do Comitê</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="finalScorePanel" className="block text-sm font-medium text-gray-700">Nota Final do Comitê</label>
-            <input
-              type="number" id="finalScorePanel" step="0.1"
-              className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-orange-500 focus:ring-orange-500"
-              value={score}
-              onChange={(e) => setScore(e.target.value)}
-            />
-          </div>
-          <div>
-            <label htmlFor="observationPanel" className="block text-sm font-medium text-gray-700">Observação Histórica</label>
-            <textarea
-              id="observationPanel" rows={3}
-              className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-orange-500 focus:ring-orange-500"
-              value={observation}
-              onChange={(e) => setObservation(e.target.value)}
-            />
-          </div>
+            <div>
+                <label htmlFor="finalScorePanel" className="block text-sm font-medium text-gray-700">Nota Final do Comitê</label>
+                <input
+                    type="number" id="finalScorePanel" step="0.1"
+                    className="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm transition-colors focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/50"
+                    value={score}
+                    onChange={(e) => setScore(e.target.value)}
+                />
+            </div>
+            <div>
+                <label htmlFor="observationPanel" className="block text-sm font-medium text-gray-700">Observação Histórica</label>
+                <textarea
+                    id="observationPanel" rows={3}
+                    className="mt-1 block w-full px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm transition-colors focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/50"
+                    value={observation}
+                    onChange={(e) => setObservation(e.target.value)}
+                    placeholder="Insira suas observações..."
+                />
+            </div>
         </div>
-      </section>
+    </section>
       
       {saveError && (
         <div className="p-3 mt-4 text-sm text-red-800 bg-red-100 border border-red-300 rounded-md flex items-center gap-2">
