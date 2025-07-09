@@ -16,7 +16,7 @@ export default function EditUserPanel() {
         handleOpenEditModal, handleCloseEditModal, handleUpdateUser,
         currentPage, totalPages, setCurrentPage,
         searchTerm, handleSearchChange, 
-        userTypeFilter, handleUserTypeChange, userTypeOptions
+        userTypeFilter, handleUserTypeChange, userTypeOptions,allTracks
     } = useEditUserPanelLogic();
 
     const panelRef = useRef<HTMLDivElement>(null);
@@ -93,6 +93,8 @@ export default function EditUserPanel() {
                     onSubmit={handleUpdateUser}
                     onCancel={handleCloseEditModal}
                     isSubmitting={isSubmitting}
+                    allTracks={allTracks}
+                    userTypeOptions={userTypeOptions}
                 />
             </Modal>
         </div>

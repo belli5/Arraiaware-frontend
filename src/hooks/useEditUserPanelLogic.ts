@@ -41,6 +41,8 @@ export const useEditUserPanelLogic = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [userTypeFilter, setUserTypeFilter] = useState<SelectOption | null>(null);
 
+    const [allTracks, setAllTracks] = useState<SelectOption[]>([]);
+
     const handleOpenEditModal = (user: User) => {
         setEditingUser(user);
         setIsEditModalOpen(true);
@@ -61,14 +63,14 @@ export const useEditUserPanelLogic = () => {
         setCurrentPage(1); 
     }, []);
 
-    const handleUpdateUser = async (userData: { id: string; name: string; email: string; unidade: string; userType: string; }) => {
+    const handleUpdateUser = async (userData: { id: string; name: string; email: string; unidade: string; userType: string; roles: string[] }) => {
         setIsSubmitting(true);
         setNotification(null);
 
         const token = localStorage.getItem('token');
         if (!token) {
             setNotification({ status: 'error', title: 'Autenticação Falhou', message: 'Token não encontrado.' });
-            setIsLoading(false);
+            setIsSubmitting(false); 
             return;
         }
 
@@ -78,6 +80,7 @@ export const useEditUserPanelLogic = () => {
                 email: userData.email,
                 unidade: userData.unidade,
                 userType: userData.userType,
+                roles: userData.roles,
             };
 
             const response = await fetch(`http://localhost:3000/api/users/${userData.id}`, {
@@ -96,7 +99,7 @@ export const useEditUserPanelLogic = () => {
 
         } catch (err) {
             if (err instanceof Error) {
-                console.log("erro haha")
+                setNotification({ status: 'error', title: 'Erro na Atualização', message: err.message });
             }
         } finally {
             setIsSubmitting(false);
@@ -142,6 +145,7 @@ export const useEditUserPanelLogic = () => {
                     unidade: user.unidade,
                     userType: user.userType,
                     roles: Array.isArray(user.roles) ? user.roles : [], 
+                    isActive: user.isActive,
                 }));
 
                 setUsers(formattedUsers);
@@ -158,7 +162,42 @@ export const useEditUserPanelLogic = () => {
 
         fetchUsers();
     }, [currentPage, isUpdating, searchTerm, userTypeFilter]); 
-    
+
+    useEffect(() => {
+        const fetchTracks = async () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/roles/trilhas', {
+                    method: "GET",
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Não foi possível carregar as trilhas.');
+                }
+
+                const apiTracks: { id: string, nome_da_trilha: string }[] = await response.json();
+                
+                const formattedTracks: SelectOption[] = apiTracks.map(track => ({
+                    id: track.id,
+                    name: track.nome_da_trilha, 
+                }));
+
+                setAllTracks(formattedTracks);
+            } catch (err) {
+                console.error(err);
+                setNotification({ status: 'error', title: 'Erro de Rede', message: 'Não foi possível buscar a lista de trilhas.' });
+            }
+        };
+
+        fetchTracks();
+    }, []);
+
+
     return {
         users,
         isLoading,
@@ -178,5 +217,6 @@ export const useEditUserPanelLogic = () => {
         userTypeFilter,
         handleUserTypeChange,
         userTypeOptions,
+        allTracks,
     };
 };
