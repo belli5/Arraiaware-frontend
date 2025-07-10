@@ -34,7 +34,8 @@ export default function EditUserForm({ initialData, onSubmit, onCancel, isSubmit
     unidade: '',
   }); 
 
-  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
+
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -43,16 +44,18 @@ export default function EditUserForm({ initialData, onSubmit, onCancel, isSubmit
         unidade: initialData.unidade,
         userType: { id: initialData.userType, name: initialData.userType },
       });
-      setSelectedRoles(initialData.roles || []);
+      const initialIds = (initialData.roles || []).map(role => role.id);
+      setSelectedRoleIds(initialIds);
+        
       setErrors({ name: '', email: '', unidade: '' });
     }
-  }, [initialData]);
+  }, [initialData,allTracks]);
 
-  const handleRoleChange = (roleName: string) => {
-    setSelectedRoles(prevSelectedRoles =>
-      prevSelectedRoles.includes(roleName)
-        ? prevSelectedRoles.filter(role => role !== roleName)
-        : [...prevSelectedRoles, roleName] 
+  const handleRoleChange = (roleId: string) => {
+    setSelectedRoleIds(prevSelectedIds =>
+      prevSelectedIds.includes(roleId)
+        ? prevSelectedIds.filter(id => id !== roleId) 
+        : [...prevSelectedIds, roleId] 
     );
   };
 
@@ -60,13 +63,11 @@ export default function EditUserForm({ initialData, onSubmit, onCancel, isSubmit
     const newErrors = { name: '', email: '', unidade: '' };
     let isValid = true;
 
-    // Validação do Nome
     if (!formData.name.trim()) {
       newErrors.name = 'O nome do usuário é obrigatório.';
       isValid = false;
     }
 
-    // Validação da Unidade
     if (!formData.unidade.trim()) {
       newErrors.unidade = 'A unidade é obrigatória.';
       isValid = false;
@@ -106,7 +107,7 @@ export default function EditUserForm({ initialData, onSubmit, onCancel, isSubmit
       email: formData.email,
       unidade: formData.unidade,
       userType: formData.userType.id,
-      roles: selectedRoles,
+      roles: selectedRoleIds,
     };
     onSubmit(dataToSubmit);
   };
@@ -163,8 +164,8 @@ export default function EditUserForm({ initialData, onSubmit, onCancel, isSubmit
                   type="checkbox"
                   id={`track-${track.id}`}
                   name={track.name}
-                  checked={selectedRoles.includes(track.name)}
-                  onChange={() => handleRoleChange(track.name)}
+                  checked={selectedRoleIds.includes(track.id)}
+                  onChange={() => handleRoleChange(track.id)}
                   className="h-4 w-4 accent-orange-600 border-gray-300 rounded focus:ring-orange-500"
                 />
                 <label htmlFor={`track-${track.id}`} className="ml-2 block text-sm text-gray-900">

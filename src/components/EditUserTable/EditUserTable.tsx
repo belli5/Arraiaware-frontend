@@ -29,7 +29,7 @@ export default function EditUserTable({ users, onEdit }: EditUserTableProps) {
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.unidade}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.userType}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {user.roles.length > 0 ? user.roles.join(', ') : '-'}
+                {user.roles.length > 0 ? user.roles.map(role => role.name).join(', ') : '-'}
               </td>
               {/* Vínculo */}
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
