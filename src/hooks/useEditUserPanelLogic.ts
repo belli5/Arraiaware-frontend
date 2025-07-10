@@ -25,6 +25,12 @@ const userTypeOptions: SelectOption[] = [
         { id: 'COMITE', name: 'Comitê' },
     ];
 
+const statusFilterOptions: SelectOption[] = [
+    { id: 'true', name: 'Ativo' },
+    { id: 'false', name: 'Inativo' },
+    { id: 'all', name: 'Todos'} 
+];   
+
 export const useEditUserPanelLogic = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -40,6 +46,7 @@ export const useEditUserPanelLogic = () => {
     
     const [searchTerm, setSearchTerm] = useState('');
     const [userTypeFilter, setUserTypeFilter] = useState<SelectOption | null>(null);
+    const [statusFilter, setStatusFilter] = useState<SelectOption | null>(null);
 
     const [allTracks, setAllTracks] = useState<SelectOption[]>([]);
 
@@ -63,6 +70,11 @@ export const useEditUserPanelLogic = () => {
         setCurrentPage(1); 
     }, []);
 
+    const handleStatusChange = useCallback((option: SelectOption | null) => {
+        setStatusFilter(option);
+        setCurrentPage(1);
+    }, []);
+
     const handleUpdateUser = async (userData: { id: string; name: string; email: string; unidade: string; userType: string; roles: string[] }) => {
         setIsSubmitting(true);
         setNotification(null);
@@ -80,7 +92,7 @@ export const useEditUserPanelLogic = () => {
                 email: userData.email,
                 unidade: userData.unidade,
                 userType: userData.userType,
-                roles: userData.roles,
+                roleIds: userData.roles,
             };
 
             const response = await fetch(`http://localhost:3000/api/users/${userData.id}`, {
@@ -129,6 +141,10 @@ export const useEditUserPanelLogic = () => {
                     params.append('userType', userTypeFilter.id);
                 }
 
+                if (statusFilter && statusFilter.id !== 'all') {
+                    params.append('isActive', statusFilter.id);
+                }
+
                 const response = await fetch(`http://localhost:3000/api/users/paginated?${params.toString()}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -161,7 +177,7 @@ export const useEditUserPanelLogic = () => {
         };
 
         fetchUsers();
-    }, [currentPage, isUpdating, searchTerm, userTypeFilter]); 
+    }, [currentPage, isUpdating, searchTerm, userTypeFilter,statusFilter]); 
 
     useEffect(() => {
         const fetchTracks = async () => {
@@ -218,5 +234,8 @@ export const useEditUserPanelLogic = () => {
         handleUserTypeChange,
         userTypeOptions,
         allTracks,
+        statusFilter,
+        handleStatusChange,
+        statusFilterOptions
     };
 };
