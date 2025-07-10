@@ -18,21 +18,11 @@ interface UserApiResponse {
 }
 
 const userTypeOptions: SelectOption[] = [
-        { id: 'all', name: 'Todos' },
         { id: 'COLABORADOR', name: 'Colaborador' },
         { id: 'GESTOR', name: 'Gestor' },
         { id: 'RH', name: 'RH' },
         { id: 'COMITE', name: 'Comitê' },
     ];
-
-const statusFilterOptions: SelectOption[] = [
-    { id: 'all', name: 'Todos'} ,
-    { id: 'true', name: 'Ativo' },
-    { id: 'false', name: 'Inativo' },
-];   
-
-const userTypeEditOptions: SelectOption[] = userTypeOptions.filter(option => option.id !== 'all');
-const statusEditOptions: SelectOption[] = statusFilterOptions.filter(option => option.id !== 'all');
 
 export const useEditUserPanelLogic = () => {
     const [users, setUsers] = useState<User[]>([]);
@@ -49,9 +39,6 @@ export const useEditUserPanelLogic = () => {
     
     const [searchTerm, setSearchTerm] = useState('');
     const [userTypeFilter, setUserTypeFilter] = useState<SelectOption | null>(null);
-    const [statusFilter, setStatusFilter] = useState<SelectOption | null>(null);
-
-    const [allTracks, setAllTracks] = useState<SelectOption[]>([]);
 
     const handleOpenEditModal = (user: User) => {
         setEditingUser(user);
@@ -73,19 +60,14 @@ export const useEditUserPanelLogic = () => {
         setCurrentPage(1); 
     }, []);
 
-    const handleStatusChange = useCallback((option: SelectOption | null) => {
-        setStatusFilter(option);
-        setCurrentPage(1);
-    }, []);
-
-    const handleUpdateUser = async (userData: { id: string; name: string; email: string; unidade: string; userType: string; roles: string[] }) => {
+    const handleUpdateUser = async (userData: { id: string; name: string; email: string; unidade: string; userType: string; }) => {
         setIsSubmitting(true);
         setNotification(null);
 
         const token = localStorage.getItem('token');
         if (!token) {
             setNotification({ status: 'error', title: 'Autenticação Falhou', message: 'Token não encontrado.' });
-            setIsSubmitting(false); 
+            setIsLoading(false);
             return;
         }
 
@@ -95,7 +77,6 @@ export const useEditUserPanelLogic = () => {
                 email: userData.email,
                 unidade: userData.unidade,
                 userType: userData.userType,
-                roleIds: userData.roles,
             };
 
             const response = await fetch(`http://localhost:3000/api/users/${userData.id}`, {
@@ -114,7 +95,7 @@ export const useEditUserPanelLogic = () => {
 
         } catch (err) {
             if (err instanceof Error) {
-                setNotification({ status: 'error', title: 'Erro na Atualização', message: err.message });
+                console.log("erro haha")
             }
         } finally {
             setIsSubmitting(false);
@@ -140,12 +121,8 @@ export const useEditUserPanelLogic = () => {
                 if (searchTerm) {
                     params.append('search', searchTerm);
                 }
-                if (userTypeFilter && userTypeFilter.id !== 'all') {
+                if (userTypeFilter) {
                     params.append('userType', userTypeFilter.id);
-                }
-
-                if (statusFilter && statusFilter.id !== 'all') {
-                    params.append('isActive', statusFilter.id);
                 }
 
                 const response = await fetch(`http://localhost:3000/api/users/paginated?${params.toString()}`, {
@@ -182,43 +159,8 @@ export const useEditUserPanelLogic = () => {
         };
 
         fetchUsers();
-    }, [currentPage, isUpdating, searchTerm, userTypeFilter,statusFilter]); 
-
-    useEffect(() => {
-        const fetchTracks = async () => {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                return;
-            }
-            
-            try {
-                const response = await fetch('http://localhost:3000/api/roles/trilhas', {
-                    method: "GET",
-                    headers: { 'Authorization': `Bearer ${token}` },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Não foi possível carregar as trilhas.');
-                }
-
-                const apiTracks: { id: string, nome_da_trilha: string }[] = await response.json();
-                
-                const formattedTracks: SelectOption[] = apiTracks.map(track => ({
-                    id: track.id,
-                    name: track.nome_da_trilha, 
-                }));
-
-                setAllTracks(formattedTracks);
-            } catch (err) {
-                console.error(err);
-                setNotification({ status: 'error', title: 'Erro de Rede', message: 'Não foi possível buscar a lista de trilhas.' });
-            }
-        };
-
-        fetchTracks();
-    }, []);
-
-
+    }, [currentPage, isUpdating, searchTerm, userTypeFilter]); 
+    
     return {
         users,
         isLoading,
@@ -238,11 +180,5 @@ export const useEditUserPanelLogic = () => {
         userTypeFilter,
         handleUserTypeChange,
         userTypeOptions,
-        allTracks,
-        statusFilter,
-        handleStatusChange,
-        statusFilterOptions,
-        userTypeEditOptions,
-        statusEditOptions
     };
 };

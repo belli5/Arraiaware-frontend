@@ -8,19 +8,11 @@ interface HistoryFromApi {
   status: string;
 }
 
-interface NotificationState {
-  status: 'success' | 'error';
-  title: string;
-  message: string;
-}
-
 export const useHistoryPanelLogic = () => {
   const [history, setHistory] = useState<ImportHistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-
-  const [notification, setNotification] = useState<NotificationState | null>(null);
 
   const fetchHistory = useCallback(async () => {
     setError(null);
@@ -114,64 +106,13 @@ export const useHistoryPanelLogic = () => {
     }
   }, []); 
 
-  const handleCriteriaImport = useCallback(async (file: File) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setNotification({
-        status: 'error',
-        title: 'Falha na Autenticação',
-        message: 'Por favor, faça login novamente.'
-      });
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch('http://localhost:3000/api/criteria/batch-update', {
-        method: 'PATCH', 
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || 'Erro de rede');
-      }
-
-      setNotification({
-        status: 'success',
-        title: 'Sucesso!',
-        message: 'Critérios processados com sucesso.',
-      });
-
-    } catch (err) {
-      setNotification({
-        status: 'error',
-        title: 'Erro na Importação',
-        message: (err as Error).message || 'Não foi possível conectar ao servidor.',
-      });
-    }
-  }, []);
-  
-  // 3. Função para fechar a notificação
-  const closeNotification = useCallback(() => {
-    setNotification(null);
-  }, []);
-
   return {
     history,
     isLoading,
     error,
     downloadingId,
-    notification,
     handleDeleteHistory,
     handleDownload,
-    refreshHistory: fetchHistory,
-    handleCriteriaImport, 
-    closeNotification,    
+    refreshHistory: fetchHistory, 
   };
 };

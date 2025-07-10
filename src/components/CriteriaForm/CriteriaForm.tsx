@@ -1,9 +1,7 @@
-import { useState,useEffect,useMemo } from 'react';
+import { useState,useEffect } from 'react';
 import { Check } from 'lucide-react';
 import type {Criterion,Track, CriterionType} from '../../types/RH';
 import type { NewCriterionData,ExistingCriterionData } from '../../types/RH';
-import CustomSelect from '../CustomSelect/CustomSelect';
-import type { SelectOption } from '../CustomSelect/CustomSelect';
 
 interface CriteriaFormProps {
   tracks: Track[];
@@ -20,14 +18,8 @@ export default function CriteriaForm({ tracks, onCancel, onSubmit, initialData, 
   const [name, setName] = useState('');
   const [type, setType] = useState<CriterionType | ''>('');
   const [description, setDescription] = useState('');
-  const [selectedTrack, setSelectedTrack] = useState<SelectOption | null>(null);
-  
-  const trackOptions: SelectOption[] = useMemo(() => {
-    return tracks.map(track => ({
-      id: track.id,
-      name: track.name,
-    }));
-  }, [tracks]);
+  const [selectedTrackId, setSelectedTrackId] = useState<string>('');
+
 
   const [errors, setErrors] = useState({
     trackId: '', name: '', type: '', description: ''
@@ -37,7 +29,7 @@ export default function CriteriaForm({ tracks, onCancel, onSubmit, initialData, 
     const newErrors = { trackId: '', name: '', type: '', description: '' };
     let isValid = true;
 
-    if (!selectedTrack) { newErrors.trackId = 'Por favor, selecione uma trilha.'; isValid = false; }
+    if (!selectedTrackId) { newErrors.trackId = 'Por favor, selecione uma trilha.'; isValid = false; }
     if (!type) { newErrors.type = 'Por favor, selecione um tipo.'; isValid = false; }
     if (!name.trim()) { newErrors.name = 'O nome do critério é obrigatório.'; isValid = false; }
     if (!description.trim()) { newErrors.description = 'A descrição é obrigatória.'; isValid = false; }
@@ -51,29 +43,28 @@ export default function CriteriaForm({ tracks, onCancel, onSubmit, initialData, 
   const isEditing = !!initialData;
   useEffect(() => {
     if (isEditing && initialData) {
-      const trackToEdit = trackOptions.find(t => t.id === initialData.trackId);
-      setSelectedTrack(trackToEdit || null);
+      setSelectedTrackId(initialData.trackId); 
       setName(initialData.criterion.criterionName);
       setDescription(initialData.criterion.description);
       setType(initialData.criterion.pillar);
     } else {
-      setSelectedTrack(null);
+      setSelectedTrackId('');
       setName('');
       setDescription('');
       setType('');
     }
-  }, [initialData, isEditing,trackOptions]);
+  }, [initialData, isEditing]);
 
   
   const handleSubmit = () => {
     if (!validate()) return;
-    if (selectedTrack && type) {
+    if (selectedTrackId && type) {
       if (isEditing && initialData) {
         const dataToSubmit: ExistingCriterionData = { id: initialData.criterion.id, name, description, type };
-        onSubmit(selectedTrack.id, dataToSubmit);
+        onSubmit(selectedTrackId, dataToSubmit);
       } else {
         const dataToSubmit: NewCriterionData = { name, description, type };
-        onSubmit(selectedTrack.id, dataToSubmit);
+        onSubmit(selectedTrackId, dataToSubmit);
       }
     }
   };
@@ -83,15 +74,20 @@ export default function CriteriaForm({ tracks, onCancel, onSubmit, initialData, 
       {/* Seção 1: Seleção da Trilha */}
       <div>
         <label htmlFor="track-select" className="block text-sm font-medium text-gray-700">Adicionar à Trilha</label>
-        <div className="mt-1">
-          <CustomSelect
-            options={trackOptions}
-            selected={selectedTrack}
-            onChange={setSelectedTrack}
-            placeholder="Selecione uma trilha"
-            disabled={isEditing}
-          />
-        </div>
+        <select
+          id="track-select"
+          value={selectedTrackId}
+          onChange={e => setSelectedTrackId(e.target.value)}
+          className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${errors.trackId ? 'border-red-500' : 'border-gray-300'}`}
+          disabled={isEditing}
+        >
+          <option disabled value="">Selecione uma trilha</option>
+          {tracks.map(track => (
+            <option key={track.id} value={track.id}>
+              {track.name}
+            </option>
+          ))}
+        </select>
         {errors.trackId && <p className="mt-1 text-xs text-red-600">{errors.trackId}</p>}
       </div>
 
