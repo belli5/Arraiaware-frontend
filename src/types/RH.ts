@@ -51,6 +51,7 @@ export interface DashboardData {
   completedEvaluations: number;
   pendingEvaluations: number;
   overdueEvaluations: number;
+  totalActiveUsers: number;
 }
 
 export interface TrackSignUp {
