@@ -157,13 +157,15 @@ export const useEditUserPanelLogic = () => {
                 }
 
                 const data: UserApiResponse = await response.json();
-                const formattedUsers: User[] = data.data.map(user => ({
+                const formattedUsers: User[] = data.data
+                .filter(user => user.name !== 'Administrador do Sistema') 
+                .map(user => ({                                          
                     id: user.id,
                     name: user.name,
                     email: user.email,
                     unidade: user.unidade,
                     userType: user.userType,
-                    roles: Array.isArray(user.roles) ? user.roles : [], 
+                    roles: Array.isArray(user.roles) ? user.roles : [],
                     isActive: user.isActive,
                 }));
 
