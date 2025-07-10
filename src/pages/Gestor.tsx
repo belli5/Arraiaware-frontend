@@ -127,13 +127,13 @@ export default function Manager() {
       <Header />
       <main className="pt-24">
         <section className="mb-10 px-6 md:px-12 text-left">
-          <h1 className="text-3xl md:text-4xl font-bold">
-            Acompanhamento de {userObject?.name || 'Liderados'}
+          <h1 className="text-3xl md:text-4xl font-bold flex items-center gap-2 mb-2">
+              Acompanhamento de {userObject?.name || 'Liderados'}
           </h1>
-          <p className="text-gray-600">
-            Monitore o progresso de preenchimento dos seus liderados
+          <p className="text-gray-600 flex items-center gap-2">
+              Monitore o progresso de preenchimento dos seus liderados
           </p>
-        </section>
+      </section>
 
         <div className='max-w-[1600px] mx-auto px-6 lg:px-10'>
           {isLoading ? (

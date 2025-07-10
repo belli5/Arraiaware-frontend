@@ -16,7 +16,8 @@ export default function EditUserTable({ users, onEdit }: EditUserTableProps) {
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unidade</th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cargos/Funções</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trilhas</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vínculo</th>
             <th scope="col" className="relative px-6 py-3"><span className="sr-only">Ações</span></th>
           </tr>
         </thead>
@@ -28,7 +29,19 @@ export default function EditUserTable({ users, onEdit }: EditUserTableProps) {
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.unidade}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.userType}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {user.roles.length > 0 ? user.roles.join(', ') : '-'}
+                {user.roles.length > 0 ? user.roles.map(role => role.name).join(', ') : '-'}
+              </td>
+              {/* Vínculo */}
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {user.isActive ? (
+                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    Ativo
+                  </span>
+                ) : (
+                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                    Inativo
+                  </span>
+                )}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <button onClick={() => onEdit(user)} className="text-indigo-600 hover:text-indigo-900">

@@ -107,7 +107,7 @@ export default function RH() {
                   <StatCard 
                       title="Total de Avaliações"
                       value={dashboardData.totalEvaluations.toString()}
-                      subtitle="Colaboradores ativos"
+                      subtitle={`${dashboardData.totalActiveUsers} Colaboradores ativos`}
                       Icon={Users}
                       borderColor="border-black-500"
                       valueColor="text-black-500"
