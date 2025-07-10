@@ -16,8 +16,7 @@ export default function EditUserPanel() {
         handleOpenEditModal, handleCloseEditModal, handleUpdateUser,
         currentPage, totalPages, setCurrentPage,
         searchTerm, handleSearchChange, 
-        userTypeFilter, handleUserTypeChange, userTypeOptions,allTracks,
-        statusFilter, handleStatusChange, statusFilterOptions,userTypeEditOptions
+        userTypeFilter, handleUserTypeChange, userTypeOptions
     } = useEditUserPanelLogic();
 
     const panelRef = useRef<HTMLDivElement>(null);
@@ -34,7 +33,7 @@ export default function EditUserPanel() {
         }, [currentPage]);
 
     return (
-        <div className="bg-white p-6 md:p-8 rounded-b-lg rounded-r-lg shadow-md">
+        <div className="bg-white rounded-xl shadow-lg p-6">
             {notification && (
                 <NotificationMessages
                     status={notification.status}
@@ -44,16 +43,11 @@ export default function EditUserPanel() {
                 />
             )}
             
-            <h2 ref={panelRef} className="text-xl font-bold text-gray-800">
-                Gerenciamento de Usuários
-            </h2>
-            <p className="text-base text-gray-500 mt-1">
-                Gerencie todos os usuários do sistema
-            </p>
+            <h3 ref={panelRef} className="text-xl font-semibold text-gray-700 mb-4">Gerenciamento de Usuários</h3>
             
             {/* --- SEÇÃO DE FILTROS --- */}
-            <div className="grid grid-cols-4 gap-4 mb-3 mt-2">
-                <div className="relative col-span-2 mt-2">
+            <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="relative col-span-2 mt-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input 
                     type="text"
@@ -65,20 +59,12 @@ export default function EditUserPanel() {
                 </div>
 
                 {/* Filtro de Tipo de Usuário */}
-                <div className="relative col-span-1 mt-1">
+                <div className="relative col-span-1">
                     <CustomSelect
                     placeholder="Filtrar por tipo..."
                     options={userTypeOptions}
                     selected={userTypeFilter}
                     onChange={handleUserTypeChange}
-                    />
-                </div>
-                <div className="relative md:col-span-1 mt-1">
-                    <CustomSelect
-                        placeholder="Filtrar por vínculo..."
-                        options={statusFilterOptions}
-                        selected={statusFilter}
-                        onChange={handleStatusChange}
                     />
                 </div>
             </div>
@@ -107,8 +93,6 @@ export default function EditUserPanel() {
                     onSubmit={handleUpdateUser}
                     onCancel={handleCloseEditModal}
                     isSubmitting={isSubmitting}
-                    allTracks={allTracks}
-                    userTypeOptions={userTypeEditOptions}
                 />
             </Modal>
         </div>

@@ -33,8 +33,8 @@ export interface Evaluation {
   id: string               // ← é esse campo que vamos usar
   collaboratorId: string;   // ← É esse que você precisa
   collaborator: string;     // <-- só o nome de exibição
-  cycleId: string;
-  cycleName: string
+  cycleId: string;     // ← **É** este campo que faltava
+  cycleName: string;  
   track: string
   status: string
   progress: number
@@ -89,6 +89,27 @@ export interface PeerEvaluationRecord {
   evaluatorUser: {
     id: string;
     name: string;
+  };
+}
+
+export interface LeaderEvaluationRecord {
+  id: string;
+  collaboratorId: string;
+  cycleId: string;
+  score: number;
+  scoreDescription: string;
+  
+  justification?: string | null;
+  criterion: {
+    id: string;
+    pillar: string;
+    criterionName: string;
+    description: string;
+  };
+  leader: {
+    id: string;
+    name: string;
+    email: string;
   };
 }
 

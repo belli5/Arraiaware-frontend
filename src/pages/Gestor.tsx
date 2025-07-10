@@ -15,8 +15,8 @@ import EvaluationsPanelManager from '../components/EvaluationsPanel/EvolutionPan
 
 const managerTabOptions: Tab[] = [
   { id: 'status', label: 'Status dos liderados', icon: <CheckCircle2 size={18} /> },
-  { id: 'insights', label: 'Insights Comparativos', icon: <BarChart2 size={18} /> },
-  { id: 'evaluation', label: 'Avaliação de liderados', icon: <ClipboardList size={18} /> }
+  { id: 'evaluation', label: 'Avaliação de liderados', icon: <ClipboardList size={18} /> },
+  { id: 'insights', label: 'Brutal Facts', icon: <BarChart2 size={18} /> }
 ];
 
 const managerQuestions: Question[] = [
@@ -127,13 +127,13 @@ export default function Manager() {
       <Header />
       <main className="pt-24">
         <section className="mb-10 px-6 md:px-12 text-left">
-          <h1 className="text-3xl md:text-4xl font-bold flex items-center gap-2 mb-2">
-              Acompanhamento de {userObject?.name || 'Liderados'}
+          <h1 className="text-3xl md:text-4xl font-bold">
+            Acompanhamento de {userObject?.name || 'Liderados'}
           </h1>
-          <p className="text-gray-600 flex items-center gap-2">
-              Monitore o progresso de preenchimento dos seus liderados
+          <p className="text-gray-600">
+            Monitore o progresso de preenchimento dos seus liderados
           </p>
-      </section>
+        </section>
 
         <div className='max-w-[1600px] mx-auto px-6 lg:px-10'>
           {isLoading ? (
@@ -212,7 +212,7 @@ export default function Manager() {
 
             {activeTab === 'evaluation' && dashboardData && (           
               <div className="bg-white p-8 rounded-lg shadow-md">
-                <section className="mb-10 px-6 md:px-12 text-left">
+                <section className="mb-10 text-left">
                   <h2 className="text-xl font-bold text-gray-800">
                     <span>Avaliação de {userObject?.name || 'seus Liderados'}</span>
                   </h2>

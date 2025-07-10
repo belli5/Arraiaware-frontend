@@ -20,7 +20,7 @@ export default function EvaluationsPanel({ managerId }: EvaluationsPanelProps) {
     const panelRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (currentPage>1 && panelRef.current) {
+        if (currentPage && panelRef.current) {
             const elementTop = panelRef.current.getBoundingClientRect().top + window.scrollY;
             const offset = 150;
             window.scrollTo({
@@ -45,9 +45,10 @@ export default function EvaluationsPanel({ managerId }: EvaluationsPanelProps) {
             </div>
 
             {/* Barra de Ações (Busca e Filtros) */}
-           <div className="grid grid-cols-4 gap-4 mb-3 mt-2">
-                {/* Campo de Busca  */}
-                <div className="relative col-span-2 mt-2">
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+    
+                {/* Campo de Busca */}
+                <div className="relative flex-grow mt-1" style={{ minWidth: '300px' }}>
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                     <input 
                         type="text"
@@ -58,32 +59,31 @@ export default function EvaluationsPanel({ managerId }: EvaluationsPanelProps) {
                     />
                 </div>
                 
-                {/* Filtro de Status (Ocupando 1 coluna) */}
-                <div className="relative col-span-1 mt-1">
-                    <CustomSelect
-                        options={statusOptions}
-                        selected={statusFilter}
-                        onChange={handleStatusSelect}
-                        placeholder="Filtrar por Status"
-                    />
-                </div>
-                
-                {/* Filtro de Ciclo (Ocupando 1 coluna) */}
-                <div className="relative col-span-1 mt-1">
-                    {isLoadingCycles ? (
-                        <div className="flex items-center justify-center text-gray-500 border border-gray-300 px-4 py-2 rounded-lg text-sm h-full">
-                            <Loader2 className="animate-spin h-4 w-4 mr-2" /> Carregando...
-                        </div>
-                    ) : (
-                        <CustomSelect
-                            options={cycleOptions}
-                            selected={cycleFilter}
-                            onChange={handleCycleSelect}
-                            placeholder="Filtrar por Ciclo"
+                {/* Filtros e Exportação*/}
+                <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+                    <div className="w-48">
+                         <CustomSelect
+                            options={statusOptions}
+                            selected={statusFilter}
+                            onChange={handleStatusSelect}
+                            placeholder="Filtrar por Status"
                         />
-                    )}
+                    </div>
+                    <div className="w-48">
+                        {isLoadingCycles ? (
+                             <div className="flex items-center justify-center text-gray-500 border border-gray-300 px-4 py-2 rounded-lg text-sm">
+                                <Loader2 className="animate-spin h-4 w-4 mr-2" /> Carregando...
+                            </div>
+                        ) : (
+                            <CustomSelect
+                                options={cycleOptions}
+                                selected={cycleFilter}
+                                onChange={handleCycleSelect}
+                                placeholder="Filtrar por Ciclo"
+                            />
+                        )}
+                    </div>
                 </div>
-
             </div>
 
             {/* Tabela de Dados */}
