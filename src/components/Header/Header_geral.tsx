@@ -1,14 +1,12 @@
 // src/components/Header/Header_geral.tsx
-import React, { useEffect, useState } from "react";
-import { Bell, Settings, User, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Bell, Settings, User, UserIcon, X } from "lucide-react";
 import { useNavigate, NavLink } from "react-router-dom";
 import logo from "../../../imagens/logo_arraiware.png";
 
 export default function Header() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
-
-  // controla se a sidebar de configurações está aberta
   const [showConfig, setShowConfig] = useState(false);
 
   useEffect(() => {
@@ -16,7 +14,6 @@ export default function Header() {
     if (stored) setUser(JSON.parse(stored));
   }, []);
 
-  // função de logout
   function handleLogout() {
     localStorage.clear();
     setShowConfig(false);
@@ -124,32 +121,64 @@ export default function Header() {
         </div>
       </header>
 
-      {/* SIDEBAR DE CONFIGURAÇÕES */}
-      {showConfig && (
-        <>
-          {/* backdrop semi-transparente */}
-          <div
-            className="fixed inset-0 bg-transparent z-40"
+      {/* Backdrop */}
+      <div
+        className={`
+          fixed inset-0 bg-opacity-30 z-40 transition-opacity duration-300
+          ${showConfig ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
+        `}
+        onClick={() => setShowConfig(false)}
+      />
+
+      {/* Sidebar de Configurações com animação */}
+      <aside
+        className={`
+          fixed right-0 top-0 h-full w-64 bg-orange-50 shadow-lg z-50 p-6 flex flex-col
+          transform transition-transform duration-300 ease-in-out
+          ${showConfig ? "translate-x-0" : "translate-x-full"}
+        `}
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-lg font-semibold">Configurações</h2>
+          <X
+            className="h-6 w-6 cursor-pointer text-gray-600"
             onClick={() => setShowConfig(false)}
           />
-          {/* painel lateral */}
-          <aside className="fixed right-0 top-0 h-full w-64 bg-white shadow-lg z-50 p-6 flex flex-col">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold">Configurações</h2>
-              <X
-                className="h-6 w-6 cursor-pointer text-gray-600"
-                onClick={() => setShowConfig(false)}
-              />
+        </div>
+
+        {/* Aqui exibimos o avatar e nome do usuário */}
+        {user && (
+        <div className="flex flex-col items-center mb-6">
+          {user.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt="Avatar do usuário"
+              className="h-16 w-16 rounded-full object-cover mb-2"
+            />
+          ) : (
+            <div className="p-4 bg-orange-100 rounded-full mb-2">
+              <UserIcon className="h-8 w-8 text-gray-600" />
             </div>
-            <button
-              onClick={handleLogout}
-              className="mt-auto bg-red-500 text-white py-2 rounded hover:bg-red-600 transition"
-            >
-              Logout
-            </button>
-          </aside>
-        </>
-      )}
+          )}
+
+          <p className="text-gray-800 font-medium text-center">
+            {user.name}
+          </p>
+          {user.email && (
+            <p className="text-sm text-gray-500 text-center truncate">
+              {user.email}
+            </p>
+          )}
+        </div>
+        )}
+        
+        <button
+          onClick={handleLogout}
+          className="mt-auto bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition"
+        >
+          Logout
+        </button>
+      </aside>
     </>
   );
 }
