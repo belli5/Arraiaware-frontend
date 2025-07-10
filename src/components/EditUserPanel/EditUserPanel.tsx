@@ -17,7 +17,7 @@ export default function EditUserPanel() {
         currentPage, totalPages, setCurrentPage,
         searchTerm, handleSearchChange, 
         userTypeFilter, handleUserTypeChange, userTypeOptions,allTracks,
-        statusFilter, handleStatusChange, statusFilterOptions 
+        statusFilter, handleStatusChange, statusFilterOptions,userTypeEditOptions
     } = useEditUserPanelLogic();
 
     const panelRef = useRef<HTMLDivElement>(null);
@@ -44,7 +44,7 @@ export default function EditUserPanel() {
                 />
             )}
             
-            <h2 className="text-xl font-bold text-gray-800">
+            <h2 ref={panelRef} className="text-xl font-bold text-gray-800">
                 Gerenciamento de Usuários
             </h2>
             <p className="text-base text-gray-500 mt-1">
@@ -108,7 +108,7 @@ export default function EditUserPanel() {
                     onCancel={handleCloseEditModal}
                     isSubmitting={isSubmitting}
                     allTracks={allTracks}
-                    userTypeOptions={userTypeOptions}
+                    userTypeOptions={userTypeEditOptions}
                 />
             </Modal>
         </div>

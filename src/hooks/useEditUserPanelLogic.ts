@@ -18,6 +18,7 @@ interface UserApiResponse {
 }
 
 const userTypeOptions: SelectOption[] = [
+        { id: 'all', name: 'Todos' },
         { id: 'COLABORADOR', name: 'Colaborador' },
         { id: 'GESTOR', name: 'Gestor' },
         { id: 'ADMIN', name: 'Admin' },
@@ -26,10 +27,13 @@ const userTypeOptions: SelectOption[] = [
     ];
 
 const statusFilterOptions: SelectOption[] = [
+    { id: 'all', name: 'Todos'} ,
     { id: 'true', name: 'Ativo' },
     { id: 'false', name: 'Inativo' },
-    { id: 'all', name: 'Todos'} 
 ];   
+
+const userTypeEditOptions: SelectOption[] = userTypeOptions.filter(option => option.id !== 'all');
+const statusEditOptions: SelectOption[] = statusFilterOptions.filter(option => option.id !== 'all');
 
 export const useEditUserPanelLogic = () => {
     const [users, setUsers] = useState<User[]>([]);
@@ -137,7 +141,7 @@ export const useEditUserPanelLogic = () => {
                 if (searchTerm) {
                     params.append('search', searchTerm);
                 }
-                if (userTypeFilter) {
+                if (userTypeFilter && userTypeFilter.id !== 'all') {
                     params.append('userType', userTypeFilter.id);
                 }
 
@@ -236,6 +240,8 @@ export const useEditUserPanelLogic = () => {
         allTracks,
         statusFilter,
         handleStatusChange,
-        statusFilterOptions
+        statusFilterOptions,
+        userTypeEditOptions,
+        statusEditOptions
     };
 };
