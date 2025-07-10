@@ -21,7 +21,6 @@ const userTypeOptions: SelectOption[] = [
         { id: 'all', name: 'Todos' },
         { id: 'COLABORADOR', name: 'Colaborador' },
         { id: 'GESTOR', name: 'Gestor' },
-        { id: 'ADMIN', name: 'Admin' },
         { id: 'RH', name: 'RH' },
         { id: 'COMITE', name: 'Comitê' },
     ];
