@@ -16,8 +16,6 @@ export interface Track {
 
 export type RHTabId = 'Cadastrar' |'status' | 'criterios' | 'historico' | 'cargos' | 'Editar' ;
 
-export type Role = 'Colaborador' | 'Gestor' | 'RH';
-
 export type UploadResult = {
   status: 'success' | 'error';
   title: string;
@@ -73,7 +71,15 @@ export interface User{
   email: string;
   unidade: string;
   userType: string;
-  roles: string[];
+  roles: Role[];
+  isActive: boolean;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
 }
 
 export interface ApiUserResponse extends User {
