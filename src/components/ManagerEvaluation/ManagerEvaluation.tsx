@@ -12,59 +12,56 @@ interface ManagerEvaluationProps {
 }
 
 export default function ManagerEvaluation({
-  managerId, questions
+  managerId,
+  questions
 }: ManagerEvaluationProps) {
-
-
   const navigate = useNavigate()
   const [team, setTeam] = useState<Manager[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [answers, setAnswers] = useState<Record<string, Record<string, Answer>>>({})
   const [evaluatingId, setEvaluatingId] = useState<string | null>(null)
+  const [searchName, setSearchName] = useState<string>('')
 
   // busca seus liderados
   useEffect(() => {
     setLoading(true)
     fetch(`http://localhost:3000/api/teams/manager/${managerId}`, {
-        headers: {
+      headers: {
         'Content-Type': 'application/json',
         ...(localStorage.token && { Authorization: `Bearer ${localStorage.token}` })
-        }
+      }
     })
-        .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
-        .then((projects: Array<{
-     projectName: string
-     collaborators: { id: string; name: string }[]
-     cycleId: string        // ← preciso deste campo no DTO
-    }>) => {
-    const all: Manager[] = projects.flatMap(proj =>
-        proj.collaborators.map(col => ({
-        id:          col.id,
-        nome:        col.name,
-        cargo:       'Colaborador',
-        projectName: proj.projectName,
-        area:        proj.projectName,
-        tempo:       '—',
-        cycleId:     proj.cycleId    // ← daqui!
-        }))
-    )
-
-        console.log(all)
-
+      .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
+      .then((projects: Array<{
+        projectName: string
+        collaborators: { id: string; name: string }[]
+        cycleId:     string
+      }>) => {
+        const all: Manager[] = projects.flatMap(proj =>
+          proj.collaborators.map(col => ({
+            id:          col.id,
+            nome:        col.name,
+            cargo:       'Colaborador',
+            projectName: proj.projectName,
+            area:        proj.projectName,
+            tempo:       '—',
+            cycleId:     proj.cycleId
+          }))
+        )
         // remove duplicados de id
         const unique = Array.from(new Map(all.map(u => [u.id, u])).values())
         setTeam(unique)
-        })
-        .catch(e => setError(String(e)))
-        .finally(() => setLoading(false))
-    }, [managerId])
+      })
+      .catch(e => setError(String(e)))
+      .finally(() => setLoading(false))
+  }, [managerId])
 
   const handleAnswerChange = (
-    userId: string,
+    userId:     string,
     questionId: string,
-    field: 'scale' | 'justification',
-    value: string
+    field:      'scale' | 'justification',
+    value:      string
   ) => {
     setAnswers(a => ({
       ...a,
@@ -80,39 +77,32 @@ export default function ManagerEvaluation({
 
   const handleSubmit = async () => {
     if (!evaluatingId) return
-
-    // 1) encontre o objeto Manager correspondente:
-    const mgr   = team.find(u => u.id === evaluatingId)!
+    const mgr         = team.find(u => u.id === evaluatingId)!
     const userAnswers = answers[evaluatingId] || {}
     const payload = {
-        leaderId:       managerId,
-        collaboratorId: evaluatingId,
-        cycleId:        mgr.cycleId,   // ← ciclo correto vindo do Manager
-      deliveryScore:     Number(userAnswers['deliveryScore']?.scale    || 0),
-      proactivityScore:  Number(userAnswers['proactivityScore']?.scale || 0),
-      collaborationScore:Number(userAnswers['collaborationScore']?.scale || 0),
-      skillScore:        Number(userAnswers['skillScore']?.scale       || 0),
-      justification:     userAnswers['justification']?.justification   || ''
+      leaderId:           managerId,
+      collaboratorId:     evaluatingId,
+      cycleId:            mgr.cycleId,
+      deliveryScore:      Number(userAnswers['deliveryScore']?.scale    || 0),
+      proactivityScore:   Number(userAnswers['proactivityScore']?.scale || 0),
+      collaborationScore: Number(userAnswers['collaborationScore']?.scale || 0),
+      skillScore:         Number(userAnswers['skillScore']?.scale       || 0),
+      justification:      userAnswers['justification']?.justification   || ''
     }
-
-    console.log("Payload enviado pelo ManagerEvaluation:", payload)
-    console.log(" → typeof cycleId:", typeof payload.cycleId, "::", payload.cycleId)
 
     try {
       const res = await fetch('http://localhost:3000/api/evaluations/leader', {
-        method:  'POST',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...localStorage.token && { Authorization: `Bearer ${localStorage.token}` }
+          ...(localStorage.token && { Authorization: `Bearer ${localStorage.token}` })
         },
         body: JSON.stringify(payload)
       })
-
       if (!res.ok) {
         const msg = await res.text()
         throw new Error(msg)
       }
-
       alert('Avaliação enviada com sucesso!')
       setEvaluatingId(null)
       navigate('/manager/evaluation')
@@ -120,6 +110,11 @@ export default function ManagerEvaluation({
       setError(`Falha ao enviar avaliação: ${err.message}`)
     }
   }
+
+  // filtra o time pelo nome
+  const filteredTeam = team.filter(u =>
+    u.nome.toLowerCase().includes(searchName.toLowerCase())
+  )
 
   if (loading) return <div>Carregando sua equipe…</div>
   if (error)   return <div className="text-red-600">Erro: {error}</div>
@@ -156,15 +151,21 @@ export default function ManagerEvaluation({
           </div>
         </>
       ) : (
-        <PeerEvaluationPanel
-          colleagues={team.map(u => ({
-            ...u,
-            progresso:
-              (questions.filter(q => !!answers[u.id]?.[q.id]?.scale).length / questions.length) * 100
-          }))}
-          onEvaluate={setEvaluatingId}
-          sectionKey="leader"
-        />
+        <>
+          <PeerEvaluationPanel
+            colleagues={filteredTeam.map(u => ({
+              ...u,
+              progresso:
+                (questions.filter(q => !!answers[u.id]?.[q.id]?.scale).length /
+                  questions.length) *
+                100
+            }))}
+            onEvaluate={setEvaluatingId}
+            sectionKey="leader"
+            searchName={searchName}
+            onSearchChange={setSearchName}
+          />
+        </>
       )}
     </div>
   )

@@ -1,5 +1,5 @@
 // src/pages/Dashboard.tsx
-import React, { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { FaChartLine} from 'react-icons/fa';
 import Header from '../components/Header/Header_geral';
 import Footer from '../components/Footer/Footer';
@@ -12,6 +12,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  BarChart,    // ← Novo
+  Bar,         // ← Novo
 } from 'recharts';
 import { TrendingUp} from 'lucide-react';
 
@@ -112,12 +114,12 @@ export default function Dashboard() {
         {/* Gráfico de Desempenho + Visão Geral */}
         <section className="flex flex-row gap-4 mb-10">
           {/* Desempenho Mensal */}
-          <div className="bg-white rounded-xl shadow-md p-6 h-[400px] w-full md:w-2/3">
+          <div className="bg-white rounded-xl shadow-md p-10 w-[65%] h-[300px]">
             <div className="flex items-center gap-2 mb-4">
               <FaChartLine className="text-orange-500 text-2xl" />
               <h2 className="text-xl font-semibold">Desempenho Mensal</h2>
             </div>
-            <ResponsiveContainer width="100%" height="90%">
+            <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sampleData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
@@ -130,7 +132,7 @@ export default function Dashboard() {
           </div>
 
           {/* Visão Geral */}
-          <div className="bg-white rounded-xl shadow-md p-6 w-full md:w-1/3">
+         <div className="bg-white rounded-xl shadow-md p-4 w-[35%] h-[300px] flex flex-col justify-center">
             <h2 className="text-xl font-semibold mb-4 text-center">Visão Geral</h2>
             <Progress title="Liderança" value={8.5} />
             <Progress title="Comunicação" value={9.0} />
@@ -138,6 +140,27 @@ export default function Dashboard() {
             <Progress title="Colaboração" value={8.8} />
           </div>
         </section>
+
+        <section className="mb-10">
+        <div className="bg-white rounded-xl shadow-md p-10 w-[65%] h-[300px]">
+          <div className="flex items-center gap-2 mb-4">
+            <FaChartLine className="text-orange-500 text-2xl" />
+            <h2 className="text-xl font-semibold">Metas por Mês</h2>
+          </div>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={sampleData}
+              margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="Metas" fill="#F59E0B" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
 
         
       </main>

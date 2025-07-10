@@ -5,7 +5,7 @@ import Pagination from '../Pagination/Pagination';
 import EvaluationsTableSkeleton from '../EvaluationsTableSkeleton/EvaluationsTableSkeleton';
 import CustomSelect, { type SelectOption } from '../CustomSelect/CustomSelect';
 import { useEvaluationsPanelLogic } from '../../hooks/useEvaluationsPanelLogic';
-import type { Evaluation, SelfEvaluationRecord, PeerEvaluationRecord } from '../../types/evaluation';
+import type { Evaluation, SelfEvaluationRecord, PeerEvaluationRecord, LeaderEvaluationRecord, } from '../../types/evaluation';
 import EvaluationsTableManager from '../EvaluationsTable/EvolutionTableManager';
 
 interface EvaluationsPanelManagerProps {
@@ -51,6 +51,10 @@ export default function EvaluationsPanelManager({
   const [peerRecords, setPeerRecords] = useState<PeerEvaluationRecord[]>([]);
   const [loadingPeer, setLoadingPeer] = useState(false);
   const [errorPeer, setErrorPeer] = useState<string | null>(null);
+
+  const [leaderRecords, setLeaderRecords] = useState<LeaderEvaluationRecord[]>([]);
+  const [loadingLeader, setLoadingLeader] = useState(false);
+  const [errorLeader, setErrorLeader] = useState<string | null>(null);
 
   // Aba ativa no detalhe
   const [activeSubTab, setActiveSubTab] = useState<'self' | 'peer' | 'leader'>('self');
@@ -125,6 +129,33 @@ export default function EvaluationsPanelManager({
       .then(setPeerRecords)
       .catch(err => setErrorPeer(err.message))
       .finally(() => setLoadingPeer(false));
+  }, [selectedEvalItem, activeSubTab]);
+
+  console.log("» selectedEvalItem:", selectedEvalItem);
+
+  // Fetch da avaliação do líder
+  useEffect(() => {
+    if (!selectedEvalItem || activeSubTab !== 'leader') return;
+
+    setLoadingLeader(true);
+    setErrorLeader(null);
+
+    const { collaboratorId: userId, cycleId: selCycleId } = selectedEvalItem;
+    const token = localStorage.getItem('token') || '';
+
+    fetch(
+      `${API_BASE}/api/evaluations/leader-evaluation/for-user/${userId}?cycleId=${selCycleId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Erro ${res.status}: não foi possível carregar avaliação do líder`);
+        }
+        return res.json() as Promise<LeaderEvaluationRecord[]>;
+      })
+      .then(data => setLeaderRecords(data))
+      .catch(err => setErrorLeader(err.message))
+      .finally(() => setLoadingLeader(false));
   }, [selectedEvalItem, activeSubTab]);
 
   // Scroll ao mudar página
@@ -231,7 +262,9 @@ export default function EvaluationsPanelManager({
               !errorSelf &&
               selfRecords.map(rec => (
                 <div key={rec.id} className="bg-gray-50 p-4 rounded shadow-sm">
-                  <h4 className="font-semibold mb-1">{rec.criterion.criterionName}</h4>
+                  <h4 className="font-semibold mb-1">
+                    {rec.criterion.criterionName}
+                  </h4>
                   <p className="text-sm text-gray-600 mb-2">
                     Pilar: {rec.criterion.pillar}
                   </p>
@@ -239,7 +272,9 @@ export default function EvaluationsPanelManager({
                     Nota: {rec.score} ({rec.scoreDescription})
                   </p>
                   {rec.justification && (
-                    <p className="mt-2 text-gray-700">Justificativa: {rec.justification}</p>
+                    <p className="mt-2 text-gray-700">
+                      Justificativa: {rec.justification}
+                    </p>
                   )}
                 </div>
               ))}
@@ -267,9 +302,33 @@ export default function EvaluationsPanelManager({
                 </div>
               ))}
           </div>
-        ) : (
-          <p className="text-gray-500">Conteúdo da aba Líder em breve...</p>
-        )
+        ) : activeSubTab === 'leader' ? (
+          <div className="space-y-4">
+            {loadingLeader && <p>Carregando avaliação do gestor…</p>}
+            {errorLeader && <p className="text-red-500">{errorLeader}</p>}
+
+            {!loadingLeader && !errorLeader && leaderRecords.length > 0
+              ? leaderRecords.map(rec => (
+                  <div key={rec.id} className="bg-gray-50 p-4 rounded shadow-sm">
+                    <h4 className="font-semibold mb-1">
+                      {rec.criterion.criterionName}
+                    </h4>
+                    <p className="font-medium mb-1">
+                      Nota: {rec.score} ({rec.scoreDescription})
+                    </p>
+                    <p className="mt-2">
+                      Avaliado por: <strong>{rec.leader.name}</strong>
+                    </p>
+                  </div>
+                ))
+              : !loadingLeader && (
+                  <p className="text-gray-500">
+                    Nenhuma avaliação do líder encontrada.
+                  </p>
+                )
+            }
+          </div>
+        ) : null
       ) : (
         <>
           {/* Filtros e Busca */}
