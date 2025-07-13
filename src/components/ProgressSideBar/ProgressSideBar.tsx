@@ -8,6 +8,7 @@ interface ProgressSidebarProps {
   leaderAnswers: Record<string, Record<string, Answer>>;
   colleagues: Colleague[];
   leaders: Colleague[];
+  isReferenceSectionComplete: boolean; 
 }
 
 export default function ProgressSidebar({
@@ -16,7 +17,8 @@ export default function ProgressSidebar({
   peerAnswers,
   leaderAnswers,
   colleagues,
-  leaders
+  leaders,
+  isReferenceSectionComplete
 }: ProgressSidebarProps) {
 
   const isPersonEvaluationComplete = (
@@ -75,7 +77,12 @@ export default function ProgressSidebar({
               done = colleagues.filter(p =>
                 isPersonEvaluationComplete(p.id, s.questions, peerAnswers, s.key)
               ).length;
-            } else if (s.key === 'leader') {
+            } 
+            else if (s.key === 'reference') {
+              total = 1;
+              done = isReferenceSectionComplete ? 1 : 0;
+            }
+            else if (s.key === 'leader') {
               total = leaders.length;
               done = leaders.filter(l =>
                 isPersonEvaluationComplete(l.id, s.questions, leaderAnswers, s.key)
