@@ -71,9 +71,8 @@ export default function Dashboard() {
           <h1 className="text-4xl font-bold flex items-center gap-2 mb-2">
             Olá, {user?.name || 'visitante'}! <span className="wave">👋</span>
           </h1>
-          <p className="text-gray-600">
-            Bem-vinda ao seu painel de autoavaliação, {user?.name || ''}. Seu cargo é{' '}
-            <strong>{user?.userType || '—'}</strong>
+          <p className="text-gray-700">
+            Bem-vinda ao seu painel de Dashboard, <strong>{user?.name || ''}</strong> . Aqui você pode monitorar todo o seu progresso na empresa ate agora
           </p>
         </section>
 

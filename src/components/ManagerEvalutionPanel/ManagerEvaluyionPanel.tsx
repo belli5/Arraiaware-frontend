@@ -1,5 +1,6 @@
 // src/components/PeerEvaluationPanel/PeerEvaluationPanel.tsx
-import { FaUsers, FaUserCheck } from 'react-icons/fa';
+import { FaUsers, FaUserCheck} from 'react-icons/fa';
+import { Search } from 'lucide-react';
 import type { Colleague } from '../../types/evaluation';
 import ColleagueCard from '../ColleagueCard/ColleagueCard';
 import InfoBox from '../InfoBox/InfoBox';
@@ -39,20 +40,24 @@ export default function PeerEvaluationPanel({
       <InfoBox icon={icon} title={title} text={text} />
 
       {/* Campo de busca logo abaixo do banner */}
-      <div className="mb-4 mt-4 px-4">
-        <input
-          type="text"
-          placeholder="Buscar colaborador..."
-          value={searchName}
-          onChange={e => onSearchChange(e.target.value)}
-          className="
-            w-full sm:w-1/2
-            px-4 py-2
-            border border-gray-300 rounded-lg
-            focus:outline-none focus:ring-2 focus:ring-orange-500
-          "
-        />
-      </div>
+      <div className="relative mb-4 mt-4">
+       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+         <Search className="h-5 w-5 text-gray-400" />
+       </div>
+       <input
+         type="search"
+         placeholder="Buscar colaborador..."
+         value={searchName}
+         onChange={e => onSearchChange(e.target.value)}
+         className="
+          block w-full bg-white
+           border border-gray-300 rounded-lg
+           pl-10 pr-3 py-2
+           placeholder-gray-500
+           focus:outline-none focus:ring-1 focus:ring-orange-500
+         "
+       />
+     </div>
 
       {/* Lista de colegas */}
       <div className="space-y-4 mt-6">

@@ -1,8 +1,10 @@
 import type { Evaluation, Section } from "./evaluation";
 
-export type managerTabId = 'status' | 'insights' | 'evaluation';
+export type managerTabId = 'status' | 'evaluation' | 'brutalfact' | 'projeto'
+
 
 export interface ManagerDashboardData {
+  equalizationDate: string | undefined;
   sections: Section[];
   cycleId: string;
   summary: {

@@ -69,8 +69,8 @@ export default function Home() {
           <h1 className="text-4xl font-bold flex items-center gap-2 mb-2">
             Olá, {user?.name || 'visitante'}! <span className="wave">👋</span>
           </h1>
-          <p className="text-gray-600 flex items-center gap-2">
-            Bem-vinda ao seu painel de autoavaliação, {user?.name || ''}. Seu cargo é{' '}
+          <p className="text-gray-700 flex items-center gap-2">
+            Bem-vinda ao seu painel de autoavaliação, <strong>{user?.name || ''}</strong>. Seu cargo é{' '}
             <strong>{user?.userType || '—'}</strong>
           </p>
         </section>
@@ -199,11 +199,11 @@ export default function Home() {
             <div className="bg-white rounded-xl shadow-md p-6 w-[35%]">
               <h3 className="text-lg font-semibold mb-4">Ações Rápidas</h3>
               <div className="space-y-2">
-                <Action onClick={() => navigate('/avaliacao/tech')} icon={<FaRegFileAlt />}>
+                <Action onClick={() => navigate('/avaliacao/comportamento')} icon={<FaRegFileAlt />}>
                   Nova Avaliação
                 </Action>
-                <Action onClick={() => navigate('/avaliacao/goals')} icon={<FaChartLine />}>
-                  Ver Resultados
+                <Action onClick={() => navigate('/Dashboard')} icon={<FaChartLine />}>
+                  Dashboard
                 </Action>
                 <Action onClick={() => navigate('/avaliacao/collab')} icon={<FaBullseye />}>
                   Definir Metas
