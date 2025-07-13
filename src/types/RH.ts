@@ -14,7 +14,7 @@ export interface Track {
   criteria: Criterion[];
 }
 
-export type RHTabId = 'Cadastrar' |'status' | 'criterios' | 'historico' | 'cargos' | 'Editar' ;
+export type RHTabId = 'Cadastrar' |'status' | 'criterios' | 'historico' | 'cargos' | 'Editar' | 'ciclos';
 
 export type UploadResult = {
   status: 'success' | 'error';

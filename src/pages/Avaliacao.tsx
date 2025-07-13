@@ -61,8 +61,6 @@ const predefinedSections: Record<string, { key: string; title: string; icon: JSX
   },
 };
 
-
-
 interface ApiTeamInfo {
   projectId:   string;
   projectName: string;
@@ -76,7 +74,10 @@ interface ApiTeamInfo {
   }>;
 }
 
-
+const getStorageKey = (userId: string, cycleId: string, key: string) => {
+  if (!userId || !cycleId) return null;
+  return `evaluationState:${userId}:${cycleId}:${key}`;
+};
 
 export default function Avaliacao() {
   const navigate = useNavigate();
@@ -87,37 +88,41 @@ export default function Avaliacao() {
   const [leaderColleagues, setLeaderColleagues] = useState<Colleague[]>([]);
   const [projectName, setProjectName] = useState<string>('—');
   const [projectId, setProjectId] = useState<string>('');
-
+  const [answers, setAnswers] = useState<Record<string, Answer>>({});
+  const [peerAnswers, setPeerAnswers] = useState<Record<string, Record<string, Answer>>>({});
+  const [leaderAnswers, setLeaderAnswers] = useState<Record<string, Record<string, Answer>>>({});
+  const [avaliandoId, setAvaliandoId] = useState<string | null>(null);
+  
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  
   const [cycleId, setCycleId] = useState<string>('');
   
   const [userId, setUserId] = useState<string>('');
-
+  
   const [referencesData, setReferencesData] = useState<Reference[]>([]);
   const [isReferenceSectionComplete, setIsReferenceSectionComplete] = useState<boolean>(false);
-
-
+  
+  
   useEffect(() => {
     const raw = localStorage.getItem('token');
     if (!raw) return;
-
+    
     try {
       const base64Payload = raw.split('.')[1]
-        .replace(/-/g, '+')
+      .replace(/-/g, '+')
         .replace(/_/g, '/');
       const json = decodeURIComponent(
         atob(base64Payload)
           .split('')
           .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
           .join('')
-      );
-      const { sub } = JSON.parse(json);
-      setUserId(sub);           
-    } catch (e) {
-      console.error('Não conseguiu decodificar token:', e);
+        );
+        const { sub } = JSON.parse(json);
+        setUserId(sub);           
+      } catch (e) {
+        console.error('Não conseguiu decodificar token:', e);
     }
   }, []);
 
@@ -125,7 +130,7 @@ export default function Avaliacao() {
   useEffect(() => {
     if (!userId) return;
     setLoadingTeam(true);
-
+    
     const token = localStorage.getItem('token');
     fetch(`http://localhost:3000/api/teams/user/${userId}`, {
       headers: {
@@ -133,15 +138,15 @@ export default function Avaliacao() {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       }
     })
-      .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
-      .then((info: ApiTeamInfo) => {
-        // guarda tudo de uma vez
-        setProjectId(info.projectId);
-        setProjectName(info.projectName);
-        setCycleId(info.cycleId);
-
-        // transforma collaborators em Colleague[]
-        setTeamMates(info.collaborators.map(c => ({
+    .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
+    .then((info: ApiTeamInfo) => {
+      // guarda tudo de uma vez
+      setProjectId(info.projectId);
+      setProjectName(info.projectName);
+      setCycleId(info.cycleId);
+      
+      // transforma collaborators em Colleague[]
+      setTeamMates(info.collaborators.map(c => ({
           id:           c.id,
           nome:         c.name,
           cargo:        'Colaborador',
@@ -149,7 +154,7 @@ export default function Avaliacao() {
           tempo:        '—',
           projectName: info.projectName,        
         })));
-
+        
         // mapeia o gestor
         setLeaderColleagues([{
           id:           info.managerId,
@@ -162,21 +167,167 @@ export default function Avaliacao() {
       })
       .catch(err => setTeamError(String(err)))
       .finally(() => setLoadingTeam(false));
-  }, [userId]);
+    }, [userId]);
+    
+    useEffect(() => {
+      if (!userId || !cycleId) return;
+      
+      const loadState = <T,>(key: string, setter: React.Dispatch<React.SetStateAction<T>>, defaultValue: T) => {
+        const storageKey = getStorageKey(userId, cycleId, key);
+        if (!storageKey) return;
+        
+        const savedStateJSON = localStorage.getItem(storageKey);
+        if (savedStateJSON) {
+          try {
+            setter(JSON.parse(savedStateJSON));
+          } catch (e) {
+            console.error(`Falha ao carregar estado para a chave "${key}":`, e);
+            setter(defaultValue);
+          }
+        }
+  };
+  
+  loadState('answers', setAnswers, {});
+  loadState('peerAnswers', setPeerAnswers, {});
+  loadState('leaderAnswers', setLeaderAnswers, {});
+  loadState('referencesData', setReferencesData, []);
+  loadState('isReferenceSectionComplete', setIsReferenceSectionComplete, false);
+  
+}, [userId, cycleId]);
 
+useEffect(() => {
+  const saveData = (key: string, data: unknown) => {
+    const storageKey = getStorageKey(userId, cycleId, key);
+    if (storageKey) {
+      localStorage.setItem(storageKey, JSON.stringify(data));
+    }
+  };
 
-  async function handleSubmitPeer() {
+  saveData('answers', answers);
+  saveData('peerAnswers', peerAnswers);
+  saveData('leaderAnswers', leaderAnswers);
+  saveData('referencesData', referencesData);
+  saveData('isReferenceSectionComplete', isReferenceSectionComplete);
+  
+}, [answers, peerAnswers, leaderAnswers, referencesData, isReferenceSectionComplete, userId, cycleId]);
+  
+  useEffect(() => {
+    async function fetchCycles() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const res = await fetch('http://localhost:3000/api/cycles', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const cycles: Cycle[] = await res.json();
+        const open = cycles.find(c => c.status.toLowerCase() === 'aberto');
+        if (open) setCycleId(open.id);
+      } catch (err) {
+        console.error('Erro ao buscar ciclos:', err);
+      }
+    }
+    fetchCycles();
+  }, []);
+  
+  useEffect(() => {
+    async function fetchCriteria() {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      setError('Você não está autenticado.');
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      const response = await fetch('http://localhost:3000/api/criteria', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erro ao buscar critérios.');
+      }
+  
+      const data = await response.json();
+      console.log('Resposta da API:', data);
+  
+      if (!Array.isArray(data)) {
+        throw new Error('A resposta da API não é um array');
+      }
+      
+      const groupedByPillar: Record<string, Question[]> = {};
+      
+      data.forEach((c: any) => {
+        const pillarKey = c.pillar?.toLowerCase().trim() || 'comportamento';
+        
+        if (!groupedByPillar[pillarKey]) {
+          groupedByPillar[pillarKey] = [];
+        }
+        
+        groupedByPillar[pillarKey].push({
+          id: c.id,
+          type: 'scale',
+          text: c.criterionName,
+        });
+      });
+      
+      const mapped: Section[] = Object.entries(groupedByPillar).map(([pillarKey, questions]) => {
+        const predefined = predefinedSections[pillarKey] || {
+          key: pillarKey.replace(/\s/g, '-'),
+          title: pillarKey.charAt(0).toUpperCase() + pillarKey.slice(1),
+          icon: <FaUsers />,
+        };
+        
+        return {
+          ...predefined,
+          questions,
+        };
+      });
+      
+      // Adiciona seções de pares, líderes e indicação de referências no fim
+      mapped.push(
+        { key: 'peer', title: 'Avaliação de Pares', icon: <FaUsers />, questions: peerQuestions },
+        { key: 'leader', title: 'Avaliação de Líderes', icon: <FaCrown />, questions: leaderQuestions },
+        { key: 'reference', title: 'Indicação de Referências', icon: <UserCheck />, questions: [] }
+      );
+      
+      setSections(mapped);
+    } catch (err) {
+      console.error(err);
+      setError('Erro ao carregar os critérios.');
+    } finally {
+      setLoading(false);
+    }
+  }
+  fetchCriteria(); 
+}, []);
+
+const currentSectionIndex = sections.findIndex(s => s.key === section);
+const currentSectionData = currentSectionIndex >= 0 ? sections[currentSectionIndex] : null;
+
+if (!currentSectionData) {
+  return (
+    <div className="p-6 text-red-600">
+      Seção inválida ou ainda não carregada.
+    </div>
+  );
+}
+
+async function handleSubmitPeer() {
   if (!userId || !cycleId) {
     alert('Usuário ou ciclo não carregados ainda.');
     return;
   }
-
+  
   const entries = Object.entries(peerAnswers);
   if (entries.length === 0) {
     alert('Não há avaliações de pares preenchidas.');
     return;
   }
-
+  
   try {
     const token = localStorage.getItem('token');
     for (const [evaluatedUserId, answersMap] of entries) {
@@ -220,6 +371,8 @@ export default function Avaliacao() {
         throw new Error(`Erro ao enviar avaliação de ${evaluatedUserId}: ${await res.text()}`);
       }
     }
+    const storageKey = getStorageKey(userId, cycleId, 'peerAnswers');
+    if (storageKey) localStorage.removeItem(storageKey);
 
     alert('Todas as avaliações de pares foram enviadas com sucesso!');
     navigate(`/avaliacao/${sections[currentSectionIndex + 1]?.key}`);
@@ -261,128 +414,20 @@ export default function Avaliacao() {
       }
 
       alert('Referências salvas com sucesso!');
-      setReferencesData(references); // Atualiza o estado local com os dados salvos
-      setIsReferenceSectionComplete(true); // Marca a seção de referência como completa
-      // Navega para a próxima seção após salvar
+      const dataKey = getStorageKey(userId, cycleId, 'referencesData');
+      if (dataKey) localStorage.removeItem(dataKey);
+
+      const completeKey = getStorageKey(userId, cycleId, 'isReferenceSectionComplete');
+      if (completeKey) localStorage.removeItem(completeKey);
+
+      setReferencesData([]);
+      setIsReferenceSectionComplete(false);
       navigate(`/avaliacao/${sections[currentSectionIndex + 1]?.key}`);
     } catch (err: any) {
       console.error(err);
       alert('Falha ao salvar referências: ' + err.message);
     }
   };
-
-
-  useEffect(() => {
-    async function fetchCycles() {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      try {
-        const res = await fetch('http://localhost:3000/api/cycles', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error(await res.text());
-        const cycles: Cycle[] = await res.json();
-        const open = cycles.find(c => c.status.toLowerCase() === 'aberto');
-        if (open) setCycleId(open.id);
-      } catch (err) {
-        console.error('Erro ao buscar ciclos:', err);
-      }
-    }
-    fetchCycles();
-  }, []);
-
-  useEffect(() => {
-    async function fetchCriteria() {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      setError('Você não está autenticado.');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const response = await fetch('http://localhost:3000/api/criteria', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao buscar critérios.');
-      }
-
-      const data = await response.json();
-      console.log('Resposta da API:', data);
-
-      if (!Array.isArray(data)) {
-        throw new Error('A resposta da API não é um array');
-      }
-
-      const groupedByPillar: Record<string, Question[]> = {};
-
-      data.forEach((c: any) => {
-        const pillarKey = c.pillar?.toLowerCase().trim() || 'comportamento';
-
-        if (!groupedByPillar[pillarKey]) {
-          groupedByPillar[pillarKey] = [];
-        }
-
-        groupedByPillar[pillarKey].push({
-          id: c.id,
-          type: 'scale',
-          text: c.criterionName,
-        });
-      });
-
-      const mapped: Section[] = Object.entries(groupedByPillar).map(([pillarKey, questions]) => {
-        const predefined = predefinedSections[pillarKey] || {
-          key: pillarKey.replace(/\s/g, '-'),
-          title: pillarKey.charAt(0).toUpperCase() + pillarKey.slice(1),
-          icon: <FaUsers />,
-        };
-
-        return {
-          ...predefined,
-          questions,
-        };
-      });
-
-      // Adiciona seções de pares, líderes e indicação de referências no fim
-      mapped.push(
-        { key: 'peer', title: 'Avaliação de Pares', icon: <FaUsers />, questions: peerQuestions },
-        { key: 'leader', title: 'Avaliação de Líderes', icon: <FaCrown />, questions: leaderQuestions },
-        { key: 'reference', title: 'Indicação de Referências', icon: <UserCheck />, questions: [] }
-      );
-
-      setSections(mapped);
-    } catch (err) {
-      console.error(err);
-      setError('Erro ao carregar os critérios.');
-    } finally {
-      setLoading(false);
-    }
-  }
-  fetchCriteria(); 
-  }, []);
-
-  const [answers, setAnswers] = useState<Record<string, Answer>>({});
-  const [peerAnswers, setPeerAnswers] = useState<Record<string, Record<string, Answer>>>({});
-  const [leaderAnswers, setLeaderAnswers] = useState<Record<string, Record<string, Answer>>>({});
-  const [avaliandoId, setAvaliandoId] = useState<string | null>(null);
-
-  const currentSectionIndex = sections.findIndex(s => s.key === section);
-  const currentSectionData = currentSectionIndex >= 0 ? sections[currentSectionIndex] : null;
-
-  if (!currentSectionData) {
-    return (
-      <div className="p-6 text-red-600">
-        Seção inválida ou ainda não carregada.
-      </div>
-    );
-  }
-
-  
 
   async function handleSubmitSelfEvaluation() {
     if (!userId) {
@@ -411,6 +456,8 @@ export default function Avaliacao() {
       });
       if (!res.ok) throw new Error(await res.text());
       alert('Autoavaliação enviada!');
+      const storageKey = getStorageKey(userId, cycleId, 'answers');
+      if (storageKey) localStorage.removeItem(storageKey);
       navigate(`/avaliacao/${sections[currentSectionIndex + 1]?.key}`);
     } catch (err: any) {
       console.error(err);
@@ -467,14 +514,13 @@ export default function Avaliacao() {
       const err = await res.text();
       throw new Error(err);
     }
+    const storageKey = getStorageKey(userId, cycleId, 'leaderAnswers');
+    if (storageKey) localStorage.removeItem(storageKey);
 
     alert('Avaliação de líder enviada com sucesso!');
     // navega para a próxima aba
     navigate(`/avaliacao/${sections[currentSectionIndex + 1]?.key}`);
   }
-
-
-
   const handleAnswerChange = (
     questionId: string,
     field: 'scale' | 'justification',
