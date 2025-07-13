@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
 import Header from '../components/Header/Header_geral';
@@ -10,6 +11,7 @@ import PeerQuestionList from '../components/PeerQuestionList/PeerQuestionList';
 import LeaderQuestionList from '../components/LeadQuestionList/LeadQuestionList';
 import ReferenceForm from '../components/ReferenceForm/ReferenceForm';
 import { useAvaliacaoLogic } from '../hooks/useEvaluationPageLogic';
+import type { Reference } from '../types/evaluation';
 
 export default function Avaliacao() {
   const navigate = useNavigate();
@@ -54,6 +56,46 @@ export default function Avaliacao() {
       : currentSectionIndex;
     if (nextIndex !== currentSectionIndex) {
       navigate(`/avaliacao/${sections[nextIndex].key}`);
+    }
+  };
+
+  const onPeerSubmit = async () => {
+    try {
+      await handleSubmitPeer();
+      alert('Avaliações de pares enviadas com sucesso!');
+      handleNextSection();
+    } catch (err: any) {
+      console.error('Falha recebida pelo componente:', err);
+    }
+  };
+
+  const onSelfEvaluationSubmit = async () => {
+    try {
+      await handleSubmitSelfEvaluation();
+      alert('Autoavaliação enviada com sucesso!');
+      handleNextSection();
+    } catch (err: any) {
+      console.error('Falha recebida pelo componente:', err);
+    }
+  };
+
+  const onLeaderSubmit = async () => {
+    try {
+      await handleSubmitLeader();
+      alert('Avaliação de líder enviada com sucesso!');
+      handleNextSection();
+    } catch (err: any) {
+      console.error('Falha recebida pelo componente:', err);
+    }
+  };
+
+  const onReferencesSave = async (references: Reference[]) => {
+    try {
+      await handleSubmitReferences(references);
+      alert('Referências salvas com sucesso!');
+      handleNextSection();
+    } catch (err: any) {
+      console.error('Falha recebida pelo componente:', err);
     }
   };
 
@@ -180,7 +222,7 @@ export default function Avaliacao() {
                           sectionKey="peer"
                         />
                         <div className="mt-6 flex justify-end">
-                          <button onClick={handleSubmitPeer} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                          <button onClick={onPeerSubmit} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                             Enviar Avaliações de Pares
                           </button>
                         </div>
@@ -197,7 +239,7 @@ export default function Avaliacao() {
                           sectionKey="leader"
                         />
                         <div className="mt-6 flex justify-end">
-                          <button onClick={handleSubmitLeader} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                          <button onClick={onLeaderSubmit} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                             Enviar Avaliação de Líder
                           </button>
                         </div>
@@ -208,7 +250,7 @@ export default function Avaliacao() {
                 ) : currentSectionData.key === 'reference' ? (
                   <ReferenceForm
                     initialReferences={referencesData}
-                    onSaveReferences={handleSubmitReferences}
+                    onSaveReferences={onReferencesSave}
                   />
                 ) : (
                   <>
@@ -219,7 +261,7 @@ export default function Avaliacao() {
                     />
                     <div className="mt-8 pt-6 border-t flex justify-end">
                       <button
-                        onClick={handleSubmitSelfEvaluation}
+                        onClick={onSelfEvaluationSubmit}
                         className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                       >
                         Enviar Autoavaliação

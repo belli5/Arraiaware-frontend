@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect,type JSX } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import {useParams } from 'react-router-dom';
 import { FaStar, FaUsers, FaChartLine, FaCrown } from 'react-icons/fa';
 import { UserCheck } from 'lucide-react';
 
@@ -43,7 +44,6 @@ const getStorageKey = (userId?: string, cycleId?: string, key?: string) => {
 };
 
 export const useAvaliacaoLogic = () => {
-const navigate = useNavigate();
   const { section } = useParams();
   const [teamMates, setTeamMates] = useState<Colleague[]>([]);
   const [loadingTeam, setLoadingTeam] = useState<boolean>(true);
@@ -55,13 +55,12 @@ const navigate = useNavigate();
   const [peerAnswers, setPeerAnswers] = useState<Record<string, Record<string, Answer>>>({});
   const [leaderAnswers, setLeaderAnswers] = useState<Record<string, Record<string, Answer>>>({});
   const [avaliandoId, setAvaliandoId] = useState<string | null>(null);
-  
+  const [currentCycleId,setCurrentCycleId] = useState<string>('');
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   const [cycleId, setCycleId] = useState<string>('');
-  
   const [userId, setUserId] = useState<string>('');
   
   const [referencesData, setReferencesData] = useState<Reference[]>([]);
@@ -87,6 +86,28 @@ const navigate = useNavigate();
       } catch (e) {
         console.error('Não conseguiu decodificar token:', e);
     }
+  }, []);
+
+
+  useEffect(() => {
+    async function fetchCycles() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const res = await fetch('http://localhost:3000/api/cycles', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const cycles: Cycle[] = await res.json();
+        const open = cycles.find(c => c.status.toLowerCase() === 'aberto');
+        if(open)
+            setCurrentCycleId(open.id);
+
+      } catch (err) {
+        console.error('Erro ao buscar ciclos:', err);
+      }
+    }
+    fetchCycles();
   }, []);
 
   // 1) Busca colegas de equipe dinâmicos assim que souber o userId
@@ -153,8 +174,8 @@ const navigate = useNavigate();
   loadState('answers', setAnswers, {});
   loadState('peerAnswers', setPeerAnswers, {});
   loadState('leaderAnswers', setLeaderAnswers, {});
-  loadState('referencesData', setReferencesData, []);
-  loadState('isReferenceSectionComplete', setIsReferenceSectionComplete, false);
+  loadState('referencesData', setReferencesData, [] as Reference[]);
+  loadState<boolean>('isReferenceSectionComplete', setIsReferenceSectionComplete, false);
   
 }, [userId, cycleId]);
 
@@ -173,26 +194,7 @@ useEffect(() => {
   saveData('isReferenceSectionComplete', isReferenceSectionComplete);
   
 }, [answers, peerAnswers, leaderAnswers, referencesData, isReferenceSectionComplete, userId, cycleId]);
-  
-  useEffect(() => {
-    async function fetchCycles() {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      try {
-        const res = await fetch('http://localhost:3000/api/cycles', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error(await res.text());
-        const cycles: Cycle[] = await res.json();
-        const open = cycles.find(c => c.status.toLowerCase() === 'aberto');
-        if (open) setCycleId(open.id);
-      } catch (err) {
-        console.error('Erro ao buscar ciclos:', err);
-      }
-    }
-    fetchCycles();
-  }, []);
-  
+   
   useEffect(() => {
     async function fetchCriteria() {
     const token = localStorage.getItem('token');
@@ -273,14 +275,16 @@ const currentSectionData = currentSectionIndex >= 0 ? sections[currentSectionInd
 
 async function handleSubmitPeer() {
   if (!userId || !cycleId) {
-    alert('Usuário ou ciclo não carregados ainda.');
-    return;
+    const err = new Error('Dados de Usuário e Ciclos ainda não foram carregados');
+      alert(err.message);
+      return Promise.reject(err);
   }
   
   const entries = Object.entries(peerAnswers);
   if (entries.length === 0) {
-    alert('Não há avaliações de pares preenchidas.');
-    return;
+    const err = new Error('Não há avaliações de pares para serem respondidas');
+      alert(err.message);
+      return Promise.reject(err);
   }
   
   try {
@@ -293,8 +297,9 @@ async function handleSubmitPeer() {
     // 2) converte em inteiro e valida intervalo [1,5]
     const generalScore = raw ? parseInt(raw, 10) : NaN;
     if (isNaN(generalScore) || generalScore < 1 || generalScore > 5) {
-      alert('Por favor, dê uma nota geral entre 1 e 5.');
-      return;
+      const err = new Error('Por favor, dê uma nota geral entre 1 e 5');
+      alert(err.message);
+      return Promise.reject(err);
     }
 
     // 3) extrai os outros campos
@@ -330,22 +335,26 @@ async function handleSubmitPeer() {
     if (storageKey) localStorage.removeItem(storageKey);
 
     alert('Todas as avaliações de pares foram enviadas com sucesso!');
-    navigate(`/avaliacao/${sections[currentSectionIndex + 1]?.key}`);
-  } catch (err: any) {
-    console.error(err);
-    alert('Falha ao enviar avaliações: ' + err.message);
+    return Promise.resolve(); 
+
+  }catch (err: any) {
+        console.error(err);
+        alert('Falha ao enviar: ' + err.message);
+        return Promise.reject(err); // <-- ESSENCIAL para notificar o componente
     }
   }
 
   const handleSubmitReferences = async (references: Reference[]) => {
     if (!userId || !cycleId) {
-      alert('Usuário ou ciclo não carregados ainda.');
-      return;
+      const err = new Error('Usuários não carregados ainda');
+      alert(err.message);
+      return Promise.reject(err);
     }
 
     if (references.length === 0) {
-      alert('Adicione pelo menos uma referência antes de salvar.');
-      return;
+      const err = new Error('Adicione pelo menos uma referência antes de salvar');
+      alert(err.message);
+      return Promise.reject(err);
     }
 
     try {
@@ -377,17 +386,19 @@ async function handleSubmitPeer() {
 
       setReferencesData([]);
       setIsReferenceSectionComplete(false);
-      navigate(`/avaliacao/${sections[currentSectionIndex + 1]?.key}`);
+      return Promise.resolve(); 
     } catch (err: any) {
-      console.error(err);
-      alert('Falha ao salvar referências: ' + err.message);
+        console.error(err);
+        alert('Falha ao enviar: ' + err.message);
+        return Promise.reject(err); 
     }
   };
 
   async function handleSubmitSelfEvaluation() {
     if (!userId) {
-      alert('Ainda não carregou seu usuário, aguarde um instante')
-      return
+      const err = new Error('Usuário não carregado');
+      alert(err.message);
+      return Promise.reject(err);
     }
     const payload = {
       userId,
@@ -413,16 +424,21 @@ async function handleSubmitPeer() {
       alert('Autoavaliação enviada!');
       const storageKey = getStorageKey(userId, cycleId, 'answers');
       if (storageKey) localStorage.removeItem(storageKey);
-      navigate(`/avaliacao/${sections[currentSectionIndex + 1]?.key}`);
+      return Promise.resolve(); 
     } catch (err: any) {
-      console.error(err);
-      alert('Falha ao enviar autoavaliação: ' + err.message);
+        console.error(err);
+        alert('Falha ao enviar: ' + err.message);
+        return Promise.reject(err); 
     }
   }
 
   async function handleSubmitLeader() {
     // garanta que já tenha userId, cycleId e o array leaderColleagues
-    if (!userId || !cycleId || leaderColleagues.length === 0) return;
+    if (!userId || !cycleId || leaderColleagues.length === 0){
+        const err = new Error('Dados essenciais (usuário, ciclo, líder) não estão disponíveis.');
+        alert(err.message);
+        return Promise.reject(err);
+    }
 
     const leaderId = leaderColleagues[0].id;
     const answersMap = leaderAnswers[leaderId] || {};
@@ -438,44 +454,53 @@ async function handleSubmitPeer() {
       [visionScore, inspirationScore, developmentScore, feedbackScore]
         .some(n => isNaN(n) || n < 1 || n > 5)
     ) {
-      alert('Por favor, dê uma nota inteira de 1 a 5 em todas as perguntas.');
-      return;
+      const err = new Error('Por favor, dê uma nota inteira de 1 a 5 em todas as perguntas.');
+      alert(err.message);
+      return Promise.reject(err);
     }
 
-    const payload = {
-      collaboratorId:  userId,
-      leaderId,
-      cycleId,
-      visionScore,
-      inspirationScore,
-      developmentScore,
-      feedbackScore,
-    };
+    try{
+        const payload = {
+            collaboratorId:  userId,
+            leaderId,
+            cycleId,
+            visionScore,
+            inspirationScore,
+            developmentScore,
+            feedbackScore,
+        };
 
-    const token = localStorage.getItem('token');
-    const res = await fetch(
-      'http://localhost:3000/api/evaluations/leader-feedback',
-      {
-        method:  'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+        const token = localStorage.getItem('token');
+        const res = await fetch(
+            'http://localhost:3000/api/evaluations/leader-feedback',
+            {
+            method:  'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token && { Authorization: `Bearer ${token}` }),
+            },
+            body: JSON.stringify(payload),
+            }
+        );
 
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(err);
+        if (!res.ok) {
+            const err = await res.text();
+            throw new Error(err);
+        }
+        const storageKey = getStorageKey(userId, cycleId, 'leaderAnswers');
+        if (storageKey) localStorage.removeItem(storageKey);
+
+        alert('Avaliação de líder enviada com sucesso!');
+        // navega para a próxima aba
+        return Promise.resolve();
     }
-    const storageKey = getStorageKey(userId, cycleId, 'leaderAnswers');
-    if (storageKey) localStorage.removeItem(storageKey);
-
-    alert('Avaliação de líder enviada com sucesso!');
-    // navega para a próxima aba
-    navigate(`/avaliacao/${sections[currentSectionIndex + 1]?.key}`);
+    catch (err: any) {
+        console.error(err);
+        alert('Falha ao enviar: ' + err.message);
+        return Promise.reject(err); 
+    }
   }
+  
   const handleAnswerChange = (
     questionId: string,
     field: 'scale' | 'justification',
@@ -614,6 +639,8 @@ async function handleSubmitPeer() {
         avaliandoId,
         setAvaliandoId, // Expondo o setter para o botão de "Voltar"
         colegaSelecionado,
+        projectName,
+        currentCycleId,
         
         // Funções de manipulação de eventos
         handleAnswerChange,
