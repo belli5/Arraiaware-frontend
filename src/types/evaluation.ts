@@ -113,6 +113,26 @@ export interface LeaderEvaluationRecord {
   };
 }
 
+export interface ApiTeamInfo {
+  projectId:   string;
+  projectName: string;
+  managerId:   string;
+  managerName: string;
+  cycleId:     string;
+  collaborators: Array<{
+    id:    string;
+    name:  string;
+    email: string;
+  }>;
+}
+
+export interface Reference {
+  id: string;
+  name: string;
+  email: string;
+  type: 'technical' | 'cultural' | 'both' | '';
+  areaOfKnowledge: string;
+}
 
 export interface Manager extends Colleague {
   cycleId: string;
