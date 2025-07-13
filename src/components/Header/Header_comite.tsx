@@ -1,6 +1,6 @@
 // src/components/Header/Header_Comite.tsx
 import { useEffect, useState } from "react";
-import { Bell, Settings, User, X } from "lucide-react";
+import { Bell, Settings, User, X, LogOut } from "lucide-react";
 import { useNavigate, NavLink } from "react-router-dom";
 import logo from "../../../imagens/logo_arraiware.png";
 
@@ -82,24 +82,24 @@ export default function Header() {
                   </NavLink>
                 </li>
                 {user?.userType?.toLowerCase() === "admin" && (
-                  <li>
-                    <NavLink
-                      to="/rh"
-                      className={({ isActive }) => linkClass(isActive)}
-                    >
-                      Painel RH
-                    </NavLink>
-                  </li>
-                )}
-                {user?.userType?.toLowerCase() === "admin" && (
-                  <li>
-                    <NavLink
-                      to="/gestor"
-                      className={({ isActive }) => linkClass(isActive)}
-                    >
-                      Painel Gestor
-                    </NavLink>
-                  </li>
+                  <>
+                    <li>
+                      <NavLink
+                        to="/rh"
+                        className={({ isActive }) => linkClass(isActive)}
+                      >
+                        Painel RH
+                      </NavLink>
+                    </li>
+                    <li>
+                      <NavLink
+                        to="/gestor"
+                        className={({ isActive }) => linkClass(isActive)}
+                      >
+                        Painel Gestor
+                      </NavLink>
+                    </li>
+                  </>
                 )}
                 <li>
                   <NavLink
@@ -119,11 +119,15 @@ export default function Header() {
               className="h-6 w-6 text-gray-600 hover:text-orange-500 transition cursor-pointer"
               onClick={() => alert("Você clicou nas notificações!")}
             />
-            <Settings
-              className="h-6 w-6 text-gray-600 hover:text-orange-500 transition cursor-pointer"
+
+            {/* engrenagem sem ação visual */}
+            <Settings className="h-6 w-6 text-gray-400 cursor-default" />
+
+            {/* container do usuário agora abre o menu */}
+            <div
+              className="flex items-center space-x-2 cursor-pointer"
               onClick={() => setShowConfig(true)}
-            />
-            <div className="flex items-center space-x-2">
+            >
               <div className="p-1 bg-orange-200 rounded-full">
                 <User className="h-5 w-5 text-gray-600" />
               </div>
@@ -185,11 +189,13 @@ export default function Header() {
           </div>
         )}
 
+        {/* Botão de logout como ícone com seta para a esquerda */}
         <button
           onClick={handleLogout}
-          className="mt-auto bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition"
+          aria-label="Logout"
+          className="mt-auto bg-orange-500 text-white p-3 rounded-full hover:bg-orange-600 transition flex items-center justify-center"
         >
-          Logout
+          <LogOut className="h-5 w-5 transform rotate-180" />
         </button>
       </aside>
     </>

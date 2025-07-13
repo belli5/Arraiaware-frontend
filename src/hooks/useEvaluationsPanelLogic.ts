@@ -12,9 +12,10 @@ const statusOptions: SelectOption[] = [
 
 interface UseEvaluationsPanelLogicProps {
     managerId?: string;
+    cycleId?: string; 
 }
 
-export const useEvaluationsPanelLogic = ({ managerId }: UseEvaluationsPanelLogicProps) => {
+export const useEvaluationsPanelLogic = ({ managerId, cycleId,}: UseEvaluationsPanelLogicProps) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<SelectOption | null>(statusOptions[0]);
     const [cycleFilter, setCycleFilter] = useState<SelectOption | null>({ id: 'all', name: 'Todos os Ciclos' });
@@ -89,6 +90,13 @@ export const useEvaluationsPanelLogic = ({ managerId }: UseEvaluationsPanelLogic
                     setEvaluations(result.data);
                     setTotalPages(result.pagination.totalPages);
                 }
+
+                if (cycleId) {
+                    params.append('cycleId', cycleId);
+                    } else if (cycleFilter && cycleFilter.id !== 'all') {
+                    params.append('cycleId', cycleFilter.id);
+                }
+
             } catch (err) {
                 setError((err as Error).message);
             } finally {
@@ -97,7 +105,7 @@ export const useEvaluationsPanelLogic = ({ managerId }: UseEvaluationsPanelLogic
         };
 
         fetchEvaluations();
-    }, [searchTerm, statusFilter, cycleFilter, currentPage, managerId]);
+    }, [searchTerm, statusFilter, cycleFilter, currentPage, managerId, cycleId]);
 
     const handleSearchChange = useCallback((term: string) => {
         setSearchTerm(term);

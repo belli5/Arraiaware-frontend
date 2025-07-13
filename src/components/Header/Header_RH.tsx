@@ -1,6 +1,6 @@
-// src/components/Header/Header_geral.tsx
+// src/components/Header/Header_RH.tsx
 import { useEffect, useState } from "react";
-import { Bell, Settings, User, X } from "lucide-react";
+import { Bell, Settings, User, X, LogOut } from "lucide-react";
 import { useNavigate, NavLink } from "react-router-dom";
 import logo from "../../../imagens/logo_arraiware.png";
 
@@ -29,6 +29,7 @@ export default function Header_RH() {
 
   return (
     <>
+      {/* Header fixo */}
       <header className="fixed inset-x-0 top-0 bg-gradient-to-br from-white to-orange-300 shadow-md z-50">
         <div className="w-full flex items-center justify-between px-6 py-4">
           {/* LOGO + NAVEGAÇÃO */}
@@ -77,7 +78,7 @@ export default function Header_RH() {
                     Metas
                   </NavLink>
                 </li>
-                {/* Exemplo Painel RH sempre visível */}
+                {/* Painel RH sempre visível */}
                 <li>
                   <NavLink
                     to="/rh"
@@ -86,7 +87,7 @@ export default function Header_RH() {
                     Painel RH
                   </NavLink>
                 </li>
-                {(user?.userType?.toLowerCase() === "admin") && (
+                {user?.userType?.toLowerCase() === "admin" && (
                   <>
                     <li>
                       <NavLink
@@ -116,11 +117,15 @@ export default function Header_RH() {
               className="h-6 w-6 text-gray-600 hover:text-orange-500 transition cursor-pointer"
               onClick={() => alert("Você clicou nas notificações!")}
             />
-            <Settings
-              className="h-6 w-6 text-gray-600 hover:text-orange-500 transition cursor-pointer"
+
+            {/* engrenagem sem ação */}
+            <Settings className="h-6 w-6 text-gray-400 cursor-default" />
+
+            {/* clique no avatar/nome abre o menu */}
+            <div
+              className="flex items-center space-x-2 cursor-pointer"
               onClick={() => setShowConfig(true)}
-            />
-            <div className="flex items-center space-x-2">
+            >
               <div className="p-1 bg-orange-200 rounded-full">
                 <User className="h-5 w-5 text-gray-600" />
               </div>
@@ -135,7 +140,7 @@ export default function Header_RH() {
       {/* Backdrop */}
       <div
         className={`
-          fixed inset-0  bg-opacity-30 z-40 transition-opacity duration-300
+          fixed inset-0 bg-opacity-30 z-40 transition-opacity duration-300
           ${showConfig ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
         `}
         onClick={() => setShowConfig(false)}
@@ -182,11 +187,13 @@ export default function Header_RH() {
           </div>
         )}
 
+        {/* Logout como ícone apontando para a esquerda */}
         <button
           onClick={handleLogout}
-          className="mt-auto bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition"
+          aria-label="Logout"
+          className="mt-auto bg-orange-500 text-white p-3 rounded-full hover:bg-orange-600 transition flex items-center justify-center"
         >
-          Logout
+          <LogOut className="h-5 w-5 transform rotate-180" />
         </button>
       </aside>
     </>

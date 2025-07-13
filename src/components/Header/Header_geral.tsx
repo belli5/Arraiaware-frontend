@@ -1,6 +1,6 @@
 // src/components/Header/Header_geral.tsx
 import { useEffect, useState } from "react";
-import { Bell, Settings, User, UserIcon, X } from "lucide-react";
+import { Bell, Settings, User, UserIcon, X, LogOut } from "lucide-react";
 import { useNavigate, NavLink } from "react-router-dom";
 import logo from "../../../imagens/logo_arraiware.png";
 
@@ -105,11 +105,15 @@ export default function Header() {
               className="h-6 w-6 text-gray-600 hover:text-orange-500 cursor-pointer"
               onClick={() => alert("Você clicou nas notificações!")}
             />
-            <Settings
-              className="h-6 w-6 text-gray-600 hover:text-orange-500 cursor-pointer"
+
+            {/* Mantive o Settings apenas ilustrativo; sem onClick */}
+            <Settings className="h-6 w-6 text-gray-400 cursor-default" />
+
+            {/* Aqui agora abrimos o sidebar: */}
+            <div
+              className="flex items-center space-x-2 cursor-pointer"
               onClick={() => setShowConfig(true)}
-            />
-            <div className="flex items-center space-x-2">
+            >
               <div className="p-1 bg-orange-200 rounded-full">
                 <User className="h-5 w-5 text-gray-600" />
               </div>
@@ -130,7 +134,7 @@ export default function Header() {
         onClick={() => setShowConfig(false)}
       />
 
-      {/* Sidebar de Configurações com animação */}
+      {/* Sidebar de Configurações */}
       <aside
         className={`
           fixed right-0 top-0 h-full w-64 bg-orange-50 shadow-lg z-50 p-6 flex flex-col
@@ -146,37 +150,36 @@ export default function Header() {
           />
         </div>
 
-        {/* Aqui exibimos o avatar e nome do usuário */}
+        {/* Avatar, nome e email */}
         {user && (
-        <div className="flex flex-col items-center mb-6">
-          {user.avatarUrl ? (
-            <img
-              src={user.avatarUrl}
-              alt="Avatar do usuário"
-              className="h-16 w-16 rounded-full object-cover mb-2"
-            />
-          ) : (
-            <div className="p-4 bg-orange-100 rounded-full mb-2">
-              <UserIcon className="h-8 w-8 text-gray-600" />
-            </div>
-          )}
+          <div className="flex flex-col items-center mb-6">
+            {user.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt="Avatar do usuário"
+                className="h-16 w-16 rounded-full object-cover mb-2"
+              />
+            ) : (
+              <div className="p-4 bg-orange-100 rounded-full mb-2">
+                <UserIcon className="h-8 w-8 text-gray-600" />
+              </div>
+            )}
 
-          <p className="text-gray-800 font-medium text-center">
-            {user.name}
-          </p>
-          {user.email && (
-            <p className="text-sm text-gray-500 text-center truncate">
-              {user.email}
-            </p>
-          )}
-        </div>
+            <p className="text-gray-800 font-medium text-center">{user.name}</p>
+            {user.email && (
+              <p className="text-sm text-gray-500 text-center truncate">
+                {user.email}
+              </p>
+            )}
+          </div>
         )}
-        
+
         <button
           onClick={handleLogout}
-          className="mt-auto bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition"
+          aria-label="Logout"
+          className="mt-auto bg-orange-500 text-white p-3 rounded-full hover:bg-orange-600 transition flex items-center justify-center"
         >
-          Logout
+          <LogOut className="h-5 w-5 transform rotate-180" />
         </button>
       </aside>
     </>
