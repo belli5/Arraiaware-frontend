@@ -94,3 +94,16 @@ export interface ApiResponse {
     totalItems: number;
   };
 }
+
+export interface BrutalFacts{
+  selfEvaluationScore: number;
+  peerEvaluationScore: number;
+  leaderEvaluationScore: number;
+  finalScore: number;
+  projectName: string;
+  projectId: string;
+  cycleName: string;
+  cycleId: string;
+  mentorName: string;
+  aiBriefing: string;
+}
