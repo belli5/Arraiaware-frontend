@@ -2,7 +2,7 @@ import Header from '../components/Header/Header_RH';
 import StatCard from '../components/StatCard/StatCard'; 
 import { Users,PlusCircle, CheckCircle2, Clock, AlertTriangle,ClipboardList, SlidersHorizontal, Import,Briefcase,Pencil} from 'lucide-react'; 
 import OverallProgress from '../components/OverallProgressRH/OverallProgress';
-import { useState,useRef,useEffect } from 'react';
+import { useState,useRef,useEffect,useCallback } from 'react';
 import type { Tab } from '../types/tabs';
 import Tabs from '../components/Tabs/Tabs';
 import EvaluationsPanel from '../components/EvaluationsPanel/EvaluationsPanel';
@@ -38,33 +38,33 @@ export default function RH() {
     ? Math.round((dashboardData.completedEvaluations / dashboardData.totalEvaluations) * 100)
     : 0;
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      setIsLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error("Autenticação necessária.");
-        setIsLoading(false);
-        return;
-      }
+   const fetchDashboardData = useCallback(async () => {
+    setIsLoading(true);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error("Autenticação necessária.");
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        const response = await fetch('http://localhost:3000/api/dashboard/overall-stats', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-        if (!response.ok) throw new Error('Falha ao buscar dados do dashboard.');
-        
-        const data: DashboardData = await response.json();
-        setDashboardData(data);
-      } catch (error) {
-        console.error("Erro no dashboard:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
+    try {
+      const response = await fetch('http://localhost:3000/api/dashboard/overall-stats', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Falha ao buscar dados do dashboard.');
+      
+      const data: DashboardData = await response.json();
+      setDashboardData(data);
+    } catch (error) {
+      console.error("Erro no dashboard:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []); 
+
+  useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [fetchDashboardData]); 
 
   const handleTabClick = (tabId: string) => {
       setActiveTab(tabId as RHTabId);
@@ -162,7 +162,7 @@ export default function RH() {
               {activeTab === 'status' && <EvaluationsPanel />}
               {activeTab === 'criterios' && <CriteriaPanel />}
               {activeTab === 'cargos' && <CreateRolePanel />}
-              {activeTab === 'historico' && <HistoryPanel />}
+              {activeTab === 'historico' && <HistoryPanel onImportSuccess={fetchDashboardData} />}
               {activeTab === 'Editar' && <EditUserPanel />}
               {activeTab === 'Cadastrar' && <SignUpPanel />}
               {activeTab === 'ciclos' && <CreateCyclePanel />}
