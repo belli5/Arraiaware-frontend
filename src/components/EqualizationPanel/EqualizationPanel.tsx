@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { EvaluationConsolidatedView } from '../../types/committee';
-import { Loader2, AlertTriangle, Save } from 'lucide-react';
+import { Loader2, AlertTriangle, Save,FileText } from 'lucide-react';
 
 interface EqualizationPanelProps {
   data: EvaluationConsolidatedView | null;
@@ -10,16 +10,18 @@ interface EqualizationPanelProps {
   initialObservation: string;
   onSave: (score: string, observation: string) => Promise<void>;
   onClose: () => void;
+  collaboratorId: string;
 }
 
 export default function EqualizationPanel({ 
-    data, isLoading, error: initialError, initialScore, initialObservation, onSave, onClose 
+    data, isLoading, error: initialError, initialScore, initialObservation, onSave, onClose,collaboratorId 
 }: EqualizationPanelProps) {
     
   const [score, setScore] = useState(initialScore);
   const [observation, setObservation] = useState(initialObservation);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false); // New state for PDF export loading
 
   useEffect(() => {
     setScore(initialScore);
@@ -42,6 +44,66 @@ export default function EqualizationPanel({
       }
     } finally {
       setIsSaving(false); 
+    }
+  };
+
+  const handleExportPdf = async () => {
+    if (!collaboratorId || !data?.cycleId) {
+      setSaveError("Dados insuficientes para exportar o PDF.");
+      return;
+    }
+
+    setIsExporting(true);
+    setSaveError(null);
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setSaveError("Autenticação necessária para exportar o PDF.");
+      setIsExporting(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/equalization/consolidated-view/${collaboratorId}/export?cycleId=${data.cycleId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/pdf', 
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Falha ao exportar PDF: ${errorText || response.statusText}`);
+      }
+
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `avaliacao_consolidada_${data.collaboratorName}.pdf`;
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (match && match[1]) {
+          filename = match[1];
+        }
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+    } catch (err) {
+      if (err instanceof Error) {
+        setSaveError(err.message);
+      } else {
+        setSaveError("Ocorreu um erro inesperado ao exportar o PDF.");
+      }
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -167,10 +229,18 @@ export default function EqualizationPanel({
       )}
       
       {/* 4. Botão para salvar as alterações */}
-      <div className="mt-6 pt-4 border-t flex justify-end">
+      <div className="mt-6 pt-4 border-t flex justify-end gap-3">
+        <button
+          type="button" onClick={handleExportPdf} disabled={isExporting}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
+        >
+          {isExporting ? <Loader2 className="animate-spin h-5 w-5" /> : <FileText className="h-5 w-5" />}
+          {isExporting ? 'Exportando...' : 'Exportar PDF'}
+        </button>
+
         <button
           type="button" onClick={handleSaveChanges} disabled={isSaving}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-300"
+          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:bg-orange-300"
         >
           {isSaving ? <Loader2 className="animate-spin h-5 w-5" /> : <Save className="h-5 w-5" />}
           {isSaving ? 'Salvando...' : 'Salvar e Finalizar'}

@@ -173,6 +173,7 @@ export default function CommitteeEvaluationsPanel() {
                 initialScore={selectedEvaluation?.finalScore?.toString() || ''}
                 initialObservation={selectedEvaluation?.observation || ''}
                 onSave={handleSaveFromPanel}
+                collaboratorId={selectedEvaluation?.collaboratorId || ''} 
               />
             </Modal>
         </div>
