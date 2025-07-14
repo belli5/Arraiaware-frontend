@@ -217,50 +217,42 @@ const handleCreateTrackSubmit = async (data: { name: string; description: string
   }
 };
   const handleDeleteCriterion = async (trackId: string, criterionId: string) => {
-  const isConfirmed = window.confirm(
-    "Você tem certeza que deseja desassociar este critério desta trilha? A ação não pode ser desfeita."
-  );
+    setIsSubmitting(true);
+    setNotification(null);
+    const token = localStorage.getItem('token');
 
-  if (!isConfirmed) {
-    return; 
-  }
-
-  setIsSubmitting(true);
-  setNotification(null);
-  const token = localStorage.getItem('token');
-
-  if (!token) {
-    setNotification({ status: 'error', title: 'Erro de Autenticação', message: 'Por favor, faça login novamente.' });
-    setIsSubmitting(false);
-    return;
-  }
-
-  const endpoint = `http://localhost:3000/api/criteria/${criterionId}/disassociate-role`;
-  const requestBody = { roleId: trackId };
-
-  try {
-    const response = await fetch(endpoint, {
-      method: 'DELETE', 
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Erro ${response.status} ao desassociar o critério.`);
+    if (!token) {
+      setNotification({ status: 'error', title: 'Erro de Autenticação', message: 'Por favor, faça login novamente.' });
+      setIsSubmitting(false);
+      return;
     }
 
-    setNotification({ status: 'success', title: 'Sucesso!', message: 'Critério desassociado da trilha.' });
-    fetchTracks();
+    const endpoint = `http://localhost:3000/api/criteria/${criterionId}/disassociate-role`;
+    const requestBody = { roleId: trackId };
 
-  } catch (error) {
-    setNotification({ status: 'error', title: 'Falha na Operação', message: (error as Error).message });
-  } finally {
-    setIsSubmitting(false);
-  }
+    try {
+      const response = await fetch(endpoint, {
+        method: 'DELETE', 
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Erro ${response.status} ao desassociar o critério.`);
+      }
+
+      setNotification({ status: 'success', title: 'Sucesso!', message: 'Critério desassociado da trilha.' });
+      fetchTracks();
+
+    } catch (error) {
+      setNotification({ status: 'error', title: 'Falha na Operação', message: (error as Error).message });
+    } finally {
+      setIsSubmitting(false);
+    }
 };
 
   const handleOpenCreateModal = () => {

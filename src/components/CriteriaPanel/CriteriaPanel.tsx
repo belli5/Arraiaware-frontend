@@ -7,6 +7,8 @@ import CreateTrackForm from '../CreateTrackForm/CreateTrackForm';
 import AssociateCriterionForm from '../AssociateCriterionForm/AssociateCriterionForm';
 import TrackCriteriaSkeleton from '../TrackCriteriaSkeleton/TrackCriteriaSkeleton';
 import { useCriteriaPanelLogic } from '../../hooks/useCriteriaPanelLogic';
+import { useConfirmationMessage } from '../../hooks/useConfirmationMessageLogic';
+import { ConfirmationMessage } from '../ConfirmationMessage/ConfirmationMessage';
 
 export default function CriteriaPanel() {
   const {
@@ -35,6 +37,21 @@ export default function CriteriaPanel() {
     handleOpenAssociateModal,
     handleCloseAssociateModal,
   } = useCriteriaPanelLogic();
+
+  const {
+    isOpen: isConfirmOpen,
+    message: confirmMessage,
+    showConfirmation,
+    handleConfirm,
+    handleCancel
+  } = useConfirmationMessage();
+
+  const requestDisassociationConfirmation = (trackId: string, criterionId: string) => {
+    showConfirmation({
+      message: 'Você tem certeza que deseja desassociar este critério da trilha? Esta ação não pode ser desfeita.',
+      onConfirm: () => handleDeleteCriterion(trackId, criterionId),
+    });
+  };
 
   return (
     <>
@@ -97,7 +114,7 @@ export default function CriteriaPanel() {
                     <TrackCriteria
                       key={track.id}
                       track={track}
-                      onDeleteCriterion={handleDeleteCriterion}
+                      onDeleteCriterion={requestDisassociationConfirmation}
                       onEditCriterion={(criterion) => handleOpenEditModal(track.id, criterion)}
                       onOpenAssociateModal={handleOpenAssociateModal}
                     />
@@ -159,6 +176,12 @@ export default function CriteriaPanel() {
           onClose={() => setNotification(null)}
         />
       )}
+      <ConfirmationMessage
+        isOpen={isConfirmOpen}
+        message={confirmMessage}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </>
   );
 }

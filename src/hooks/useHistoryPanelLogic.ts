@@ -65,9 +65,7 @@ export const useHistoryPanelLogic = () => {
   }, [fetchHistory]); 
 
   const handleDeleteHistory = useCallback(async (id: string) => {
-    if (!window.confirm("Você tem certeza que deseja excluir este registro?")) {
-      return;
-    }
+   
     const token = localStorage.getItem('token');
 
     try {
