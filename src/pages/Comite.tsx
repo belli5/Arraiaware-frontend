@@ -6,14 +6,18 @@ import CommitteeInsightsPanel from '../components/CommitteeInsightsPanel/Committ
 import type { CommitteeTab} from '../types/committee';
 import Tabs from '../components/Tabs/Tabs';
 import type { Tab } from '../types/tabs';
-import { DownloadCloud, BarChart2, CheckCircle2 } from 'lucide-react';
+import { DownloadCloud, BarChart2, CheckCircle2,Users,UserPlus } from 'lucide-react';
 import CommitteeExportPanel from '../components/CommitteeExportPanel/CommitteeExportPanel'
 import CommitteeEvaluationsPanel from '../components/CommitteeEvaluationsPanel/CommitteeEvaluationsPanel';
+import MentorBrutalFactsPanel from '../components/MentorBrutalFactsPanel/MentorBrutalFactsPanel';
+import AddMenteePanel from '../components/AddMenteePanel/AddMenteePanel';
 
 const committeeTabOptions: Tab[] = [
   { id: 'exportacao', label: 'Exportar Dados', icon: <DownloadCloud size={18} /> },
   { id: 'equalizacao', label: 'Equalização por Colaborador', icon: <CheckCircle2 size={18} /> },
-  { id: 'insights', label: 'Insights Comparativos', icon: <BarChart2 size={18} /> }
+  { id: 'insights', label: 'Insights Comparativos', icon: <BarChart2 size={18} /> },
+  { id: 'mentor', label: 'Mentorados', icon: <Users size={18} /> },
+  { id: 'mentorar', label: 'Adicionar mentorado', icon: <UserPlus size={18} /> },
 ];
 
 
@@ -61,6 +65,8 @@ export default function Comite() {
             {activeTab === 'exportacao' && <CommitteeExportPanel />}
             {activeTab === 'equalizacao' && <CommitteeEvaluationsPanel/>}
             {activeTab === 'insights' && <CommitteeInsightsPanel />}
+            {activeTab === 'mentor' && <MentorBrutalFactsPanel />}
+            {activeTab === 'mentorar' && <AddMenteePanel />}
           </div>
         </div>
       </main>
