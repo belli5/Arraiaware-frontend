@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useRef, useState, useLayoutEffect } from 'react';
 import { Listbox, Transition, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 
@@ -22,10 +22,21 @@ export default function CustomSelect({
   placeholder = "Selecione uma opção",
   disabled = false,
 }: CustomSelectProps) {
+
+
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [width, setWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    if (buttonRef.current) {
+      setWidth(buttonRef.current.offsetWidth);
+    }
+  }, []);
+
   return (
     <Listbox value={selected} onChange={onChange} disabled={disabled}>
-      <div className="relative mt-1">
-        <ListboxButton className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed">
+      <div className="mt-1">
+        <ListboxButton  ref={buttonRef} className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-100 disabled:cursor-not-allowed">
           <span className={`block truncate ${selected ? 'text-gray-900' : 'text-gray-400'}`}>
             {selected ? selected.name : placeholder}
           </span>
@@ -40,7 +51,10 @@ export default function CustomSelect({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <ListboxOptions className="absolute z-50 w-full mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+          <ListboxOptions 
+            className="absolute z-50 mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"
+            style={{ width: `${width}px` }}
+          >
             {options.length === 0 ? (
               <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
                 Nenhuma opção disponível.
