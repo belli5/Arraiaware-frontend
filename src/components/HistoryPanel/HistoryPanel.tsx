@@ -6,6 +6,9 @@ import HistoryPanelSkeleton from '../HistoryPanelSkeleton/HistoryPanelSkeleton';
 import { useHistoryPanelLogic } from '../../hooks/useHistoryPanelLogic'; 
 import NotificationMessages from '../NotificationMessages/NotificationMessages';
 import { useRef } from 'react';
+import { ConfirmationMessage } from '../ConfirmationMessage/ConfirmationMessage';
+import { useConfirmationMessage } from '../../hooks/useConfirmationMessageLogic';
+
 
 export default function HistoryPanel() {
   const {
@@ -21,6 +24,14 @@ export default function HistoryPanel() {
     closeNotification,
   } = useHistoryPanelLogic();
 
+  const { 
+    isOpen: isConfirmOpen, 
+    message: confirmMessage, 
+    showConfirmation, 
+    handleConfirm, 
+    handleCancel 
+  } = useConfirmationMessage();
+
   const criteriaInputRef = useRef<HTMLInputElement>(null);
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -31,6 +42,14 @@ export default function HistoryPanel() {
         event.target.value = '';
     }
   };
+
+  const requestDeleteConfirmation = (id: string) => {
+    showConfirmation({
+      message: 'Você tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.',
+      onConfirm: () => handleDeleteHistory(id),
+    });
+  };
+
   return (
     <div className="bg-white p-6 md:p-8 rounded-b-lg rounded-r-lg shadow-md space-y-12">
       {notification && (
@@ -79,13 +98,21 @@ export default function HistoryPanel() {
           ) : (
             <ImportHistoryTable
               history={history}
-              onDelete={handleDeleteHistory}
+              onDelete={requestDeleteConfirmation}
               onDownload={handleDownload}
               downloadingId={downloadingId}
             />
           )}
         </div>
       </div>
+
+      <ConfirmationMessage
+        isOpen={isConfirmOpen}
+        message={confirmMessage}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
+
     </div>
   );
 }
