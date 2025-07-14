@@ -126,12 +126,9 @@ export interface ApiTeamInfo {
   }>;
 }
 
-export interface Reference {
-  id: string;
-  name: string;
-  email: string;
-  type: 'technical' | 'cultural' | 'both' | '';
-  areaOfKnowledge: string;
+export interface ReferenceIndication {
+  indicatedUserId: string;
+  justification: string;
 }
 
 export interface Manager extends Colleague {

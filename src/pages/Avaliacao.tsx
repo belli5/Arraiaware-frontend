@@ -11,7 +11,7 @@ import PeerQuestionList from '../components/PeerQuestionList/PeerQuestionList';
 import LeaderQuestionList from '../components/LeadQuestionList/LeadQuestionList';
 import ReferenceForm from '../components/ReferenceForm/ReferenceForm';
 import { useAvaliacaoLogic } from '../hooks/useEvaluationPageLogic';
-import type { Reference } from '../types/evaluation';
+import type { ReferenceIndication } from '../types/evaluation';
 
 export default function Avaliacao() {
   const navigate = useNavigate();
@@ -41,6 +41,7 @@ export default function Avaliacao() {
     handleSubmitLeader,
     getSectionProgress,
     overallProgressPercentage,
+    allUsers,
   } = useAvaliacaoLogic();
   
   const handlePreviousSection = () => {
@@ -89,7 +90,7 @@ export default function Avaliacao() {
     }
   };
 
-  const onReferencesSave = async (references: Reference[]) => {
+  const onReferencesSave = async (references: ReferenceIndication[]) => {
     try {
       await handleSubmitReferences(references);
       alert('Referências salvas com sucesso!');
@@ -249,6 +250,7 @@ export default function Avaliacao() {
                   )
                 ) : currentSectionData.key === 'reference' ? (
                   <ReferenceForm
+                    availableUsers={allUsers}
                     initialReferences={referencesData}
                     onSaveReferences={onReferencesSave}
                   />

@@ -4,7 +4,7 @@ import {useParams } from 'react-router-dom';
 import { FaStar, FaUsers, FaChartLine, FaCrown } from 'react-icons/fa';
 import { UserCheck } from 'lucide-react';
 
-import type { Section, Colleague, Answer, Question, Reference, Cycle, ApiTeamInfo } from '../types/evaluation';
+import type { Section, Colleague, Answer, Question, ReferenceIndication, Cycle, ApiTeamInfo } from '../types/evaluation';
 
 const peerQuestions: Question[] = [
   { id: 'pq1', type: 'scale', text: 'Você ficaria motivado em trabalhar novamente com este colaborador?' },
@@ -63,8 +63,11 @@ export const useAvaliacaoLogic = () => {
   const [cycleId, setCycleId] = useState<string>('');
   const [userId, setUserId] = useState<string>('');
   
-  const [referencesData, setReferencesData] = useState<Reference[]>([]);
+  const [referencesData, setReferencesData] = useState<ReferenceIndication[]>([]);
   const [isReferenceSectionComplete, setIsReferenceSectionComplete] = useState<boolean>(false);
+
+  const [allUsers, setAllUsers] = useState<Colleague[]>([]);
+
   
   
   useEffect(() => {
@@ -174,7 +177,7 @@ export const useAvaliacaoLogic = () => {
   loadState('answers', setAnswers, {});
   loadState('peerAnswers', setPeerAnswers, {});
   loadState('leaderAnswers', setLeaderAnswers, {});
-  loadState('referencesData', setReferencesData, [] as Reference[]);
+  loadState('referencesData', setReferencesData, [] as ReferenceIndication[]);
   loadState<boolean>('isReferenceSectionComplete', setIsReferenceSectionComplete, false);
   
 }, [userId, cycleId]);
@@ -270,6 +273,35 @@ useEffect(() => {
   fetchCriteria(); 
 }, []);
 
+//get All users
+useEffect(() => {
+  async function fetchAllUsers() {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch('http://localhost:3000/api/users', {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (!res.ok) throw new Error('Falha ao buscar usuários');
+      const users: ApiTeamInfo['collaborators'] = await res.json();
+      // mapear para o tipo Colleague (ou crie outro tipo para “usuário genérico”)
+      setAllUsers(users.map(u => ({
+        id: u.id,
+        nome: u.name,
+        cargo: 'Colaborador',
+        area: '—',
+        tempo: '—',
+        projectName: '—',
+      })));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  fetchAllUsers();
+}, []);
+
 const currentSectionIndex = sections.findIndex(s => s.key === section);
 const currentSectionData = currentSectionIndex >= 0 ? sections[currentSectionIndex] : null;
 
@@ -344,53 +376,50 @@ async function handleSubmitPeer() {
     }
   }
 
-  const handleSubmitReferences = async (references: Reference[]) => {
-    if (!userId || !cycleId) {
-      const err = new Error('Usuários não carregados ainda');
-      alert(err.message);
-      return Promise.reject(err);
-    }
-
+  const handleSubmitReferences = async (references: ReferenceIndication[]) => {
+    if (!userId || !cycleId) throw new Error('Dados não carregados');
     if (references.length === 0) {
-      const err = new Error('Adicione pelo menos uma referência antes de salvar');
-      alert(err.message);
-      return Promise.reject(err);
+      alert('Adicione pelo menos uma referência');
+      return Promise.reject();
     }
 
+    const token = localStorage.getItem('token');
     try {
-      const token = localStorage.getItem('token');
-      const payload = {
-        userId,
-        cycleId,
-        references,
-      };
-      const res = await fetch('http://localhost:3000/api/references', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Erro ao salvar referências: ${await res.text()}`);
+      for (const ref of references) {
+        const payload = {
+          indicatorUserId: userId,
+          indicatedUserId: ref.indicatedUserId,
+          cycleId,
+          justification: ref.justification,
+        };
+        const res = await fetch('http://localhost:3000/api/evaluations/reference', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          throw new Error(`Erro ao salvar referência de ${ref.indicatedUserId}: ${await res.text()}`);
+        }
       }
 
-      alert('Referências salvas com sucesso!');
-      const dataKey = getStorageKey(userId, cycleId, 'referencesData');
-      if (dataKey) localStorage.removeItem(dataKey);
+      setReferencesData([]);
+      setIsReferenceSectionComplete(true);
+
+      // limpa localStorage
+      const refKey = getStorageKey(userId, cycleId, 'referencesData');
+      if (refKey) localStorage.removeItem(refKey);
 
       const completeKey = getStorageKey(userId, cycleId, 'isReferenceSectionComplete');
       if (completeKey) localStorage.removeItem(completeKey);
 
-      setReferencesData([]);
-      setIsReferenceSectionComplete(false);
-      return Promise.resolve(); 
+      return Promise.resolve();
     } catch (err: any) {
-        console.error(err);
-        alert('Falha ao enviar: ' + err.message);
-        return Promise.reject(err); 
+      console.error(err);
+      alert('Falha ao enviar: ' + err.message);
+      return Promise.reject(err);
     }
   };
 
@@ -627,6 +656,7 @@ async function handleSubmitPeer() {
         currentSectionData,
         teamMates,
         leaderColleagues,
+        allUsers,
         
         // Estado das respostas
         answers,
