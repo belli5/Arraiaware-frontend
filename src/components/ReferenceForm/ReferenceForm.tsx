@@ -1,100 +1,80 @@
 import { useState } from 'react'
-import { PlusCircle } from 'lucide-react'
-import type { Reference } from '../../types/evaluation';
+import type { ReferenceIndication, Colleague } from '../../types/evaluation';
 
 interface ReferenceFormProps {
-  initialReferences: Reference[];
-  onSaveReferences: (references: Reference[]) => Promise<void> | void;
+  availableUsers: Colleague[];
+  initialReferences: ReferenceIndication[];
+  onSaveReferences: (references: ReferenceIndication[]) => Promise<void> | void;
 }
 
-export default function ReferenceForm({ initialReferences, onSaveReferences }: ReferenceFormProps) {
-  const [references, setReferences] = useState(initialReferences);
+export default function ReferenceForm({ availableUsers, initialReferences, onSaveReferences }: ReferenceFormProps) {
+  const [references, setReferences] = useState<ReferenceIndication[]>(initialReferences);
 
-  const handleChange = (index: number, field: keyof Reference, value: string) => {
-    const updated = [...references];
-    updated[index] = { ...updated[index], [field]: value };
-    setReferences(updated);
+  const toggleUser = (userId: string, checked: boolean) => {
+    if (checked) {
+      setReferences(prev => [...prev, { indicatedUserId: userId, justification: '' }]);
+    } else {
+      setReferences(prev => prev.filter(r => r.indicatedUserId !== userId));
+    }
   };
 
-  const addNewReference = () => {
-    setReferences(prev => [
-      ...prev,
-      { id: String(Date.now()), name: '', email: '', type: '', areaOfKnowledge: '' }
-    ]);
-  };
-
-  const removeReference = (index: number) => {
-    setReferences(updated => updated.filter((_, i) => i !== index));
+  const changeJustification = (userId: string, text: string) => {
+    setReferences(prev =>
+      prev.map(r =>
+        r.indicatedUserId === userId ? { ...r, justification: text } : r
+      )
+    );
   };
 
   const handleSubmit = () => {
     onSaveReferences(references);
   };
 
-
-   return (
-    <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
-      <h2 className="text-xl font-semibold text-gray-800">Referências Técnicas e Culturais</h2>
-
-      {references.map((ref, index) => (
-        <div key={ref.id} className="border border-gray-200 rounded-lg p-4 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-xl p-3"
-                value={ref.name}
-                onChange={(e) => handleChange(index, 'name', e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-              <input
-                type="email"
-                className="w-full border border-gray-300 rounded-xl p-3"
-                value={ref.email}
-                onChange={(e) => handleChange(index, 'email', e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-              <select
-                className="w-full border border-gray-300 rounded-xl p-3"
-                value={ref.type}
-                onChange={(e) => handleChange(index, 'type', e.target.value)}
-              >
-                <option value="">Selecione...</option>
-                <option value="technical">Técnica</option>
-                <option value="cultural">Cultural</option>
-                <option value="both">Ambas</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Área de Conhecimento</label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-xl p-3"
-                value={ref.areaOfKnowledge}
-                onChange={(e) => handleChange(index, 'areaOfKnowledge', e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="flex justify-end">
-            <button className="text-red-600 text-sm" onClick={() => removeReference(index)}>
-              Remover referência
-            </button>
-          </div>
+  return (
+    <div className="bg-white rounded-xl shadow-md p-6">
+      <h2 className="text-xl font-semibold mb-4">Indicação de Referências</h2>
+      <div className="flex gap-6">
+        {/* Lista rolável de usuários */}
+        <div className="flex-1 border border-gray-200 rounded-md max-h-80 overflow-y-auto divide-y divide-gray-100 p-4">
+          {availableUsers.map(user => {
+            const isChecked = references.some(r => r.indicatedUserId === user.id);
+            return (
+              <label key={user.id} className="flex items-center py-2">
+                <input
+                  type="checkbox"
+                  checked={isChecked}
+                  onChange={e => toggleUser(user.id, e.target.checked)}
+                  className="h-4 w-4 text-orange-600 mr-3"
+                />
+                <span className="font-medium">{user.nome}</span>
+              </label>
+            );
+          })}
         </div>
-      ))}
-
-      <div className="flex justify-between items-center">
-        <button onClick={addNewReference} className="flex items-center gap-2 text-orange-600">
-          <PlusCircle size={18} />
-          Adicionar nova referência
-        </button>
-        <button onClick={handleSubmit} className="bg-orange-600 text-white px-4 py-2 rounded-lg">
-          Salvar Referências
+        {/* Caixa de justificativas */}
+        <div className="flex-1 space-y-4 max-h-80 overflow-y-auto p-4">
+          {references.map(ref => {
+            const user = availableUsers.find(u => u.id === ref.indicatedUserId);
+            return (
+              <div key={ref.indicatedUserId}>
+                <p className="font-medium mb-2">{user?.nome}</p>
+                <textarea
+                  className="w-full border border-gray-300 rounded-md p-2"
+                  placeholder="Justifique sua indicação"
+                  value={ref.justification}
+                  onChange={e => changeJustification(ref.indicatedUserId, e.target.value)}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="mt-6 flex justify-end">
+        <button
+          onClick={handleSubmit}
+          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+        >
+          Salvar Indicações
         </button>
       </div>
     </div>

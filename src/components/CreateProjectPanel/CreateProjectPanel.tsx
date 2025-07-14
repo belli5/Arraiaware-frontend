@@ -109,13 +109,16 @@ export default function CreateProjectPanel({
 
   return (
     <div className="w-full px-4 lg:px-1 mx-auto mt-8">
-      {/* HEADER LARANJA */}
-      <div className="bg-white rounded-t-lg px-6 py-4 text-black">
-        <h2 className="text-2xl font-bold">Criar Novo Projeto</h2>
-      </div>
-
-      {/* CORPO BRANCO */}
-      <div className="bg-white p-8 rounded-b-lg shadow-md">
+      {/* TODO O HEADER AGORA DENTRO DO CARD BRANCO */}
+      <div className="bg-white p-8 rounded-lg shadow-md">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-800">
+            Criar Novo Projeto
+          </h2>
+          <p className="text-base text-gray-500 mt-1">
+            Crie um novo projeto para avaliação dos seus liderados 
+          </p>
+        </div>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         {success && (
           <p className="text-green-600 mb-4">Projeto criado com sucesso!</p>
@@ -128,11 +131,20 @@ export default function CreateProjectPanel({
               Nome do Projeto
             </label>
             <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              required
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Digite o nome do seu projeto..."
+                className="
+                w-full
+                border border-gray-300       /* borda clara */
+                text-gray-700                /* texto um pouco mais escuro */
+                placeholder-gray-400         /* placeholder ainda mais suave */
+                px-3 py-2
+                rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-orange-500
+                "
+                required
             />
           </div>
 
