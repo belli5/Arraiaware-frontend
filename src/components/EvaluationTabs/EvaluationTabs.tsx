@@ -10,6 +10,7 @@ interface EvaluationTabsProps {
   leaderAnswers: Record<string, Record<string, Answer>>;
   peerColleagues: Colleague[];
   leaderColleagues: Colleague[];
+  isReferenceSectionComplete: boolean;
 }
 
 export default function EvaluationTabs({ 
@@ -20,6 +21,7 @@ export default function EvaluationTabs({
   leaderAnswers,
   peerColleagues,
   leaderColleagues,
+  isReferenceSectionComplete
  }: EvaluationTabsProps) {
   const navigate = useNavigate();
 
@@ -46,7 +48,12 @@ export default function EvaluationTabs({
             return answeredQuestions === s.questions.length;
           }).length;
 
-        } else if (s.key === 'leader') {
+        }
+        else if (s.key === 'reference') {
+          totalCount = 1; 
+          doneCount = isReferenceSectionComplete ? 1 : 0;
+        } 
+        else if (s.key === 'leader') {
           totalCount = leaderColleagues.length;
           // Conta quantos líderes foram totalmente avaliados
           doneCount = leaderColleagues.filter(leader => {

@@ -8,6 +8,7 @@ interface ProgressSidebarProps {
   leaderAnswers: Record<string, Record<string, Answer>>;
   colleagues: Colleague[];
   leaders: Colleague[];
+  isReferenceSectionComplete: boolean; 
 }
 
 export default function ProgressSidebar({
@@ -16,8 +17,14 @@ export default function ProgressSidebar({
   peerAnswers,
   leaderAnswers,
   colleagues,
-  leaders
+  leaders,
+  isReferenceSectionComplete
 }: ProgressSidebarProps) {
+
+  const isQuestionComplete = (answer: Answer | undefined): boolean => {
+    if (!answer) return false;
+    return !!answer.scale && !!answer.justification && answer.justification.trim() !== '';
+  };  
 
   const isPersonEvaluationComplete = (
     personId: string,
@@ -40,10 +47,7 @@ export default function ProgressSidebar({
     }
 
     // líder e self continuam exigindo escala + justificativa
-    return questions.every(q => {
-      const ans = personAnswers[q.id];
-      return !!ans?.scale && !!ans?.justification?.trim();
-    });
+    return questions.every(q => isQuestionComplete(personAnswers[q.id]));
   };
 
   return (
@@ -70,22 +74,26 @@ export default function ProgressSidebar({
           {sections.map(s => {
             let done = 0;
             let total = 0;
+            
             if (s.key === 'peer') {
               total = colleagues.length;
               done = colleagues.filter(p =>
                 isPersonEvaluationComplete(p.id, s.questions, peerAnswers, s.key)
               ).length;
-            } else if (s.key === 'leader') {
+            } 
+            else if (s.key === 'reference') {
+              total = 1;
+              done = isReferenceSectionComplete ? 1 : 0;
+            }
+            else if (s.key === 'leader') {
               total = leaders.length;
               done = leaders.filter(l =>
                 isPersonEvaluationComplete(l.id, s.questions, leaderAnswers, s.key)
               ).length;
             } else {
+              // Lógica de autoavaliação corrigida
               total = s.questions.length;
-              done = s.questions.filter(q => {
-                const ans = answers[q.id];
-                return ans && ans.scale && ans.justification?.trim() !== '';
-              }).length;
+              done = s.questions.filter(q => isQuestionComplete(answers[q.id])).length;
             }
             
             const progress = total > 0 ? (done / total) * 100 : 0;
