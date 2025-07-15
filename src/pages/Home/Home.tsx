@@ -237,7 +237,6 @@ const Badge = ({
   </div>
 );
 
-
 // Novo componente para as ações rápidas
 const Action = ({
   icon,
