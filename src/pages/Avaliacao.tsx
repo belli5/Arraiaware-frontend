@@ -42,6 +42,7 @@ export default function Avaliacao() {
     getSectionProgress,
     overallProgressPercentage,
     allUsers,
+    cycleName, 
   } = useAvaliacaoLogic();
   
   const handlePreviousSection = () => {
@@ -116,12 +117,12 @@ export default function Avaliacao() {
           <header className="mb-8">
             <h1 className="text-4xl font-bold text-gray-800 mb-2">
               {currentSectionData.key === 'peer'
-                ? 'Avaliação de Pares Q4 2024'
+                ? `Avaliação de Pares ${cycleName}`
                 : currentSectionData.key === 'leader'
-                ? 'Avaliação de Líderes Q4 2024'
+                ? `Avaliação de Líderes ${cycleName}`
                 : currentSectionData.key === 'reference'
                 ? 'Indicação de Referências'
-                : `Autoavaliação Q4 2024`}
+                : `Autoavaliação ${cycleName}`}
             </h1>
             <div className="relative bg-gray-200 h-2 rounded-full">
               <div
