@@ -1,4 +1,6 @@
-export type CommitteeTab = 'equalizacao' | 'insights' | 'exportacao';
+import type { Role } from "./RH";
+
+export type CommitteeTab = 'equalizacao' | 'insights' | 'exportacao' | 'mentor' | 'mentorar';
 
 export interface CommitteeCollaboratorsEvaluations{
   id: string;
@@ -73,4 +75,35 @@ export interface CommitteeSummary{
   overallAverage: number;
   totalCollaborators: number;
   pendingEvaluations: number;
+}
+
+export interface MenteeUser {
+  id: string;
+  name: string;
+  email: string;
+  userType: string;
+  isActive: boolean;
+  roles: Role[];
+}
+
+export interface ApiResponse {
+  data: MenteeUser[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+  };
+}
+
+export interface BrutalFacts{
+  selfEvaluationScore: number;
+  peerEvaluationScore: number;
+  leaderEvaluationScore: number;
+  finalScore: number;
+  projectName: string;
+  projectId: string;
+  cycleName: string;
+  cycleId: string;
+  mentorName: string;
+  aiBriefing: string;
 }

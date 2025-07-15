@@ -9,8 +9,11 @@ import { useRef } from 'react';
 import { ConfirmationMessage } from '../ConfirmationMessage/ConfirmationMessage';
 import { useConfirmationMessage } from '../../hooks/useConfirmationMessageLogic';
 
+interface HistoryPanelProps {
+  onImportSuccess: () => void;
+}
 
-export default function HistoryPanel() {
+export default function HistoryPanel({ onImportSuccess }: HistoryPanelProps) {
   const {
     history,
     isLoading,
@@ -43,6 +46,11 @@ export default function HistoryPanel() {
     }
   };
 
+  const handleFileUploadSuccess = () => {
+    refreshHistory(); 
+    onImportSuccess(); 
+  };
+
   const requestDeleteConfirmation = (id: string) => {
     showConfirmation({
       message: 'Você tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.',
@@ -64,7 +72,7 @@ export default function HistoryPanel() {
         <h2 className="text-xl font-bold text-gray-800">Importação de Históricos - Arraiware</h2>
         <p className="text-base text-gray-500 mt-1">Faça upload de arquivos Excel ou CSV com históricos de avaliações para utilização imediata</p>
         
-        <FileUploadZone onUploadSuccess={refreshHistory} />
+        <FileUploadZone onUploadSuccess={handleFileUploadSuccess} />
       </div>
       <GuidelinesBox />
 
