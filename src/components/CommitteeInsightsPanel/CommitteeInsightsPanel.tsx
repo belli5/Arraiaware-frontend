@@ -15,7 +15,7 @@ import { useCommitteeInsightsLogic } from '../../hooks/useCommiteeInsightsLogic'
 import CommitteeInsightsSkeleton from '../CommitteeInsightsSkeleton/CommitteeInsightsSkeleton';
 
 const KpiCard: React.FC<{ title: string; value: string | number }> = ({ title, value }) => (
-  <div className="bg-gray-50 p-6 rounded-xl text-center shadow-sm">
+  <div className="bg-white p-6 rounded-xl text-center shadow-sm">
     <p className="text-sm font-medium text-gray-500">{title}</p>
     <p className="text-4xl font-bold text-orange-500 mt-1">{value}</p>
   </div>
