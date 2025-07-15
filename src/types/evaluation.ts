@@ -131,6 +131,14 @@ export interface ReferenceIndication {
   justification: string;
 }
 
+export interface CriterionDto {
+  id: string;
+  pillar: string;
+  criterionName: string;
+  description: string;   // se precisar mostrar depois
+}
+
+
 export interface Manager extends Colleague {
   cycleId: string;
 }

@@ -4,7 +4,7 @@ import {useParams } from 'react-router-dom';
 import { FaStar, FaUsers, FaChartLine, FaCrown } from 'react-icons/fa';
 import { UserCheck } from 'lucide-react';
 
-import type { Section, Colleague, Answer, Question, ReferenceIndication, Cycle, ApiTeamInfo } from '../types/evaluation';
+import type { Section, Colleague, Answer, Question, ReferenceIndication, Cycle, ApiTeamInfo, CriterionDto } from '../types/evaluation';
 
 const peerQuestions: Question[] = [
   { id: 'pq1', type: 'scale', text: 'Você ficaria motivado em trabalhar novamente com este colaborador?' },
@@ -61,12 +61,15 @@ export const useAvaliacaoLogic = () => {
   const [error, setError] = useState<string | null>(null);
   
   const [cycleId, setCycleId] = useState<string>('');
+  const [cycleName, setCycleName] = useState<string>('');
   const [userId, setUserId] = useState<string>('');
   
   const [referencesData, setReferencesData] = useState<ReferenceIndication[]>([]);
   const [isReferenceSectionComplete, setIsReferenceSectionComplete] = useState<boolean>(false);
 
   const [allUsers, setAllUsers] = useState<Colleague[]>([]);
+
+  const [trilhaId, setTrilhaId] = useState<string>('');
 
   
   
@@ -91,6 +94,29 @@ export const useAvaliacaoLogic = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`http://localhost:3000/api/users/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('Não foi possível buscar usuário');
+        const user = await res.json() as { roles: { id: string; type: string }[] };
+        const trilhaRole = user.roles.find(r => r.type === 'TRILHA');
+        if (!trilhaRole) {
+          throw new Error('Usuário não possui trilha atribuída');
+        }
+        setTrilhaId(trilhaRole.id);
+      } catch (e: any) {
+        console.error(e);
+        setError(e.message);
+        setLoading(false);
+      }
+    })();
+  }, [userId]);
+
 
   useEffect(() => {
     async function fetchCycles() {
@@ -103,11 +129,12 @@ export const useAvaliacaoLogic = () => {
         if (!res.ok) throw new Error(await res.text());
         const cycles: Cycle[] = await res.json();
         const open = cycles.find(c => c.status.toLowerCase() === 'aberto');
-        if(open)
-            setCurrentCycleId(open.id);
-
-      } catch (err) {
-        console.error('Erro ao buscar ciclos:', err);
+        if (open) {
+          setCurrentCycleId(open.id);
+          setCycleName(open.name);    // ★ assumir que o objeto Cycle tem campo `name` como “Q4 2024”
+        }
+      } catch (e) {
+        console.error('Erro ao buscar ciclos:', e);
       }
     }
     fetchCycles();
@@ -199,108 +226,89 @@ useEffect(() => {
 }, [answers, peerAnswers, leaderAnswers, referencesData, isReferenceSectionComplete, userId, cycleId]);
    
   useEffect(() => {
-    async function fetchCriteria() {
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      setError('Você não está autenticado.');
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      const response = await fetch('http://localhost:3000/api/criteria', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Erro ao buscar critérios.');
-      }
-  
-      const data = await response.json();
-      console.log('Resposta da API:', data);
-  
-      if (!Array.isArray(data)) {
-        throw new Error('A resposta da API não é um array');
-      }
-      
-      const groupedByPillar: Record<string, Question[]> = {};
-      
-      data.forEach((c: any) => {
-        const pillarKey = c.pillar?.toLowerCase().trim() || 'comportamento';
-        
-        if (!groupedByPillar[pillarKey]) {
-          groupedByPillar[pillarKey] = [];
-        }
-        
-        groupedByPillar[pillarKey].push({
-          id: c.id,
-          type: 'scale',
-          text: c.criterionName,
-        });
-      });
-      
-      const mapped: Section[] = Object.entries(groupedByPillar).map(([pillarKey, questions]) => {
-        const predefined = predefinedSections[pillarKey] || {
-          key: pillarKey.replace(/\s/g, '-'),
-          title: pillarKey.charAt(0).toUpperCase() + pillarKey.slice(1),
-          icon: <FaUsers />,
-        };
-        
-        return {
-          ...predefined,
-          questions,
-        };
-      });
-      
-      // Adiciona seções de pares, líderes e indicação de referências no fim
-      mapped.push(
-        { key: 'peer', title: 'Avaliação de Pares', icon: <FaUsers />, questions: peerQuestions },
-        { key: 'leader', title: 'Avaliação de Líderes', icon: <FaCrown />, questions: leaderQuestions },
-        { key: 'reference', title: 'Indicação de Referências', icon: <UserCheck />, questions: [] }
-      );
-      
-      setSections(mapped);
-    } catch (err) {
-      console.error(err);
-      setError('Erro ao carregar os critérios.');
-    } finally {
-      setLoading(false);
-    }
-  }
-  fetchCriteria(); 
-}, []);
+    if (!trilhaId) return;
+    setLoading(true);
 
-//get All users
-useEffect(() => {
-  async function fetchAllUsers() {
-    const token = localStorage.getItem('token');
-    try {
-      const res = await fetch('http://localhost:3000/api/users', {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-      if (!res.ok) throw new Error('Falha ao buscar usuários');
-      const users: ApiTeamInfo['collaborators'] = await res.json();
-      // mapear para o tipo Colleague (ou crie outro tipo para “usuário genérico”)
-      setAllUsers(users.map(u => ({
-        id: u.id,
-        nome: u.name,
-        cargo: 'Colaborador',
-        area: '—',
-        tempo: '—',
-        projectName: '—',
-      })));
-    } catch (err) {
-      console.error(err);
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(
+          `http://localhost:3000/api/roles/trilhas/${trilhaId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (!res.ok) throw new Error('Não conseguiu buscar critérios da trilha');
+
+        // ← aqui tipa corretamente:
+        const criteria = await res.json() as CriterionDto[];
+
+        const grouped = criteria.reduce<Record<string, Question[]>>((acc, c) => {
+          const key = (c.pillar || 'comportamento').toLowerCase().trim();
+          if (!acc[key]) acc[key] = [];
+          acc[key].push({
+            id:   c.id,
+            type: 'scale',
+            text: c.criterionName,   // ← aqui, agora vai funcionar
+          });
+          return acc;
+        }, {});
+
+        // mapeia para Section[], usando ícones e títulos pré-definidos:
+        const mapped: Section[] = Object.entries(grouped).map(
+          ([pillarKey, questions]) => {
+            const pre = predefinedSections[pillarKey] ?? {
+              key: pillarKey.replace(/\s/g, '-'),
+              title: pillarKey[0].toUpperCase() + pillarKey.slice(1),
+              icon: <FaUsers />,
+            };
+            return { ...pre, questions };
+          }
+        );
+
+        // adiciona abas de peer, leader e reference:
+        mapped.push(
+          { key: 'peer', title: 'Avaliação de Pares', icon: <FaUsers />, questions: peerQuestions },
+          { key: 'leader', title: 'Avaliação de Líderes', icon: <FaCrown />, questions: leaderQuestions },
+          { key: 'reference', title: 'Indicação de Referências', icon: <UserCheck />, questions: [] },
+        );
+
+        setSections(mapped);
+      } catch (e: any) {
+        console.error(e);
+        setError(e.message || 'Erro ao carregar critérios da trilha');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [trilhaId]);
+
+  //get All users
+  useEffect(() => {
+    async function fetchAllUsers() {
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch('http://localhost:3000/api/users', {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        if (!res.ok) throw new Error('Falha ao buscar usuários');
+        const users: ApiTeamInfo['collaborators'] = await res.json();
+        // mapear para o tipo Colleague (ou crie outro tipo para “usuário genérico”)
+        setAllUsers(users.map(u => ({
+          id: u.id,
+          nome: u.name,
+          cargo: 'Colaborador',
+          area: '—',
+          tempo: '—',
+          projectName: '—',
+        })));
+      } catch (err) {
+        console.error(err);
+      }
     }
-  }
-  fetchAllUsers();
-}, []);
+    fetchAllUsers();
+  }, []);
 
 const currentSectionIndex = sections.findIndex(s => s.key === section);
 const currentSectionData = currentSectionIndex >= 0 ? sections[currentSectionIndex] : null;
@@ -671,6 +679,7 @@ async function handleSubmitPeer() {
         colegaSelecionado,
         projectName,
         currentCycleId,
+        cycleName,
         
         // Funções de manipulação de eventos
         handleAnswerChange,
