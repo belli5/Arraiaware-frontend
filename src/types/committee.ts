@@ -107,3 +107,23 @@ export interface BrutalFacts{
   mentorName: string;
   aiBriefing: string;
 }
+
+export interface CommitteInsightsInfo{
+  cycles: cycleCommitteInsightsInfo[];
+  cyclesAmount: number;
+  score: number;
+  projectsAmount: number;
+  activeProjects: number;
+  activeCollaborators:number;
+}
+
+export interface cycleCommitteInsightsInfo{
+  cycleName: string;
+  cycleId: string;
+  pendingEvaluations: number;
+  readyEvaluations: number;
+  overallAverage: number;
+  projectsInCycle:number;
+  totalCollaborators:number;
+}
+

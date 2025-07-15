@@ -6,6 +6,7 @@ import { useEffect,useRef,useState} from 'react'
 import NotificationMessages from '../NotificationMessages/NotificationMessages';
 import { ConfirmationMessage } from '../ConfirmationMessage/ConfirmationMessage';
 import type { MenteeUser } from '../../types/committee';
+import AddMenteePanelSkeleton from '../AddMenteePanelSkeleton/AddMenteePanelSkeleton';
 
 export default function AddMenteePanel() {
   const {
@@ -50,6 +51,10 @@ export default function AddMenteePanel() {
     setUserToConfirm(null); 
   };
 
+  if (isLoading) {
+    return <AddMenteePanelSkeleton />;
+  }
+  
   return (
     <div className="bg-white p-6 md:p-8 rounded-b-lg rounded-r-lg shadow-md">
       {/* SEÇÃO DE NOTIFICAÇÃO */}
