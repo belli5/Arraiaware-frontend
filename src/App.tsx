@@ -1,13 +1,13 @@
 import './App.css';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Avaliacao from './pages/Avaliacao'
-import RH from './pages/RH';
-import Comite from './pages/Comite';
-import Gestor from './pages/Gestor'
-import Dashboard from './pages/Dashboard'
-import EvaluationDetailPage from './components/EvaluationDetailPage/EvaluationDetailPage';
+import Home from './pages/Home/Home';
+import Login from './pages/Login/Login';
+import Avaliacao from './pages/Evaluation/Evaluation'
+import RH from './pages//RH/RH';
+import Comite from './pages/Committee/Committee';
+import Gestor from './pages/Manager/Manager'
+import Dashboard from './pages/Dashboard/Dashboard'
+import EvaluationDetailPage from './pages/Evaluation/components/EvaluationDetailPage';
 
 function App() {
   return (
