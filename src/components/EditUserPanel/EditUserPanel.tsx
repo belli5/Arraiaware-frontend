@@ -23,15 +23,15 @@ export default function EditUserPanel() {
     const panelRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-            if (currentPage && panelRef.current) {
-                const elementTop = panelRef.current.getBoundingClientRect().top + window.scrollY;
-                const offset = 150;
-                window.scrollTo({
-                    top: elementTop - offset,
-                    behavior: 'smooth'
-                });
-            }
-        }, [currentPage]);
+        if (currentPage && panelRef.current) {
+            const elementTop = panelRef.current.getBoundingClientRect().top + window.scrollY;
+            const offset = 150;
+            window.scrollTo({
+                top: elementTop - offset,
+                behavior: 'smooth'
+            });
+        }
+    }, [currentPage]);
 
     return (
         <div className="bg-white p-6 md:p-8 rounded-b-lg rounded-r-lg shadow-md">
@@ -44,12 +44,14 @@ export default function EditUserPanel() {
                 />
             )}
             
-            <h2 ref={panelRef} className="text-xl font-bold text-gray-800">
-                Gerenciamento de Usuários
-            </h2>
-            <p className="text-base text-gray-500 mt-1">
-                Gerencie todos os usuários do sistema
-            </p>
+            <div ref = {panelRef}>
+                <h2 className="text-xl font-bold text-gray-800">
+                    Gerenciamento de Usuários
+                </h2>
+                <p className="text-base text-gray-500 mt-1">
+                    Gerencie todos os usuários do sistema
+                </p>
+            </div>
             
             {/* --- SEÇÃO DE FILTROS --- */}
             <div className="grid grid-cols-4 gap-4 mb-3 mt-2">
