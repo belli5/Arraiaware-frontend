@@ -96,6 +96,8 @@ export interface ApiResponse {
 }
 
 export interface BrutalFacts{
+  menteeName: number;
+  menteeId: number;
   selfEvaluationScore: number;
   peerEvaluationScore: number;
   leaderEvaluationScore: number;
@@ -104,7 +106,6 @@ export interface BrutalFacts{
   projectId: string;
   cycleName: string;
   cycleId: string;
-  mentorName: string;
   aiBriefing: string;
 }
 
