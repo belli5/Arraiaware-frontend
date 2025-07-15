@@ -1,10 +1,13 @@
+// src/hooks/useEvaluationPageLogic.tsx
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect,type JSX } from 'react';
-import {useParams } from 'react-router-dom';
+import { useState, useEffect, type JSX } from 'react';
+import { useParams } from 'react-router-dom';
 import { FaStar, FaUsers, FaChartLine, FaCrown } from 'react-icons/fa';
 import { UserCheck } from 'lucide-react';
 
 import type { Section, Colleague, Answer, Question, ReferenceIndication, Cycle, ApiTeamInfo, CriterionDto } from '../types/evaluation';
+import type { ManagedTeamDto } from '../types/manager'; // Certifique-se que este tipo existe em 'types/manager.ts'
 
 const peerQuestions: Question[] = [
   { id: 'pq1', type: 'scale', text: 'Você ficaria motivado em trabalhar novamente com este colaborador?' },
@@ -59,11 +62,12 @@ export const useAvaliacaoLogic = () => {
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [cycleId, setCycleId] = useState<string>('');
   const [cycleName, setCycleName] = useState<string>('');
   const [userId, setUserId] = useState<string>('');
-  
+  const [userType, setUserType] = useState<string | null>(null);
+
   const [referencesData, setReferencesData] = useState<ReferenceIndication[]>([]);
   const [isReferenceSectionComplete, setIsReferenceSectionComplete] = useState<boolean>(false);
 
@@ -71,12 +75,12 @@ export const useAvaliacaoLogic = () => {
 
   const [trilhaId, setTrilhaId] = useState<string>('');
 
-  
-  
+
+
   useEffect(() => {
     const raw = localStorage.getItem('token');
     if (!raw) return;
-    
+
     try {
       const base64Payload = raw.split('.')[1]
       .replace(/-/g, '+')
@@ -87,8 +91,9 @@ export const useAvaliacaoLogic = () => {
           .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
           .join('')
         );
-        const { sub } = JSON.parse(json);
-        setUserId(sub);           
+        const { sub, userType: type } = JSON.parse(json);
+        setUserId(sub);
+        setUserType(type);
       } catch (e) {
         console.error('Não conseguiu decodificar token:', e);
     }
@@ -131,7 +136,7 @@ export const useAvaliacaoLogic = () => {
         const open = cycles.find(c => c.status.toLowerCase() === 'aberto');
         if (open) {
           setCurrentCycleId(open.id);
-          setCycleName(open.name);    // ★ assumir que o objeto Cycle tem campo `name` como “Q4 2024”
+          setCycleName(open.name);
         }
       } catch (e) {
         console.error('Erro ao buscar ciclos:', e);
@@ -140,56 +145,94 @@ export const useAvaliacaoLogic = () => {
     fetchCycles();
   }, []);
 
-  // 1) Busca colegas de equipe dinâmicos assim que souber o userId
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !userType) return;
     setLoadingTeam(true);
-    
     const token = localStorage.getItem('token');
-    fetch(`http://localhost:3000/api/teams/user/${userId}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      }
-    })
-    .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
-    .then((info: ApiTeamInfo) => {
-      // guarda tudo de uma vez
-      setProjectId(info.projectId);
-      setProjectName(info.projectName);
-      setCycleId(info.cycleId);
-      
-      // transforma collaborators em Colleague[]
-      setTeamMates(info.collaborators.map(c => ({
-          id:           c.id,
-          nome:         c.name,
-          cargo:        'Colaborador',
-          area:         info.projectName,        
-          tempo:        '—',
-          projectName: info.projectName,        
-        })));
-        
-        // mapeia o gestor
-        setLeaderColleagues([{
-          id:           info.managerId,
-          nome:         info.managerName,
-          cargo:        'Gestor',
-          area:         info.projectName,        
-          tempo:        '—',
-          projectName: info.projectName,        
-        }]);
-      })
-      .catch(err => setTeamError(String(err)))
-      .finally(() => setLoadingTeam(false));
-    }, [userId]);
-    
+
+    const fetchTeamData = async () => {
+        try {
+            if (userType === 'GESTOR') {
+                const res = await fetch(`http://localhost:3000/api/teams/manager/${userId}`, {
+                    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {})},
+                });
+                if (!res.ok) throw new Error(await res.text() || 'Falha ao buscar times gerenciados.');
+
+                const managedTeams: ManagedTeamDto[] = await res.json();
+                if (managedTeams.length > 0) {
+                    const allTeamMates = managedTeams.flatMap(team =>
+                        (team.collaborators ?? []).map(c => ({
+                            id: c.id,
+                            nome: c.name,
+                            cargo: 'Colaborador',
+                            area: team.projectName,
+                            tempo: '—',
+                            projectName: team.projectName,
+                        }))
+                    );
+                    const uniqueTeamMates = Array.from(new Map(allTeamMates.map(item => [item.id, item])).values());
+                    setTeamMates(uniqueTeamMates);
+
+                    const firstTeam = managedTeams[0];
+                    setProjectId(firstTeam.projectId);
+                    setProjectName(firstTeam.projectName);
+                    setCycleId(firstTeam.cycleId);
+                }
+                setLeaderColleagues([]);
+            } else {
+                const res = await fetch(`http://localhost:3000/api/teams/user/${userId}/projects`, {
+                    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {})},
+                });
+                if (!res.ok) throw new Error(await res.text() || 'Falha ao buscar dados do time.');
+
+                const infos = await res.json() as ApiTeamInfo[];
+            console.log('🔸 /api/teams/user[] response:', infos);
+
+            if (!infos.length) {
+              throw new Error('Nenhum projeto retornado para este usuário');
+            }
+
+            const info = infos[0];    // <— pega o objeto dentro do array
+
+            console.log('🔸 usando o primeiro elemento:', info);
+
+            const collaborators = info.collaborators ?? [];
+            setTeamMates(
+              collaborators.map(c => ({
+                id: c.id,
+                nome: c.name,
+                cargo: 'Colaborador',
+                area: info.projectName,
+                tempo: '—',
+                projectName: info.projectName,
+              }))
+            );
+            setLeaderColleagues([{
+              id: info.managerId,
+              nome: info.managerName,
+              cargo: 'Gestor',
+              area: info.projectName,
+              tempo: '—',
+              projectName: info.projectName,
+            }]);
+            }
+        } catch (err: any) {
+            setTeamError(err.message || 'Ocorreu um erro desconhecido.');
+        } finally {
+            setLoadingTeam(false);
+        }
+    };
+
+    fetchTeamData();
+  }, [userId, userType]);
+
     useEffect(() => {
       if (!userId || !cycleId) return;
-      
+
       const loadState = <T,>(key: string, setter: React.Dispatch<React.SetStateAction<T>>, defaultValue: T) => {
         const storageKey = getStorageKey(userId, cycleId, key);
         if (!storageKey) return;
-        
+
         const savedStateJSON = localStorage.getItem(storageKey);
         if (savedStateJSON) {
           try {
@@ -200,13 +243,13 @@ export const useAvaliacaoLogic = () => {
           }
         }
   };
-  
+
   loadState('answers', setAnswers, {});
   loadState('peerAnswers', setPeerAnswers, {});
   loadState('leaderAnswers', setLeaderAnswers, {});
   loadState('referencesData', setReferencesData, [] as ReferenceIndication[]);
   loadState<boolean>('isReferenceSectionComplete', setIsReferenceSectionComplete, false);
-  
+
 }, [userId, cycleId]);
 
 useEffect(() => {
@@ -222,11 +265,12 @@ useEffect(() => {
   saveData('leaderAnswers', leaderAnswers);
   saveData('referencesData', referencesData);
   saveData('isReferenceSectionComplete', isReferenceSectionComplete);
-  
+
 }, [answers, peerAnswers, leaderAnswers, referencesData, isReferenceSectionComplete, userId, cycleId]);
-   
+
   useEffect(() => {
-    if (!trilhaId) return;
+    // só roda quando tivermos trilha e tipo de usuário definidos
+    if (!trilhaId || userType === null) return;
     setLoading(true);
 
     (async () => {
@@ -238,40 +282,46 @@ useEffect(() => {
         );
         if (!res.ok) throw new Error('Não conseguiu buscar critérios da trilha');
 
-        // ← aqui tipa corretamente:
-        const criteria = await res.json() as CriterionDto[];
+        const criteria = (await res.json()) as CriterionDto[];
 
+        // agrupa critérios por pilar
         const grouped = criteria.reduce<Record<string, Question[]>>((acc, c) => {
           const key = (c.pillar || 'comportamento').toLowerCase().trim();
           if (!acc[key]) acc[key] = [];
           acc[key].push({
             id:   c.id,
             type: 'scale',
-            text: c.criterionName,   // ← aqui, agora vai funcionar
+            text: c.criterionName,
           });
           return acc;
         }, {});
 
-        // mapeia para Section[], usando ícones e títulos pré-definidos:
+        // mapeia para Sections já com ícones e títulos
         const mapped: Section[] = Object.entries(grouped).map(
           ([pillarKey, questions]) => {
             const pre = predefinedSections[pillarKey] ?? {
-              key: pillarKey.replace(/\s/g, '-'),
+              key:   pillarKey.replace(/\s/g, '-'),
               title: pillarKey[0].toUpperCase() + pillarKey.slice(1),
-              icon: <FaUsers />,
+              icon:  <FaUsers />,
             };
             return { ...pre, questions };
           }
         );
 
-        // adiciona abas de peer, leader e reference:
+        // adiciona seções fixas de pares, líder e referência
         mapped.push(
-          { key: 'peer', title: 'Avaliação de Pares', icon: <FaUsers />, questions: peerQuestions },
-          { key: 'leader', title: 'Avaliação de Líderes', icon: <FaCrown />, questions: leaderQuestions },
+          { key: 'peer',      title: 'Avaliação de Pares',   icon: <FaUsers />,   questions: peerQuestions },
+          { key: 'leader',    title: 'Avaliação de Líderes',  icon: <FaCrown />,   questions: leaderQuestions },
           { key: 'reference', title: 'Indicação de Referências', icon: <UserCheck />, questions: [] },
         );
 
-        setSections(mapped);
+        // se for colaborador, filtra fora o pilar de gestão e liderança
+        const filtered = userType === 'GESTOR'
+          ? mapped
+          : mapped.filter(s => s.key !== 'gestão-e-liderança');
+
+        setSections(filtered);
+
       } catch (e: any) {
         console.error(e);
         setError(e.message || 'Erro ao carregar critérios da trilha');
@@ -279,9 +329,8 @@ useEffect(() => {
         setLoading(false);
       }
     })();
-  }, [trilhaId]);
+  }, [trilhaId, userType]);
 
-  //get All users
   useEffect(() => {
     async function fetchAllUsers() {
       const token = localStorage.getItem('token');
@@ -294,7 +343,6 @@ useEffect(() => {
         });
         if (!res.ok) throw new Error('Falha ao buscar usuários');
         const users: ApiTeamInfo['collaborators'] = await res.json();
-        // mapear para o tipo Colleague (ou crie outro tipo para “usuário genérico”)
         setAllUsers(users.map(u => ({
           id: u.id,
           nome: u.name,
@@ -319,22 +367,20 @@ async function handleSubmitPeer() {
       alert(err.message);
       return Promise.reject(err);
   }
-  
+
   const entries = Object.entries(peerAnswers);
   if (entries.length === 0) {
     const err = new Error('Não há avaliações de pares para serem respondidas');
       alert(err.message);
       return Promise.reject(err);
   }
-  
+
   try {
     const token = localStorage.getItem('token');
     for (const [evaluatedUserId, answersMap] of entries) {
-    // 1) extrai a resposta bruta
     const motivatedToWorkAgain = answersMap['pq1']?.scale
     const raw = answersMap['pq2']?.scale;
 
-    // 2) converte em inteiro e valida intervalo [1,5]
     const generalScore = raw ? parseInt(raw, 10) : NaN;
     if (isNaN(generalScore) || generalScore < 1 || generalScore > 5) {
       const err = new Error('Por favor, dê uma nota geral entre 1 e 5');
@@ -342,17 +388,15 @@ async function handleSubmitPeer() {
       return Promise.reject(err);
     }
 
-    // 3) extrai os outros campos
     const pointsToImprove = answersMap['pq3']?.justification?.trim();
     const pointsToExplore = answersMap['pq4']?.justification?.trim();
 
-    // 4) agora monta o payload sabendo que generalScore está válido
     const payload = {
     evaluatorUserId: userId,
     evaluatedUserId,
     cycleId,
     projectId,
-    motivatedToWorkAgain,   
+    motivatedToWorkAgain,
     generalScore,
     pointsToImprove,
     pointsToExplore,
@@ -375,12 +419,12 @@ async function handleSubmitPeer() {
     if (storageKey) localStorage.removeItem(storageKey);
 
     alert('Todas as avaliações de pares foram enviadas com sucesso!');
-    return Promise.resolve(); 
+    return Promise.resolve();
 
   }catch (err: any) {
         console.error(err);
         alert('Falha ao enviar: ' + err.message);
-        return Promise.reject(err); // <-- ESSENCIAL para notificar o componente
+        return Promise.reject(err);
     }
   }
 
@@ -416,7 +460,6 @@ async function handleSubmitPeer() {
       setReferencesData([]);
       setIsReferenceSectionComplete(true);
 
-      // limpa localStorage
       const refKey = getStorageKey(userId, cycleId, 'referencesData');
       if (refKey) localStorage.removeItem(refKey);
 
@@ -461,16 +504,15 @@ async function handleSubmitPeer() {
       alert('Autoavaliação enviada!');
       const storageKey = getStorageKey(userId, cycleId, 'answers');
       if (storageKey) localStorage.removeItem(storageKey);
-      return Promise.resolve(); 
+      return Promise.resolve();
     } catch (err: any) {
         console.error(err);
         alert('Falha ao enviar: ' + err.message);
-        return Promise.reject(err); 
+        return Promise.reject(err);
     }
   }
 
   async function handleSubmitLeader() {
-    // garanta que já tenha userId, cycleId e o array leaderColleagues
     if (!userId || !cycleId || leaderColleagues.length === 0){
         const err = new Error('Dados essenciais (usuário, ciclo, líder) não estão disponíveis.');
         alert(err.message);
@@ -480,13 +522,11 @@ async function handleSubmitPeer() {
     const leaderId = leaderColleagues[0].id;
     const answersMap = leaderAnswers[leaderId] || {};
 
-    // converte cada escala (lq1…lq4) para o nome do DTO
     const visionScore      = parseInt(answersMap['lq1']?.scale  || '0', 10);
     const inspirationScore = parseInt(answersMap['lq2']?.scale  || '0', 10);
     const developmentScore = parseInt(answersMap['lq3']?.scale  || '0', 10);
     const feedbackScore    = parseInt(answersMap['lq4']?.scale  || '0', 10);
 
-    // valida 1–5
     if (
       [visionScore, inspirationScore, developmentScore, feedbackScore]
         .some(n => isNaN(n) || n < 1 || n > 5)
@@ -528,16 +568,15 @@ async function handleSubmitPeer() {
         if (storageKey) localStorage.removeItem(storageKey);
 
         alert('Avaliação de líder enviada com sucesso!');
-        // navega para a próxima aba
         return Promise.resolve();
     }
     catch (err: any) {
         console.error(err);
         alert('Falha ao enviar: ' + err.message);
-        return Promise.reject(err); 
+        return Promise.reject(err);
     }
   }
-  
+
   const handleAnswerChange = (
     questionId: string,
     field: 'scale' | 'justification',
@@ -580,17 +619,14 @@ async function handleSubmitPeer() {
     setAvaliandoId(id);
     window.scrollTo(0, 0);
   };
-  
+
   const isAnswerComplete = (answer?: Answer, questionId?: string) => {
   if (currentSectionData && currentSectionData.key === 'peer') {
-    // pq1 e pq2: basta ter scale
     if (questionId === 'pq1' || questionId === 'pq2') {
       return !!answer?.scale;
     }
-    // pq3 e pq4: precisa só de justificativa
     return !!answer?.justification?.trim();
   }
-  // auto e líderes continuam pedindo scale + justificativa
   return !!answer?.scale && !!answer?.justification?.trim();
   };
 
@@ -600,7 +636,6 @@ async function handleSubmitPeer() {
     ) => (id: string) => {
     const personAnswers = answersMap[id] || {};
     const doneCount = questions.filter(q =>
-    // passa também o q.id
     isAnswerComplete(personAnswers[q.id], q.id)
     ).length;
     if (questions.length === 0) return 0;
@@ -612,34 +647,29 @@ async function handleSubmitPeer() {
 
   sections.forEach(s => {
     if (s.key === 'reference') {
-      // Para a seção de referência, contamos como 1 item total
       totalOverallSectionsToCount += 1;
-      // E ela está completa se o estado isReferenceSectionComplete for true
       if (isReferenceSectionComplete) {
         completedOverallSectionsToCount += 1;
       }
     } else if (s.key === 'peer' || s.key === 'leader') {
-      // Para pares e líderes, cada pessoa é um item a ser avaliado
       const colleaguesList = s.key === 'peer' ? teamMates : leaderColleagues;
       const answersSource = s.key === 'peer' ? peerAnswers : leaderAnswers;
-      totalOverallSectionsToCount += colleaguesList.length; // Cada pessoa avaliada é um item
+      totalOverallSectionsToCount += colleaguesList.length;
       completedOverallSectionsToCount += colleaguesList.filter(person => {
         const personAnswers = answersSource[person.id] || {};
         const answeredCount = s.questions.filter(q => isAnswerComplete(personAnswers[q.id], q.id)).length;
-        // Considera completo se todas as perguntas para aquela pessoa foram respondidas
         return answeredCount === s.questions.length && s.questions.length > 0;
       }).length;
-    } else { // Autoavaliação (Comportamento, Execução, Gestão e Liderança)
-      totalOverallSectionsToCount += 1; // Cada seção de autoavaliação é 1 item
+    } else {
+      totalOverallSectionsToCount += 1;
       const answeredCount = s.questions.filter(q => isAnswerComplete(answers[q.id])).length;
-      // Considera completo se todas as perguntas da seção foram respondidas
       if (answeredCount === s.questions.length && s.questions.length > 0) {
         completedOverallSectionsToCount += 1;
       }
     }
   });
 
-  const currentColleagues = 
+  const currentColleagues =
         currentSectionData?.key === 'peer'
         ? teamMates
         : currentSectionData?.key === 'leader'
@@ -647,8 +677,8 @@ async function handleSubmitPeer() {
         : [];
     const colegaSelecionado = currentColleagues.find(c => c.id === avaliandoId);
 
-  const overallProgressPercentage = totalOverallSectionsToCount > 0 
-    ? (completedOverallSectionsToCount / totalOverallSectionsToCount) * 100 
+  const overallProgressPercentage = totalOverallSectionsToCount > 0
+    ? (completedOverallSectionsToCount / totalOverallSectionsToCount) * 100
     : 0;
 
     return {
@@ -657,7 +687,7 @@ async function handleSubmitPeer() {
         error,
         loadingTeam,
         teamError,
-        
+
         // Dados principais
         sections,
         currentSectionIndex,
@@ -665,22 +695,22 @@ async function handleSubmitPeer() {
         teamMates,
         leaderColleagues,
         allUsers,
-        
+
         // Estado das respostas
         answers,
         peerAnswers,
         leaderAnswers,
         referencesData,
         isReferenceSectionComplete,
-        
+
         // Estado da UI
         avaliandoId,
-        setAvaliandoId, // Expondo o setter para o botão de "Voltar"
+        setAvaliandoId,
         colegaSelecionado,
         projectName,
         currentCycleId,
         cycleName,
-        
+
         // Funções de manipulação de eventos
         handleAnswerChange,
         handleEvaluate,
@@ -688,7 +718,7 @@ async function handleSubmitPeer() {
         handleSubmitReferences,
         handleSubmitSelfEvaluation,
         handleSubmitLeader,
-        
+
         // Funções de cálculo
         getSectionProgress,
         overallProgressPercentage,

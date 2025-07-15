@@ -260,7 +260,7 @@ export default function EvaluationsPanelManager({
             {errorSelf && <p className="text-red-500">{errorSelf}</p>}
             {!loadingSelf &&
               !errorSelf &&
-              selfRecords.map(rec => (
+              selfRecords?.map(rec => (
                 <div key={rec.id} className="bg-gray-50 p-4 rounded shadow-sm">
                   <h4 className="font-semibold mb-1">
                     {rec.criterion.criterionName}
@@ -285,7 +285,7 @@ export default function EvaluationsPanelManager({
             {errorPeer && <p className="text-red-500">{errorPeer}</p>}
             {!loadingPeer &&
               !errorPeer &&
-              peerRecords.map(rec => (
+              peerRecords?.map(rec => (
                 <div key={rec.id} className="bg-gray-50 p-4 rounded shadow-sm">
                   <h4 className="font-semibold mb-1">Projeto: {rec.project}</h4>
                   <p>Nota geral: {rec.generalScore}</p>
@@ -307,8 +307,8 @@ export default function EvaluationsPanelManager({
             {loadingLeader && <p>Carregando avaliação do gestor…</p>}
             {errorLeader && <p className="text-red-500">{errorLeader}</p>}
 
-            {!loadingLeader && !errorLeader && leaderRecords.length > 0
-              ? leaderRecords.map(rec => (
+              {!loadingLeader && !errorLeader && leaderRecords?.length > 0
+                  ? leaderRecords.map(rec => (
                   <div key={rec.id} className="bg-gray-50 p-4 rounded shadow-sm">
                     <h4 className="font-semibold mb-1">
                       {rec.criterion.criterionName}

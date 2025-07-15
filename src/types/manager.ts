@@ -23,3 +23,17 @@ export interface ManagerDashboardData {
     currentPage: number;
   };
 }
+
+export interface TeamMemberDto {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface ManagedTeamDto {
+  projectId: string;
+  projectName: string;
+  cycleId: string;
+  cycleName: string;
+  collaborators: TeamMemberDto[];
+}

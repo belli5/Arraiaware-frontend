@@ -138,6 +138,18 @@ export interface CriterionDto {
   description: string;   // se precisar mostrar depois
 }
 
+export interface ManagedTeamDto {
+  projectId: string;
+  projectName: string;
+  members: Array<{
+    userId: string;
+    user: {
+      id: string;
+      name: string;
+    };
+  }>;
+}
+
 
 export interface Manager extends Colleague {
   cycleId: string;
