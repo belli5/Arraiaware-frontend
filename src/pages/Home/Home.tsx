@@ -6,6 +6,7 @@ import Footer from '../../components/Footer/Footer';
 import { AuthContext } from '../../context/AuthContext';
 import StatCard from '../../components/StatCard/StatCard';
 import { CheckCircle2, Clock, Users } from 'lucide-react';
+import EvolutionOverview from '../Dashboard/components/EvolutionOverview';
 
 /** ADICIONE ESTES IMPORTS **/
 import { formatDistance } from 'date-fns';
@@ -145,13 +146,9 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Visão Geral */}
-            <div className="bg-white rounded-xl shadow-md p-6 w-[35%]">
-              <h2 className="text-xl font-semibold mb-4 text-center">Visão Geral</h2>
-              <Progress title="Liderança" value={8.5} />
-              <Progress title="Comunicação" value={9.0} />
-              <Progress title="Inovação" value={7.5} />
-              <Progress title="Colaboração" value={8.8} />
+            {/* Visão Geral dinâmica vinda do back */}
+           <div className="bg-white rounded-xl shadow-md p-6 w-[35%]">
+              <EvolutionOverview />
             </div>
           </section>
 
@@ -240,20 +237,6 @@ const Badge = ({
   </div>
 );
 
-const Progress = ({ title, value }: { title: string; value: number }) => (
-  <div className="mb-4">
-    <div className="flex justify-between mb-1">
-      <span>{title}</span>
-      <span className="text-sm">{value}/10</span>
-    </div>
-    <div className="w-full bg-gray-200 h-2 rounded-full">
-      <div
-        className="bg-orange-500 h-2 rounded-full"
-        style={{ width: `${(value / 10) * 100}%` }}
-      />
-    </div>
-  </div>
-);
 
 // Novo componente para as ações rápidas
 const Action = ({
