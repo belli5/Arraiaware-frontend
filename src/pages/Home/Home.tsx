@@ -6,7 +6,7 @@ import Footer from '../../components/Footer/Footer';
 import { AuthContext } from '../../context/AuthContext';
 import StatCard from '../../components/StatCard/StatCard';
 import { CheckCircle2, Clock, Users } from 'lucide-react';
-import EvolutionOverview from '../Dashboard/components/EvolutionOverview';
+import EvolutionOverview from '../../components/EvolutionOverview/EvolutionOverview';
 
 /** ADICIONE ESTES IMPORTS **/
 import { formatDistance } from 'date-fns';

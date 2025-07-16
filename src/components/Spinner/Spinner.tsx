@@ -1,6 +1,4 @@
 // src/components/Spinner/Spinner.tsx
-import React from 'react'
-
 export default function Spinner() {
   return (
     <div className="flex justify-center items-center p-6">

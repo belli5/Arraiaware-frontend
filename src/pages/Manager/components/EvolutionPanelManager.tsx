@@ -5,7 +5,7 @@ import Pagination from '../../../components/Pagination/Pagination';
 import EvaluationsTableSkeleton from '../../Evaluation/components/EvaluationsTableSkeleton';
 import CustomSelect, {type SelectOption} from '../../../components/CustomSelect/CustomSelect';
 import { useEvaluationsPanelLogic } from '../../../hooks/useEvaluationsPanelLogic';
-import type { Evaluation, SelfEvaluationRecord, PeerEvaluationRecord, LeaderEvaluationRecord, } from '../../../types/evaluation';
+import type { Evaluation, SelfEvaluationRecord, PeerEvaluationRecord, LeaderEvaluationRecord, ReferenceIndication, } from '../../../types/evaluation';
 import EvaluationsTableManager from './EvolutionTableManager';
 
 interface EvaluationsPanelManagerProps {
@@ -56,8 +56,12 @@ export default function EvaluationsPanelManager({
   const [loadingLeader, setLoadingLeader] = useState(false);
   const [errorLeader, setErrorLeader] = useState<string | null>(null);
 
+  const [referenceRecords, setReferenceRecords] = useState<ReferenceIndication[]>([]);
+  const [loadingReference, setLoadingReference] = useState(false);
+  const [errorReference, setErrorReference] = useState<string | null>(null);
+
   // Aba ativa no detalhe
-  const [activeSubTab, setActiveSubTab] = useState<'self' | 'peer' | 'leader'>('self');
+  const [activeSubTab, setActiveSubTab] = useState<'self' | 'peer' | 'leader' | 'reference'>('self');
 
   const API_BASE = 'http://localhost:3000';
 
@@ -166,6 +170,29 @@ export default function EvaluationsPanelManager({
     }
   }, [currentPage]);
 
+  // Fetch das indicações recebidas
+useEffect(() => {
+    if (!selectedEvalItem || activeSubTab !== 'reference') return;
+    setLoadingReference(true);
+    setErrorReference(null);
+
+    const { collaboratorId: userId, cycleId: selCycleId } = selectedEvalItem;
+    const token = localStorage.getItem('token') || '';
+
+    fetch(`${API_BASE}/api/evaluations/reference/for/${userId}?cycleId=${selCycleId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    .then(res => {
+      if (!res.ok) {
+        throw new Error(`Erro ${res.status}: falha ao carregar referências`);
+      }
+      return res.json() as Promise<ReferenceIndication[]>;
+    })
+    .then(setReferenceRecords)
+    .catch(err => setErrorReference(err.message))
+    .finally(() => setLoadingReference(false));
+  }, [selectedEvalItem, activeSubTab]);
+
   return (
     <div className="bg-white p-6 md:p-8 rounded-b-lg rounded-r-lg shadow-md">
       {/* Cabeçalho de lista */}
@@ -221,8 +248,7 @@ export default function EvaluationsPanelManager({
 
               {/* subtítulo abaixo */}
               <p className="text-sm text-gray-500">
-                Ciclo: {selectedEvalItem.cycleName} • Projeto:{' '}
-                {selectedEvalItem.projectName}
+                Ciclo: {selectedEvalItem.cycleName} 
               </p>
             </div>
 
@@ -234,8 +260,8 @@ export default function EvaluationsPanelManager({
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {(['self', 'peer', 'leader'] as const).map(tab => (
+          <div className="grid grid-cols-4 gap-2 mb-4">
+            {(['self','peer','leader','reference'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveSubTab(tab)}
@@ -245,7 +271,10 @@ export default function EvaluationsPanelManager({
                     : 'bg-gray-100 text-gray-600'
                 }`}
               >
-                {tab === 'self' ? 'Autoavaliação' : tab === 'peer' ? 'Pares' : 'Líder'}
+                {tab === 'self'      ? 'Autoavaliação'
+                : tab === 'peer'     ? 'Pares'
+                : tab === 'leader'   ? 'Líder'
+                                    : 'Indicações'}
               </button>
             ))}
           </div>
@@ -326,6 +355,26 @@ export default function EvaluationsPanelManager({
                     Nenhuma avaliação do líder encontrada.
                   </p>
                 )
+            }
+          </div>
+        ) :  activeSubTab === 'reference' ? (
+          <div className="space-y-4">
+            {loadingReference && <p>Carregando indicações…</p>}
+            {errorReference && <p className="text-red-500">{errorReference}</p>}
+            {!loadingReference && !errorReference && referenceRecords.length === 0 && (
+              <p className="text-gray-500">Nenhuma indicação encontrada.</p>
+            )}
+            {!loadingReference && !errorReference &&
+              referenceRecords.map(rec => (
+                <div key={rec.id} className="bg-gray-50 p-4 rounded shadow-sm">
+                  <p>
+                    <strong>Indicador:</strong> {rec.indicatedUser.name}
+                  </p>
+                  <p className="mt-2">
+                    <strong>Justificativa:</strong> {rec.justification}
+                  </p>
+                </div>
+              ))
             }
           </div>
         ) : null
