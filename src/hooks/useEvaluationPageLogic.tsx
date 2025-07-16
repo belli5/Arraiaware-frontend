@@ -412,15 +412,12 @@ const currentSectionData = currentSectionIndex >= 0 ? sections[currentSectionInd
 
 async function handleSubmitPeer() {
   if (!userId || !currentCycleId) {
-  alert('Dados de Usuário e Ciclos ainda não foram carregados');
-  return Promise.reject(new Error());
+    return Promise.reject(new Error('Dados de Usuário e Ciclos ainda não foram carregados'));
   }
 
   const entries = Object.entries(peerAnswers);
   if (entries.length === 0) {
-    const err = new Error('Não há avaliações de pares para serem respondidas');
-      alert(err.message);
-      return Promise.reject(err);
+    return Promise.reject(new Error('Não há avaliações de pares para serem respondidas'));
   }
 
   try {
@@ -466,22 +463,22 @@ async function handleSubmitPeer() {
     const storageKey = getStorageKey(userId, cycleId, 'peerAnswers');
     if (storageKey) localStorage.removeItem(storageKey);
 
-    alert('Todas as avaliações de pares foram enviadas com sucesso!');
+    //alert('Todas as avaliações de pares foram enviadas com sucesso!');
     return Promise.resolve();
 
   }catch (err: any) {
-        console.error(err);
-        alert('Falha ao enviar: ' + err.message);
-        return Promise.reject(err);
+      console.error('Erro em handleSubmitPeer:', err);
+      return Promise.reject(err);
     }
   }
 
   const handleSubmitReferences = async (references: ReferenceIndication[]) => {
-    if (!userId || !cycleId) throw new Error('Dados não carregados');
-    if (references.length === 0) {
-      alert('Adicione pelo menos uma referência');
-      return Promise.reject();
-    }
+    if (!userId || !cycleId) {
+    return Promise.reject(new Error('Dados não carregados'));
+  }
+  if (references.length === 0) {
+    return Promise.reject(new Error('Adicione pelo menos uma referência'));
+  }
 
     const token = localStorage.getItem('token');
     try {
@@ -516,18 +513,15 @@ async function handleSubmitPeer() {
 
       return Promise.resolve();
     } catch (err: any) {
-      console.error(err);
-      alert('Falha ao enviar: ' + err.message);
+      console.error('Erro em handleSubmitReferences:', err);
       return Promise.reject(err);
     }
   };
 
   async function handleSubmitSelfEvaluation() {
     if (!userId) {
-      const err = new Error('Usuário não carregado');
-      alert(err.message);
-      return Promise.reject(err);
-    }
+    return Promise.reject(new Error('Usuário não carregado'));
+  }
     const payload = {
       userId,
       cycleId: currentCycleId, 
@@ -549,23 +543,20 @@ async function handleSubmitPeer() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error(await res.text());
-      alert('Autoavaliação enviada!');
+      //alert('Autoavaliação enviada!');
       const storageKey = getStorageKey(userId, cycleId, 'answers');
       if (storageKey) localStorage.removeItem(storageKey);
       return Promise.resolve();
     } catch (err: any) {
-        console.error(err);
-        alert('Falha ao enviar: ' + err.message);
-        return Promise.reject(err);
+        console.error('Erro em handleSubmitSelfEvaluation:', err);
+      return Promise.reject(err);
     }
   }
 
   async function handleSubmitLeader() {
-    if (!userId || !cycleId || leaderColleagues.length === 0){
-        const err = new Error('Dados essenciais (usuário, ciclo, líder) não estão disponíveis.');
-        alert(err.message);
-        return Promise.reject(err);
-    }
+    if (!userId || !cycleId || leaderColleagues.length === 0) {
+    return Promise.reject(new Error('Dados essenciais (usuário, ciclo, líder) não estão disponíveis.'));
+  }
 
     const leaderId = leaderColleagues[0].id;
     const answersMap = leaderAnswers[leaderId] || {};
@@ -615,12 +606,11 @@ async function handleSubmitPeer() {
         const storageKey = getStorageKey(userId, cycleId, 'leaderAnswers');
         if (storageKey) localStorage.removeItem(storageKey);
 
-        alert('Avaliação de líder enviada com sucesso!');
+        //alert('Avaliação de líder enviada com sucesso!');
         return Promise.resolve();
     }
     catch (err: any) {
-        console.error(err);
-        alert('Falha ao enviar: ' + err.message);
+        console.error('Erro em handleSubmitLeader:', err);
         return Promise.reject(err);
     }
   }
@@ -717,6 +707,19 @@ async function handleSubmitPeer() {
     }
   });
 
+
+  async function handleSubmitAll() {
+    try {
+      await handleSubmitSelfEvaluation();
+      await handleSubmitPeer();
+      await handleSubmitLeader();
+      
+    } catch (err: any) {
+      console.error('Falha no envio geral:', err);
+     return Promise.reject(err);
+    }
+  }
+
   const currentColleagues =
         currentSectionData?.key === 'peer'
         ? teamMates
@@ -766,6 +769,7 @@ async function handleSubmitPeer() {
         handleSubmitReferences,
         handleSubmitSelfEvaluation,
         handleSubmitLeader,
+        handleSubmitAll,
 
         // Funções de cálculo
         getSectionProgress,

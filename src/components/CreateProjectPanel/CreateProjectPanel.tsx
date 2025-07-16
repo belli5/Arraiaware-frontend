@@ -25,6 +25,7 @@ export default function CreateProjectPanel({
   );
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // 1) Buscar todos os usuários
   useEffect(() => {
@@ -156,6 +157,28 @@ export default function CreateProjectPanel({
             </span>
           </div>
 
+          {/* Campo de Busca */}
+         <div>
+           <label className="block text-lg font-medium mb-1">
+             Buscar Colaborador
+           </label>
+           <input
+             type="text"
+             value={searchTerm}
+             onChange={(e) => setSearchTerm(e.target.value)}
+             placeholder="Digite o nome do colaborador..."
+             className="
+               w-full
+               border border-gray-300
+               text-gray-700
+               placeholder-gray-400
+               px-3 py-2
+               rounded-lg
+               focus:outline-none focus:ring-2 focus:ring-orange-500
+             "
+           />
+         </div>
+
           {/* Lista de Colaboradores em cards */}
           <div>
             <label className="block text-lg font-medium mb-2">
@@ -165,7 +188,13 @@ export default function CreateProjectPanel({
               <p className="text-gray-500">Buscando colaboradores…</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-                {allCollaborators.map((u) => {
+                {allCollaborators
+                 .filter((u) =>
+                   u.name
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase().trim())
+                 )
+                 .map((u) => {
                   const selected = collaboratorIds.includes(u.id);
                   return (
                     <div

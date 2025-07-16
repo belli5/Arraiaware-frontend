@@ -368,7 +368,7 @@ useEffect(() => {
               referenceRecords.map(rec => (
                 <div key={rec.id} className="bg-gray-50 p-4 rounded shadow-sm">
                   <p>
-                    <strong>Indicador:</strong> {rec.indicatedUser.name}
+                    <strong>Indicado:</strong> {rec.indicatedUser.name}
                   </p>
                   <p className="mt-2">
                     <strong>Justificativa:</strong> {rec.justification}

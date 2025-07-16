@@ -12,6 +12,8 @@ import LeaderQuestionList from './components/LeadQuestionList';
 import ReferenceForm from './components/ReferenceForm';
 import { useAvaliacaoLogic } from '../../hooks/useEvaluationPageLogic';
 import type { ReferenceIndication } from '../../types/evaluation';
+import { ConfirmationMessage } from '../../components/ConfirmationMessage/ConfirmationMessage';
+import { useState } from 'react';
 
 export default function Avaliacao() {
   const navigate = useNavigate();
@@ -35,15 +37,25 @@ export default function Avaliacao() {
     colegaSelecionado,
     handleAnswerChange,
     handleEvaluate,
-    handleSubmitPeer,
     handleSubmitReferences,
-    handleSubmitSelfEvaluation,
-    handleSubmitLeader,
     getSectionProgress,
     overallProgressPercentage,
     allUsers,
     cycleName, 
+    handleSubmitAll,
   } = useAvaliacaoLogic();
+
+  // 1) Estado da modal de confirmação
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  // 2) Wrapper que chama o submit e, em caso de sucesso, abre a modal
+  const handleFinalSubmit = async () => {
+    try {
+      await handleSubmitAll();
+      setIsConfirmOpen(true);
+    } catch {
+      // opcional: tratar erro aqui
+    }
+  };
   
   const handlePreviousSection = () => {
     const prevIndex = Math.max(0, currentSectionIndex - 1);
@@ -60,37 +72,6 @@ export default function Avaliacao() {
       navigate(`/avaliacao/${sections[nextIndex].key}`);
     }
   };
-
-  const onPeerSubmit = async () => {
-    try {
-      await handleSubmitPeer();
-      alert('Avaliações de pares enviadas com sucesso!');
-      handleNextSection();
-    } catch (err: any) {
-      console.error('Falha recebida pelo componente:', err);
-    }
-  };
-
-  const onSelfEvaluationSubmit = async () => {
-    try {
-      await handleSubmitSelfEvaluation();
-      alert('Autoavaliação enviada com sucesso!');
-      handleNextSection();
-    } catch (err: any) {
-      console.error('Falha recebida pelo componente:', err);
-    }
-  };
-
-  const onLeaderSubmit = async () => {
-    try {
-      await handleSubmitLeader();
-      alert('Avaliação de líder enviada com sucesso!');
-      handleNextSection();
-    } catch (err: any) {
-      console.error('Falha recebida pelo componente:', err);
-    }
-  };
-
   const onReferencesSave = async (references: ReferenceIndication[]) => {
     try {
       await handleSubmitReferences(references);
@@ -223,11 +204,7 @@ export default function Avaliacao() {
                           onEvaluate={handleEvaluate}
                           sectionKey="peer"
                         />
-                        <div className="mt-6 flex justify-end">
-                          <button onClick={onPeerSubmit} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                            Enviar Avaliações de Pares
-                          </button>
-                        </div>
+                        
                       </>
                     )}
                     {currentSectionData.key === 'leader' && (
@@ -240,11 +217,7 @@ export default function Avaliacao() {
                           onEvaluate={handleEvaluate}
                           sectionKey="leader"
                         />
-                        <div className="mt-6 flex justify-end">
-                          <button onClick={onLeaderSubmit} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                            Enviar Avaliação de Líder
-                          </button>
-                        </div>
+                
                       </>
                     )}
                     </>
@@ -262,14 +235,7 @@ export default function Avaliacao() {
                       answers={answers}
                       onAnswerChange={handleAnswerChange}
                     />
-                    <div className="mt-8 pt-6 border-t flex justify-end">
-                      <button
-                        onClick={onSelfEvaluationSubmit}
-                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                      >
-                        Enviar Autoavaliação
-                      </button>
-                    </div>
+                    
                   </>
                 )}
 
@@ -281,12 +247,25 @@ export default function Avaliacao() {
                   >
                     ← Seção Anterior
                   </button>
-                  {currentSectionData.key !== 'reference' && (
+
+                  {currentSectionIndex < sections.length - 1 ? (
                     <button
                       onClick={handleNextSection}
                       className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
                     >
-                      {currentSectionIndex < sections.length - 1 ? 'Próxima Seção →' : 'Finalizar e Enviar'}
+                      Próxima Seção →
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleFinalSubmit}
+                      disabled={!isReferenceSectionComplete}
+                      className={`px-4 py-2 text-white rounded-lg ${
+                        isReferenceSectionComplete
+                          ? 'bg-green-600 hover:bg-green-700'
+                          : 'bg-gray-300 cursor-not-allowed'
+                      }`}
+                    >
+                      Enviar Tudo
                     </button>
                   )}
                 </div>
@@ -306,6 +285,17 @@ export default function Avaliacao() {
         </div>
       </main>
       <Footer />
+
+      {/* 3) Modal de sucesso */}
+      <ConfirmationMessage
+        isOpen={isConfirmOpen}
+        message="Parabéns! Sua avaliação foi finalizada com sucesso."
+        onConfirm={() => {
+          setIsConfirmOpen(false);
+          navigate('/Home'); // ou outra rota de destino
+        }}
+        onCancel={() => setIsConfirmOpen(false)}
+      />
     </div>
   );
 }
