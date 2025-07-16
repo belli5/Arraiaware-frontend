@@ -7,7 +7,6 @@ import RH from './pages//RH/RH';
 import Comite from './pages/Committee/Committee';
 import Gestor from './pages/Manager/Manager'
 import Dashboard from './pages/Dashboard/Dashboard'
-import EvaluationDetailPage from './pages/Evaluation/components/EvaluationDetailPage';
 import Admin from './pages/Admin/Admin';
 
 function App() {
@@ -22,10 +21,6 @@ function App() {
         <Route path="/RH" element={<RH />} />
         <Route path="/Comite" element={<Comite />} />
         <Route path="/Gestor" element={<Gestor />} />
-        <Route
-          path="/gestor/brutalfact"
-          element={<EvaluationDetailPage />}
-        />
         <Route path="/Dashboard" element={<Dashboard />} />
 
         <Route path="/admin" element={<Admin />} />
