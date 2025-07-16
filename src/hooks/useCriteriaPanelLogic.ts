@@ -22,7 +22,10 @@ export function useCriteriaPanelLogic() {
 
   const fetchAllCriteria = async () => {
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) {
+      setError("Autenticação necessária.");
+      return;
+    }
 
     try {
       const response = await fetch('http://localhost:3000/api/criteria', {
@@ -68,35 +71,42 @@ export function useCriteriaPanelLogic() {
   }
 };
 
-  const handleAssociateCriterionSubmit = async (trackId: string, criterionId: string) => {
-    setIsSubmitting(true);
-    setNotification(null);
-    const token = localStorage.getItem('token');
-    const endpoint = `http://localhost:3000/api/criteria/${criterionId}/associate-role`;
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST', 
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ roleId: trackId })
-      });
+  const handleAssociateCriterionSubmit = async (trackId: string, criterionIds: string[]) => {
+  setIsSubmitting(true);
+  setNotification(null);
+  const token = localStorage.getItem('token');
+  if (!token) {
+    setError("Autenticação necessária.");
+    setIsSubmitting(false);
+    return;
+  }
+  const endpoint = `http://localhost:3000/api/criteria/roles/${trackId}/criteria`;
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Erro ${response.status} ao associar critério.`);
-      }
+  try {
+    const response = await fetch(endpoint, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ criterionIds: criterionIds }),
+    });
 
-      setNotification({ status: 'success', title: 'Sucesso!', message: 'Critério associado à trilha com sucesso!' });
-      setIsAssociateModalOpen(false); 
-      fetchTracks(); 
-    } catch (error) {
-      setNotification({ status: 'error', title: 'Falha na Associação', message: (error as Error).message });
-    } finally {
-      setIsSubmitting(false);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Erro ${response.status} ao associar critérios.`);
     }
-  };
+
+    setNotification({ status: 'success', title: 'Sucesso!', message: 'Critérios da trilha atualizados com sucesso!' });
+    handleCloseAssociateModal(); 
+    fetchTracks();
+
+  } catch (error) {
+    setNotification({ status: 'error', title: 'Falha na Associação', message: (error as Error).message });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleFormSubmit = async (trackId: string, data: NewCriterionData | ExistingCriterionData) => {
   setIsSubmitting(true);
