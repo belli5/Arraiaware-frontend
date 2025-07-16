@@ -6,25 +6,41 @@ interface CreateTrackFormProps {
   isSubmitting: boolean;
 }
 
+interface FormErrors {
+  name?: string;
+  description?: string;
+}
+
 export default function CreateTrackForm({ onSubmit, isSubmitting }: CreateTrackFormProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const validate = (): FormErrors => {
+    const newErrors: FormErrors = {};
+    if (!name.trim()) {
+      newErrors.name = 'O nome da trilha é obrigatório.';
+    }
+    if (!description.trim()) {
+      newErrors.description = 'A descrição da trilha é obrigatória.';
+    }
+    return newErrors;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-
-    if (!name.trim() || !description.trim()) {
-      setError('Por favor, preencha todos os campos.');
-      return;
+    const formErrors = validate();
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return; 
     }
+    setErrors({});
     await onSubmit({ name, description });
     setName('');
     setDescription('');
   };
 
-  const inputStyles = `
+  const baseInputStyles = `
     mt-1 block w-full rounded-md shadow-sm 
     border border-gray-300
     py-2 px-3
@@ -33,6 +49,9 @@ export default function CreateTrackForm({ onSubmit, isSubmitting }: CreateTrackF
     focus:ring-orange-500 
     focus:border-transparent
   `;
+  
+  const nameInputClassName = `${baseInputStyles} ${errors.name ? 'border-red-500' : 'border-gray-300'}`;
+  const descriptionInputClassName = `${baseInputStyles} ${errors.description ? 'border-red-500' : 'border-gray-300'}`;
 
   return (
     <div className="relative">
@@ -41,8 +60,7 @@ export default function CreateTrackForm({ onSubmit, isSubmitting }: CreateTrackF
           <h3 className="text-xl font-bold text-gray-800">Criar Nova Trilha</h3>
           <p className="text-base text-gray-500 mt-1">Defina uma nova trilha de desenvolvimento para sua organização.</p>
         </div>
-
-        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
             <label htmlFor="track-name" className="block text-sm font-medium text-gray-700">Nome da Trilha</label>
             <input
@@ -50,11 +68,12 @@ export default function CreateTrackForm({ onSubmit, isSubmitting }: CreateTrackF
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              className={inputStyles} 
+              className={nameInputClassName}
               placeholder="Ex: Desenvolvimento Fullstack"
             />
+            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
           </div>
-          
+
           <div>
             <label htmlFor="track-description" className="block text-sm font-medium text-gray-700">Descrição</label>
             <textarea
@@ -62,12 +81,13 @@ export default function CreateTrackForm({ onSubmit, isSubmitting }: CreateTrackF
               value={description}
               onChange={e => setDescription(e.target.value)}
               rows={4}
-              className={inputStyles} 
+              className={descriptionInputClassName}
               placeholder="Uma breve descrição do propósito desta trilha."
             />
+            {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
           </div>
-          
-          <div className="flex justify-end">
+
+          <div className="flex justify-end pt-2">
             <button
               type="submit"
               disabled={isSubmitting}
