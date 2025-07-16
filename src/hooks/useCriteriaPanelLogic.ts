@@ -161,8 +161,8 @@ export function useCriteriaPanelLogic() {
       }
       
       const newCriterion: Criterion = await createResponse.json();
-      const associateEndpoint = `http://localhost:3000/api/criteria/${newCriterion.id}/associate-role`;
-      const associateRequestBody = { roleId: trackId };
+      const associateEndpoint = `http://localhost:3000/api/criteria/roles/${trackId}/associate-criteria`;
+      const associateRequestBody = { criterionIds: [newCriterion.id] }; 
 
       const associateResponse = await fetch(associateEndpoint, {
         method: 'POST',
