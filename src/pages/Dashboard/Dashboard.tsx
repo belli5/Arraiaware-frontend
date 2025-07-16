@@ -1,7 +1,7 @@
 // src/pages/Dashboard.tsx
 import { useContext, useEffect, useState } from 'react';
 import { FaChartLine} from 'react-icons/fa';
-import Header from '../../components/Header/Header_geral';
+import Header from '../../components/Header/Header';
 import Footer from '../../components/Footer/Footer';
 import { AuthContext } from '../../context/AuthContext';
 import {

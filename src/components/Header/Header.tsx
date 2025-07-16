@@ -143,7 +143,8 @@ export default function Header() {
       {/* Backdrop */}
       <div
         className={`
-          fixed inset-0 bg-black bg-opacity-30 z-40 transition-opacity duration-300
+          fixed inset-0 z-40 transition-opacity duration-300
+          bg-black/30 
           ${showConfig ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
         `}
         onClick={() => setShowConfig(false)}
