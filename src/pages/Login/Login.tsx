@@ -14,33 +14,51 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log("Botão 'Entrar' clicado, a função handleLogin foi chamada!");
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', { 
+      const response = await axios.post('http://localhost:3000/api/auth/login', {
         email: email,
         password: senha
-       });
-      const {access_token} = response.data;
+      });
+      const { access_token } = response.data;
       const decodedToken = jwtDecode<DecodedToken>(access_token);
-      login(access_token, decodedToken); 
-      navigate('/Home'); 
-    } 
-    catch (error: unknown) { 
-    console.error('Erro no login:', error);
-
-    if (axios.isAxiosError(error) && error.response) {
-      const errorMessage = error.response.data?.message || 'Erro desconhecido. Tente novamente.';
-      alert(`Erro no login: ${errorMessage}`);
-    } else if (error instanceof Error) {
-      alert(`Erro no login: ${error.message}`);
-    } else {
-      alert('Erro no login: Ocorreu um erro inesperado.');
+      login(access_token, decodedToken);
+      navigate('/Home');
+    } catch (error: unknown) {
+      console.error('Erro no login:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        const errorMessage = error.response.data?.message || 'Erro desconhecido. Tente novamente.';
+        alert(`Erro no login: ${errorMessage}`);
+      } else if (error instanceof Error) {
+        alert(`Erro no login: ${error.message}`);
+      } else {
+        alert('Erro no login: Ocorreu um erro inesperado.');
+      }
     }
-  }
-  
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetEmail) {
+      alert('Por favor, informe seu e-mail.');
+      return;
+    }
+
+    try {
+      await axios.post('http://localhost:3000/api/auth/reset-password', {
+        email: resetEmail,
+      });
+      alert('Se o e-mail estiver cadastrado, você receberá instruções para redefinir sua senha.');
+      setIsResettingPassword(false);
+      setResetEmail('');
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao solicitar recuperação de senha. Tente novamente mais tarde.');
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -57,7 +75,7 @@ export default function Login() {
           <h1 className="text-4xl font-bold text-gray-800 mb-4">
             Autoavaliação <span className="text-orange-500">Inteligente</span>
           </h1>
-          <p className=" mx-5 text-xl text-gray-600 mb-6">
+          <p className="mx-5 text-xl text-gray-600 mb-6">
             Desenvolva seu potencial profissional com nossa plataforma moderna de autoavaliação. Acompanhe seu crescimento e identifique oportunidades de melhoria.
           </p>
 
@@ -129,8 +147,12 @@ export default function Login() {
                 <input type="checkbox" className="mr-2" />
                 <span className="text-gray-600">Lembrar-me</span>
               </div>
-              {/* Sugestão de Link para rota interna, se aplicável */}
-              <a href="#" className="text-sm text-orange-500">Esqueceu a senha?</a>
+              <span
+                className="text-sm text-orange-500 cursor-pointer"
+                onClick={() => setIsResettingPassword(true)}
+              >
+                Esqueceu a senha?
+              </span>
             </div>
 
             <button
@@ -142,12 +164,44 @@ export default function Login() {
 
             <p className="text-center mt-4 text-gray-600">
               Não tem uma conta?
-              {/* Sugestão de Link para rota interna, se aplicável */}
-              <a href="#" className="text-orange-500">Fale com RH</a>
+              <a href="#" className="text-orange-500 ml-1">Fale com RH</a>
             </p>
           </form>
         </div>
       </div>
+
+      {/* Modal de recuperação de senha */}
+      {isResettingPassword && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+            <h2 className="text-lg font-bold mb-4 text-gray-800">Recuperar Senha</h2>
+            <p className="text-sm text-gray-600 mb-3">
+              Informe seu e-mail. Se ele estiver cadastrado, você receberá um link para redefinir sua senha.
+            </p>
+            <input
+              type="email"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+              placeholder="seu.email@empresa.com"
+              className="w-full p-2 border border-gray-300 rounded mb-4"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setIsResettingPassword(false)}
+                className="text-gray-500 hover:underline"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleResetPassword}
+                className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
+              >
+                Enviar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
