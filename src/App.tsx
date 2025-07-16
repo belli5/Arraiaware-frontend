@@ -22,6 +22,9 @@ function App() {
         <Route path="/Comite" element={<Comite />} />
         <Route path="/Gestor" element={<Gestor />} />
         <Route path="/Dashboard" element={<Dashboard />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />
+        
+        {/* Painel Admin */}
 
         <Route path="/admin" element={<Admin />} />
 

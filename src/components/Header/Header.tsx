@@ -188,6 +188,17 @@ export default function Header() {
         )}
 
         <button
+          onClick={() => {
+            setShowConfig(false);
+            navigate('/change-password');
+          }}
+          className="w-full bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600 transition flex items-center justify-center mb-4"
+        >
+          Alterar Senha
+        </button>
+
+
+        <button
           onClick={handleLogout}
           aria-label="Logout"
           className="mt-auto bg-orange-500 text-white p-3 rounded-full hover:bg-orange-600 transition flex items-center justify-center"
