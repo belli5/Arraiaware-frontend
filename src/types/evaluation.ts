@@ -150,6 +150,17 @@ export interface ManagedTeamDto {
   }>;
 }
 
+export interface ReferenceIndication {
+  id: string;
+  indicatedUser: {
+    id: string;
+    name: string;
+  };
+  cycleId: string;
+  indicatedUserId: string;
+  justification: string;
+}
+
 
 export interface Manager extends Colleague {
   cycleId: string;

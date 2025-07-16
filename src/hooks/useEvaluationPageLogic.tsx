@@ -153,7 +153,7 @@ export const useAvaliacaoLogic = () => {
     const fetchTeamData = async () => {
         try {
             if (userType === 'GESTOR') {
-                const res = await fetch(`http://localhost:3000/api/teams/manager/${userId}`, {
+                const res = await fetch(`http://localhost:3000/api/teams/manager/${userId}/projects`, {
                     headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {})},
                 });
                 if (!res.ok) throw new Error(await res.text() || 'Falha ao buscar times gerenciados.');
@@ -193,6 +193,10 @@ export const useAvaliacaoLogic = () => {
             }
 
             const info = infos[0];    // <— pega o objeto dentro do array
+
+            setProjectId(info.projectId);
+            setProjectName(info.projectName);  // (opcional, mas eu recomendaria manter o nome do projeto também)
+            setCycleId(info.cycleId);
 
             console.log('🔸 usando o primeiro elemento:', info);
 
@@ -315,12 +319,19 @@ useEffect(() => {
           { key: 'reference', title: 'Indicação de Referências', icon: <UserCheck />, questions: [] },
         );
 
-        // se for colaborador, filtra fora o pilar de gestão e liderança
-        const filtered = userType === 'GESTOR'
-          ? mapped
-          : mapped.filter(s => s.key !== 'gestão-e-liderança');
+        // agora filtra:
+      let filtered = mapped;
 
-        setSections(filtered);
+      // 1) Se for gestor, removemos a seção de líderes (eles não avaliam líderes)
+      if (userType === 'GESTOR') {
+        filtered = filtered.filter(s => s.key !== 'leader');
+      }
+      // 2) Se for colaborador, já tiramos o pilar de gestão e liderança
+      else {
+        filtered = filtered.filter(s => s.key !== 'gestão-e-liderança');
+      }
+
+      setSections(filtered);
 
       } catch (e: any) {
         console.error(e);
@@ -362,10 +373,9 @@ const currentSectionIndex = sections.findIndex(s => s.key === section);
 const currentSectionData = currentSectionIndex >= 0 ? sections[currentSectionIndex] : null;
 
 async function handleSubmitPeer() {
-  if (!userId || !cycleId) {
-    const err = new Error('Dados de Usuário e Ciclos ainda não foram carregados');
-      alert(err.message);
-      return Promise.reject(err);
+  if (!userId || !currentCycleId) {
+  alert('Dados de Usuário e Ciclos ainda não foram carregados');
+  return Promise.reject(new Error());
   }
 
   const entries = Object.entries(peerAnswers);
@@ -394,8 +404,8 @@ async function handleSubmitPeer() {
     const payload = {
     evaluatorUserId: userId,
     evaluatedUserId,
-    cycleId,
-    projectId,
+    cycleId: currentCycleId,
+    projectId, 
     motivatedToWorkAgain,
     generalScore,
     pointsToImprove,
@@ -482,7 +492,7 @@ async function handleSubmitPeer() {
     }
     const payload = {
       userId,
-      cycleId,
+      cycleId: currentCycleId, 
       evaluations: Object.entries(answers).map(([criterionId, ans]) => ({
         criterionId,
         score: Number(ans.scale),

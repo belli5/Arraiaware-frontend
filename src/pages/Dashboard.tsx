@@ -16,6 +16,7 @@ import {
   Bar,         // ← Novo
 } from 'recharts';
 import { TrendingUp} from 'lucide-react';
+import EvolutionOverview from '../components/EvolutionOverview/EvolutionOverview';
 
 /** DADOS DE EXEMPLO – SUBSTITUA PELA SUA API DEPOIS **/
 const sampleData = [
@@ -130,15 +131,11 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </div>
 
-          {/* Visão Geral */}
-         <div className="bg-white rounded-xl shadow-md p-4 w-[35%] h-[300px] flex flex-col justify-center">
-            <h2 className="text-xl font-semibold mb-4 text-center">Visão Geral</h2>
-            <Progress title="Liderança" value={8.5} />
-            <Progress title="Comunicação" value={9.0} />
-            <Progress title="Inovação" value={7.5} />
-            <Progress title="Colaboração" value={8.8} />
-          </div>
-        </section>
+          {/* Visão Geral dinâmica vinda do back */}
+            <div className="bg-white rounded-xl shadow-md p-6 w-[35%]">
+              <EvolutionOverview />
+            </div>
+          </section>
 
         <section className="mb-10">
         <div className="bg-white rounded-xl shadow-md p-10 w-[65%] h-[300px]">
@@ -168,20 +165,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-//////////////////// COMPONENTES AUXILIARES ////////////////////
-
-const Progress = ({ title, value }: { title: string; value: number }) => (
-  <div className="mb-4">
-    <div className="flex justify-between mb-1">
-      <span>{title}</span>
-      <span className="text-sm">{value}/10</span>
-    </div>
-    <div className="w-full bg-gray-200 h-2 rounded-full">
-      <div
-        className="bg-orange-500 h-2 rounded-full"
-        style={{ width: `${(value / 10) * 100}%` }}
-      />
-    </div>
-  </div>
-);
