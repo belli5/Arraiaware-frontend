@@ -192,33 +192,71 @@ export const useAvaliacaoLogic = () => {
               throw new Error('Nenhum projeto retornado para este usuário');
             }
 
-            const info = infos[0];    // <— pega o objeto dentro do array
+            const defaultInfo = infos[0];
+            setProjectId(defaultInfo.projectId);
+            setProjectName(defaultInfo.projectName);
+            setCycleId(defaultInfo.cycleId);
 
-            setProjectId(info.projectId);
-            setProjectName(info.projectName);  // (opcional, mas eu recomendaria manter o nome do projeto também)
-            setCycleId(info.cycleId);
+           // 1) Para cada time, crio um objeto { id, name, projectName }
+           interface TempCol { id: string; name: string; projectName: string }
+           const allCols: TempCol[] = infos.flatMap(team =>
+             (team.collaborators ?? []).map(c => ({
+               id: c.id,
+               name: c.name,
+               projectName: team.projectName
+             }))
+           );
 
-            console.log('🔸 usando o primeiro elemento:', info);
+           // 2) Agrupo por ID e reúno todos os nomes de projeto num Set
+           const uniqueMap = new Map<string, { name: string; projects: Set<string> }>();
+           allCols.forEach(({ id, name, projectName }) => {
+             if (!uniqueMap.has(id)) {
+               uniqueMap.set(id, { name, projects: new Set([projectName]) });
+             } else {
+               uniqueMap.get(id)!.projects.add(projectName);
+             }
+           });
 
-            const collaborators = info.collaborators ?? [];
-            setTeamMates(
-              collaborators.map(c => ({
-                id: c.id,
-                nome: c.name,
-                cargo: 'Colaborador',
-                area: info.projectName,
-                tempo: '—',
-                projectName: info.projectName,
-              }))
-            );
-            setLeaderColleagues([{
-              id: info.managerId,
-              nome: info.managerName,
-              cargo: 'Gestor',
-              area: info.projectName,
-              tempo: '—',
-              projectName: info.projectName,
-            }]);
+           // 3) Converto para Colleague, juntando os nomes de projeto em string
+        const uniqueCols = Array.from(uniqueMap.entries()).map(
+          ([id, { name, projects }]) => ({
+            id,
+            nome: name,
+            cargo: 'Colaborador',
+            area: Array.from(projects).join(', '),
+            tempo: '—',
+            projectName: Array.from(projects).join(', ')
+          })
+        );
+        setTeamMates(uniqueCols);
+
+        // ── Agora agrego também os gestores para a aba de liderança ──
+        interface TempMgr { id: string; name: string; projectName: string }
+        const allMgrs: TempMgr[] = infos.map(info => ({
+          id: info.managerId,
+          name: info.managerName,
+          projectName: info.projectName
+        }));
+        const mgrMap = new Map<string, { name: string; projects: Set<string> }>();
+        allMgrs.forEach(({ id, name, projectName }) => {
+          if (!mgrMap.has(id)) {
+            mgrMap.set(id, { name, projects: new Set([projectName]) });
+          } else {
+            mgrMap.get(id)!.projects.add(projectName);
+          }
+        });
+        const mgrList = Array.from(mgrMap.entries()).map(
+          ([id, { name, projects }]) => ({
+            id,
+            nome: name,
+            cargo: 'Gestor',
+            area: Array.from(projects).join(', '),
+            tempo: '—',
+            projectName: Array.from(projects).join(', ')
+          })
+        );
+        setLeaderColleagues(mgrList);
+        // não precisa de gestor nesta lista de pares
             }
         } catch (err: any) {
             setTeamError(err.message || 'Ocorreu um erro desconhecido.');
