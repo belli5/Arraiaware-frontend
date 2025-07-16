@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { Criterion, Track } from '../../../types/RH';
+import type { Criterion, Track,CriterionType } from '../../../types/RH';
+import PillarBadge from '../../../components/PillarBadge/PillarBadge';
 
 interface AssociateCriterionFormProps {
   track: Track;
@@ -9,6 +10,12 @@ interface AssociateCriterionFormProps {
   isSubmitting: boolean;
 }
 
+const PREDEFINED_PILLARS: CriterionType[] = [
+  'Comportamento', 
+  'Execução', 
+  'Gestão e Liderança'
+];
+
 export default function AssociateCriterionForm({
   track,
   allCriteria,
@@ -17,26 +24,29 @@ export default function AssociateCriterionForm({
   isSubmitting,
 }: AssociateCriterionFormProps) {
   
-  // Inicia o estado com os IDs dos critérios que já estão associados à trilha
-  const [selectedIds, setSelectedIds] = useState<string[]>(() =>
-    track.criteria.map(c => c.id)
+
+const [selectedIds, setSelectedIds] = useState<string[]>(() =>
+  track.criteria.map(c => c.id)
+);
+
+const filteredCriteria = allCriteria.filter(criterion => 
+    PREDEFINED_PILLARS.includes(criterion.pillar)
   );
 
-  // Função para lidar com a mudança de estado de um checkbox
-  const handleSelectionChange = (criterionId: string) => {
-    setSelectedIds(prevSelectedIds => {
-      if (prevSelectedIds.includes(criterionId)) {
-        return prevSelectedIds.filter(id => id !== criterionId);
-      } else {
-        return [...prevSelectedIds, criterionId];
-      }
-    });
-  };
+const handleSelectionChange = (criterionId: string) => {
+  setSelectedIds(prevSelectedIds => {
+    if (prevSelectedIds.includes(criterionId)) {
+      return prevSelectedIds.filter(id => id !== criterionId);
+    } else {
+      return [...prevSelectedIds, criterionId];
+    }
+  });
+};
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await onSubmit(track.id, selectedIds);
-  };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  await onSubmit(track.id, selectedIds);
+};
 
   return (
     <form onSubmit={handleSubmit}>
@@ -46,23 +56,25 @@ export default function AssociateCriterionForm({
           <span className="font-bold">{track.name}</span>. Os critérios já marcados são os que estão atualmente associados.
         </p>
 
-        {/* Lista de Critérios com Checkbox */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Critérios Existentes</label>
           <div className="mt-2 p-3 border border-gray-200 rounded-md max-h-60 overflow-y-auto space-y-2">
-            {allCriteria.length > 0 ? (
-              allCriteria.map(criterion => (
-                <div key={criterion.id} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id={`criterion-${criterion.id}`}
-                    checked={selectedIds.includes(criterion.id)}
-                    onChange={() => handleSelectionChange(criterion.id)}
-                    className="h-4 w-4 accent-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                  />
-                  <label htmlFor={`criterion-${criterion.id}`} className="ml-2 block text-sm text-gray-900">
-                    {criterion.criterionName}
-                  </label>
+            {filteredCriteria.length > 0 ? (
+              filteredCriteria.map(criterion => (
+                <div key={criterion.id} className="flex items-center justify-between hover:bg-gray-50 p-1 rounded-md">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={`criterion-${criterion.id}`}
+                      checked={selectedIds.includes(criterion.id)}
+                      onChange={() => handleSelectionChange(criterion.id)}
+                      className="h-4 w-4 accent-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                    />
+                    <label htmlFor={`criterion-${criterion.id}`} className="ml-2 block text-sm text-gray-900 cursor-pointer">
+                      {criterion.criterionName}
+                    </label>
+                  </div>
+                  <PillarBadge pillar={criterion.pillar} />
                 </div>
               ))
             ) : (
@@ -72,7 +84,6 @@ export default function AssociateCriterionForm({
         </div>
       </div>
 
-      {/* Botões de Ação */}
       <div className="mt-6 flex justify-end gap-3">
         <button
           type="button"
