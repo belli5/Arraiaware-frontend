@@ -1,5 +1,5 @@
 import { useState, useRef} from 'react';
-import Header from '../../components/Header/Header_comite';
+import Header from '../../components/Header/Header';
 import Footer from '../../components/Footer/Footer';
 import CommitteeStatsGrid from './components/CommitteeStatsGrid';
 import CommitteeInsightsPanel from './components/CommitteeInsightsPanel';

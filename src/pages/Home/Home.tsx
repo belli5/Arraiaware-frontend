@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { FaRegFileAlt, FaChartLine, FaBullseye } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/Header/Header_geral';
+import Header from '../../components/Header/Header';
 import Footer from '../../components/Footer/Footer';
 import { AuthContext } from '../../context/AuthContext';
 import StatCard from '../../components/StatCard/StatCard';
