@@ -68,6 +68,12 @@ export interface EvaluationConsolidatedView {
       justification: string
     }
   ],
+  referencesReceived: [
+    {
+      indicatorName: string,
+      justification: string
+    }
+  ]
 }
 
 export interface CommitteeSummary{
