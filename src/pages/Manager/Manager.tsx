@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import Header from '../../components/Header/Header_Gestor';
+import Header from '../../components/Header/Header';
 import StatCard from '../../components/StatCard/StatCard'; 
 import { Users, CheckCircle2, Clock, AlertTriangle, BarChart2, ClipboardList, PlusCircle} from 'lucide-react'; 
 import OverallProgressManager from './components/OverallProgressManager';

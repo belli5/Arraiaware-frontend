@@ -1,17 +1,27 @@
-// src/components/Header/Header_geral.tsx
+// src/components/Header/Header.tsx
 import { useEffect, useState } from "react";
 import { Bell, Settings, User, UserIcon, X, LogOut } from "lucide-react";
 import { useNavigate, NavLink } from "react-router-dom";
 import logo from "../../../imagens/logo_arraiware.png";
 
+// Interface para tipar o objeto de usuário
+interface UserProfile {
+  name: string;
+  email?: string;
+  avatarUrl?: string;
+  userType: "ADMIN" | "RH" | "GESTOR" | "COLABORADOR" | "COMITE"; // Tipos de usuário possíveis
+}
+
 export default function Header() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [showConfig, setShowConfig] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
   }, []);
 
   function handleLogout() {
@@ -21,7 +31,7 @@ export default function Header() {
   }
 
   const linkClass = (isActive: boolean) =>
-    `px-2 py-1 rounded font-medium ${
+    `px-2 py-1 rounded font-medium transition-colors ${
       isActive ? "text-orange-500" : "text-gray-900 hover:text-orange-500"
     }`;
 
@@ -42,6 +52,7 @@ export default function Header() {
             </div>
             <nav>
               <ul className="flex space-x-6">
+                {/* Links Padrão */}
                 <li>
                   <NavLink to="/home" className={({ isActive }) => linkClass(isActive)}>
                     Home
@@ -68,6 +79,8 @@ export default function Header() {
                     Metas
                   </NavLink>
                 </li>
+
+                {/* Links Condicionais por userType */}
                 {(user?.userType === "RH" || user?.userType === "ADMIN") && (
                   <li>
                     <NavLink to="/rh" className={({ isActive }) => linkClass(isActive)}>
@@ -77,21 +90,27 @@ export default function Header() {
                 )}
                 {(user?.userType === "GESTOR" || user?.userType === "ADMIN") && (
                   <li>
-                    <NavLink
-                      to="/gestor"
-                      className={({ isActive }) => linkClass(isActive)}
-                    >
+                    <NavLink to="/gestor" className={({ isActive }) => linkClass(isActive)}>
                       Painel Gestor
                     </NavLink>
                   </li>
                 )}
+                {/* PAINEL COMITE */}
+                {(user?.userType === "COMITE" || user?.userType === "ADMIN") && (
+                  <li>
+                    <NavLink to="/comite" className={({ isActive }) => linkClass(isActive)}>
+                      Painel Comitê
+                    </NavLink>
+                  </li>
+                )}
+                {/* PAINEL ADMIN */}
                 {user?.userType === "ADMIN" && (
                   <li>
                     <NavLink
-                      to="/comite"
+                      to="/admin" // Rota para o painel de administração
                       className={({ isActive }) => linkClass(isActive)}
                     >
-                      Painel Comitê
+                      Painel Admin
                     </NavLink>
                   </li>
                 )}
@@ -105,11 +124,7 @@ export default function Header() {
               className="h-6 w-6 text-gray-600 hover:text-orange-500 cursor-pointer"
               onClick={() => alert("Você clicou nas notificações!")}
             />
-
-            {/* Mantive o Settings apenas ilustrativo; sem onClick */}
             <Settings className="h-6 w-6 text-gray-400 cursor-default" />
-
-            {/* Aqui agora abrimos o sidebar: */}
             <div
               className="flex items-center space-x-2 cursor-pointer"
               onClick={() => setShowConfig(true)}
@@ -128,7 +143,8 @@ export default function Header() {
       {/* Backdrop */}
       <div
         className={`
-          fixed inset-0 bg-opacity-30 z-40 transition-opacity duration-300
+          fixed inset-0 z-40 transition-opacity duration-300
+          bg-black/30 
           ${showConfig ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
         `}
         onClick={() => setShowConfig(false)}
@@ -150,7 +166,6 @@ export default function Header() {
           />
         </div>
 
-        {/* Avatar, nome e email */}
         {user && (
           <div className="flex flex-col items-center mb-6">
             {user.avatarUrl ? (
@@ -164,7 +179,6 @@ export default function Header() {
                 <UserIcon className="h-8 w-8 text-gray-600" />
               </div>
             )}
-
             <p className="text-gray-800 font-medium text-center">{user.name}</p>
             {user.email && (
               <p className="text-sm text-gray-500 text-center truncate">

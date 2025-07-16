@@ -1,4 +1,4 @@
-import Header from '../../components/Header/Header_geral';
+import Header from '../../components/Header/Header';
 import StatCard from '../../components/StatCard/StatCard';
 import { Users,PlusCircle, CheckCircle2, Clock, AlertTriangle,ClipboardList, SlidersHorizontal, Import,Briefcase,Pencil} from 'lucide-react'; 
 import OverallProgress from './components/OverallProgress';

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
-import Header from '../../components/Header/Header_geral';
+import Header from '../../components/Header/Header';
 import Footer from '../../components/Footer/Footer';
 import EvaluationTabs from './components/EvaluationTabs';
 import QuestionList from './components/QuestionList';
