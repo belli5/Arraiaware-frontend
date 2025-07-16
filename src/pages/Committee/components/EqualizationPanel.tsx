@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { EvaluationConsolidatedView } from '../../../types/committee';
-import { Loader2, AlertTriangle, Save,FileText } from 'lucide-react';
+import { Loader2, AlertTriangle, Save, FileText } from 'lucide-react';
 
 interface EqualizationPanelProps {
   data: EvaluationConsolidatedView | null;
@@ -14,14 +14,14 @@ interface EqualizationPanelProps {
 }
 
 export default function EqualizationPanel({ 
-    data, isLoading, error: initialError, initialScore, initialObservation, onSave, onClose,collaboratorId 
+    data, isLoading, error: initialError, initialScore, initialObservation, onSave, onClose, collaboratorId 
 }: EqualizationPanelProps) {
     
   const [score, setScore] = useState(initialScore);
   const [observation, setObservation] = useState(initialObservation);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState(false); // New state for PDF export loading
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     setScore(initialScore);
@@ -141,7 +141,7 @@ export default function EqualizationPanel({
               <h5 className="font-bold text-gray-700">{criterion.criterionName} {criterion.hasDiscrepancy && <span className="text-red-500 text-xs font-normal">(Discrepância)</span>}</h5>
               <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 
-                {/* Autoavaliação  */}
+                {/* Autoavaliação */}
                 <div>
                   <p className="font-semibold">Autoavaliação: 
                     <span className="text-blue-600 font-bold">
@@ -150,11 +150,10 @@ export default function EqualizationPanel({
                         : '-'}
                     </span>
                   </p>
-                  {/*  */}
                   <p className="text-gray-600 italic">"{criterion.selfEvaluation?.justification || 'Não preenchido'}"</p>
                 </div>
 
-                {/* Pares  */}
+                {/* Pares */}
                 <div>
                   <p className="font-semibold">Pares: 
                     <span className="text-green-600 font-bold">
@@ -186,16 +185,54 @@ export default function EqualizationPanel({
       {/* Seção de Feedbacks dos Pares */}
       <section>
         <h4 className="text-lg font-semibold text-gray-800 mb-3">Feedbacks dos Pares</h4>
-        {data.peerFeedbacks.map((feedback, index) => (
-          <div key={index} className="p-3 border-l-4 border-orange-400 bg-orange-50 mb-3">
-            <p className="text-sm text-gray-600"><span className="font-semibold text-gray-800">{feedback.evaluatorName}</span> comentou:</p>
-            <p className="mt-1 text-sm"><strong className="text-green-700">A explorar:</strong> {feedback.pointsToExplore}</p>
-            <p className="mt-1 text-sm"><strong className="text-red-700">A melhorar:</strong> {feedback.pointsToImprove}</p>
-          </div>
-        ))}
+        {data.peerFeedbacks.length > 0 ? (
+          data.peerFeedbacks.map((feedback, index) => (
+            <div key={index} className="p-3 border-l-4 border-orange-400 bg-orange-50 mb-3 rounded-r-md">
+              <p className="text-sm text-gray-600"><span className="font-semibold text-gray-800">{feedback.evaluatorName}</span> comentou:</p>
+              <p className="mt-1 text-sm"><strong className="text-green-700">A explorar:</strong> {feedback.pointsToExplore}</p>
+              <p className="mt-1 text-sm"><strong className="text-red-700">A melhorar:</strong> {feedback.pointsToImprove}</p>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-gray-500 italic">Nenhum feedback de par foi registrado.</p>
+        )}
       </section>
 
-        {/* 3. Edição final */}
+      <section>
+        <h4 className="text-lg font-semibold text-gray-800 mb-3">Referências</h4>
+        
+        {/* Referências Recebidas */}
+        <h5 className="font-semibold text-gray-700 mb-2">Referências Recebidas</h5>
+        {data.referencesReceived.length > 0 ? (
+          data.referencesReceived.map((ref, index) => (
+            <div key={`rec-${index}`} className="p-3 border-l-4 border-purple-400 bg-purple-50 mb-3 rounded-r-md">
+              <p className="text-sm text-gray-600">
+                <span className="font-semibold text-gray-800">{ref.indicatorName}</span> indicou com a justificativa:
+              </p>
+              <p className="mt-1 text-sm italic">"{ref.justification}"</p>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-gray-500 italic mb-4">Nenhuma referência recebida.</p>
+        )}
+
+        {/*Referências Indicadas */}
+        <h5 className="font-semibold text-gray-700 mt-4 mb-2">Referências Indicadas</h5>
+        {data.referenceFeedbacks.length > 0 ? (
+          data.referenceFeedbacks.map((ref, index) => (
+            <div key={`ind-${index}`} className="p-3 border-l-4 border-cyan-400 bg-cyan-50 mb-3 rounded-r-md">
+              <p className="text-sm text-gray-600">
+                Feedback sobre <span className="font-semibold text-gray-800">{ref.indicatedName}</span>:
+              </p>
+              <p className="mt-1 text-sm italic">"{ref.justification}"</p>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-gray-500 italic">Nenhuma referência indicada.</p>
+        )}
+      </section>
+
+      {/* 3. Edição final */}
       <section className="p-6 bg-gray-50 rounded-lg shadow-md">
         <h4 className="text-xl font-semibold text-gray-800 mb-6">Ações do Comitê</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -219,7 +256,7 @@ export default function EqualizationPanel({
                 />
             </div>
         </div>
-    </section>
+      </section>
       
       {saveError && (
         <div className="p-3 mt-4 text-sm text-red-800 bg-red-100 border border-red-300 rounded-md flex items-center gap-2">
