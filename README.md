@@ -2,79 +2,131 @@
 
 Este repositório contém o código-fonte do **Frontend** da plataforma RPE (Rocket Performance & Engagement), desenvolvida pela equipe **Arraiware** para a Rocket Corp.
 
-O RPE é uma solução digital inovadora que visa modernizar e centralizar o processo de avaliação de desempenho da Rocket Corp, substituindo métodos manuais por uma abordagem mais eficiente, transparente e baseada em dados.
+O RPE é uma solução digital inovadora que visa modernizar e centralizar o processo de avaliação de desempenho da Rocket Corp, substituindo métodos manuais por uma abordagem mais eficiente, segura, estruturada e baseada em dados.
+
+🔗 **Sistema no ar**: [arraiaware-frontend-iota.vercel.app](http://arraiaware-frontend-iota.vercel.app)
 
 > Novo por aqui? Confira o guia de [ONBOARDING](docs/ONBOARDING.md) para começar!
 
-## Sobre o Projeto RPE
+---
 
-O RPE (Rocket Performance & Engagement) é uma plataforma desenvolvida para automatizar e otimizar as avaliações de desempenho, feedback 360 e gestão de talentos na Rocket Corp. O objetivo é proporcionar:
+## 🧭 Visão Geral do Projeto
 
-* **Eficiência:** Substituir planilhas e processos manuais, evitando erros e inconsistências.
-* **Transparência:** Centralizar informações e facilitar o acesso aos dados de avaliação.
-* **Decisão Estratégica:** Fornecer dados estruturados para o comitê de equalização, apoiando decisões de promoções, treinamentos e reconhecimento.
+O RPE (Rocket Performance & Engagement) é uma plataforma construída para automatizar e estruturar os processos de:
 
-## Tecnologias Utilizadas (Frontend)
+- Autoavaliação de colaboradores
+- Avaliação de pares e líderes
+- Equalização de avaliações por comitês
+- Análise inteligente de desempenho (com GenAI)
+- Segurança e controle de dados sensíveis
 
-* **Framework:** React
-* **Build Tool:** Vite
-* **Estilização:** Tailwind CSS
-* **Roteamento:** React Router DOM
-* **Ícones:** React Icons
-
-## Módulos Atuais (MVP 1)
-
-O Mínimo Produto Viável (MVP 1) do RPE foca na digitalização básica do processo de avaliação, incluindo:
-
-* **Cadastro de Usuários:** Gerenciamento de colaboradores com seus cargos, trilhas e unidades.
-* **Configuração de Critérios:** Criação e edição de critérios de avaliação personalizados por trilha/unidade.
-* **Formulário de Autoavaliação:** Permite que colaboradores preencham suas próprias avaliações.
-* **Formulário de Avaliação de Pares e Líderes:** Permite que colaboradores avaliem seus colegas e gestores.
-* **Indicação de Referências:** Funcionalidade para indicar referências técnicas e culturais.
-* **Painel de Acompanhamento (RH):** Visão básica do status de preenchimento das avaliações.
-* **Importação/Exportação:** Funcionalidades para importar históricos e exportar avaliações para o comitê.
-
-## Como Executar o Projeto (Desenvolvimento)
-
-Para rodar o frontend localmente, siga os passos abaixo:
-
-1.  **Pré-requisitos:** Certifique-se de ter o Node.js (versão 18 ou superior recomendada) e o npm (ou Yarn) instalados em sua máquina.
-2.  **Clonar o Repositório:**
-    ```bash
-    git clone https://github.com/belli5/Arraiaware-frontend.git
-    cd Arraiaware-frontend
-    ```
-
-3.  **Instalar Dependências:**
-    ```bash
-    pnpm install
-    ```
-4.  **Iniciar o Servidor de Desenvolvimento:**
-    ```bash
-    pnpm run dev
-    ```
-    O aplicativo estará disponível em `http://localhost:5173/` (ou outra porta indicada pelo Vite).
-
-## Repositório do Backend
-
-Este frontend consome dados de uma API de backend separada. Você pode encontrar o código-fonte do backend no seguinte repositório:
-
-* **Repositório do Backend:** [https://github.com/belli5/Arraiaware-backend](https://github.com/belli5/Arraiaware-backend)
-
-Certifique-se de ter o backend rodando localmente para que o frontend possa se comunicar com ele e persistir os dados das avaliações. Consulte o README do repositório do backend para instruções sobre como configurá-lo e executá-lo.
-
-## Contribuição
-
-Contribuições são bem-vindas! Se você deseja colaborar, por favor, siga estas diretrizes:
-
-1.  Faça um fork deste repositório.
-2.  Crie uma nova branch para sua funcionalidade ou correção de bug (`git checkout -b feature/minha-feature` ou `fix/meu-bug`).
-3.  Faça suas alterações e comite-as com mensagens claras e atômicas.
-4.  Envie suas alterações para o seu fork.
-5.  Abra um Pull Request para a branch `main` deste repositório.
-
-## Equipe de Desenvolvimento
-
-Este projeto está sendo desenvolvido pela equipe **Arraiware**.
+Seu objetivo principal é fornecer uma base sólida para decisões estratégicas sobre talentos, reconhecimentos, promoções e desenvolvimento de pessoas.
 
 ---
+
+## 🛠 Tecnologias Utilizadas (Frontend)
+
+- **Framework:** React
+- **Build Tool:** Vite
+- **Estilização:** Tailwind CSS
+- **Roteamento:** React Router DOM
+- **Ícones:** React Icons
+
+---
+
+## 📦 MVPs Implementados
+
+### ✅ MVP 1 — Digitalização Básica do Processo
+
+> Foco: Eficiência operacional
+
+- Cadastro de usuários (com trilha, unidade e cargo)
+- Criação e edição de critérios personalizados por trilha/unidade
+- Autoavaliação com notas (1-5) e justificativas obrigatórias
+- Avaliação de pares e líderes
+- Indicação de referências técnicas e culturais
+- Importação de histórico de avaliações (via Excel/CSV)
+- Painel básico para RH acompanhar status dos envios
+- Exportação das avaliações para o comitê de equalização
+
+### ✅ MVP 2 — Avaliação Líder-Colaborador e Equalização Inicial
+
+> Foco: Análise estratégica e suporte à decisão
+
+- Integração com ERP para identificar automaticamente líderes e alocações
+- Painel dedicado para gestores avaliarem seus liderados
+- Painel consolidado de equalização com visualização de múltiplas fontes (autoavaliação, pares, gestores)
+- Detecção automática de discrepâncias nas avaliações
+- Resumos automáticos por colaborador com GenAI para guiar discussões
+- Exportação pós-equalização com justificativas consolidadas
+- Geração dos "Brutal Facts" para mentores
+
+### ✅ MVP 3 — Privacidade e Segurança
+
+> Foco: Conformidade e proteção de dados sensíveis
+
+- Criptografia granular dos textos e dados sensíveis
+- Gestão de permissões por papel (colaborador, gestor, comitê, RH, admin)
+- Restrição de acesso a dados confidenciais para desenvolvedores
+- Logs de auditoria e controle de acessos críticos
+- Monitoramento básico de segurança e acesso
+
+---
+
+## 🚀 Como Executar o Projeto (Desenvolvimento)
+
+1. **Pré-requisitos**: Node.js 18+ e pnpm instalados
+
+2. **Clonar o Repositório**
+```bash
+git clone https://github.com/belli5/Arraiaware-frontend.git
+cd Arraiaware-frontend
+````
+
+3. **Instalar Dependências**
+
+```bash
+pnpm install
+```
+
+4. **Rodar em Desenvolvimento**
+
+```bash
+pnpm run dev
+```
+
+> O app estará disponível em `http://localhost:5173/` (ou outra porta conforme o Vite indicar).
+
+---
+
+## 🔗 Repositório do Backend
+
+Este frontend consome dados de uma API separada. Para uma experiência completa, clone e rode também o backend:
+
+👉 [https://github.com/belli5/Arraiaware-backend](https://github.com/belli5/Arraiaware-backend)
+
+---
+
+## 👥 Equipe de Desenvolvimento
+
+Projeto desenvolvido pela equipe **Arraiware** como parte do desafio Rocket Lab para a **Rocket Corp**.
+
+---
+
+## 🤝 Contribuição
+
+Contribuições são muito bem-vindas!
+
+1. Faça um fork do repositório
+2. Crie uma branch: `git checkout -b feature/nome-da-feature`
+3. Faça suas alterações com commits atômicos
+4. Push para seu fork
+5. Abra um Pull Request para `main`
+
+---
+
+📌 **Status Atual**: MVPs 1 a 3 entregues com sucesso e em produção.
+
+💡 **Próximos passos**: módulos analíticos, gestão de OKRs/PDIs e integração com NPS.
+
+```
