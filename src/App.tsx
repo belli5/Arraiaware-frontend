@@ -8,6 +8,7 @@ import Comite from './pages/Committee/Committee';
 import Gestor from './pages/Manager/Manager'
 import Dashboard from './pages/Dashboard/Dashboard'
 import Admin from './pages/Admin/Admin';
+import ResetPassword from './pages/ResetPassword/ResetPasswordPage';
 
 function App() {
   return (
@@ -22,7 +23,7 @@ function App() {
         <Route path="/Comite" element={<Comite />} />
         <Route path="/Gestor" element={<Gestor />} />
         <Route path="/Dashboard" element={<Dashboard />} />
-        <Route path="/change-password" element={<ChangePasswordPage />} />
+        <Route path="/change-password" element={<ResetPassword />} />
         
         {/* Painel Admin */}
 
